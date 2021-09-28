@@ -64,6 +64,14 @@ public class WaystoneData {
     }
 
     public synchronized void setWaystoneBlock(WaystoneBlock waystoneBlock) {
+        FancyWaystones.checkIOThread();
+        if (location instanceof LocalLocation) {
+            if (waystoneBlock == null) {
+                WaystoneManager.getManager().removeBlockData(((LocalLocation) location).getLocation(), getUUID());
+            } else if (this.waystoneBlock == null) {
+                WaystoneManager.getManager().putBlockData(((LocalLocation) location).getLocation(), getUUID());
+            }
+        }
         this.waystoneBlock = waystoneBlock;
     }
 
@@ -78,14 +86,6 @@ public class WaystoneData {
     public synchronized boolean shouldUnload() {
         return attached.isEmpty() && waystoneBlock == null && !type.isAlwaysLoaded();
     }
-
-//    public synchronized boolean check() {
-//        if (shouldUnload()) {
-//            WaystoneManager.getManager().directUnloadData(this);
-//            return true;
-//        }
-//        return false;
-//    }
 
     public void destroy(String reason) {
         FancyWaystones.checkIOThread();
@@ -121,7 +121,7 @@ public class WaystoneData {
         WaystoneManager.getManager().directUnloadData(this);
         if (waystoneBlock != null) {
             waystoneBlock.destroyModel();
-            waystoneBlock = null;
+            setWaystoneBlock(null);
         }
     }
 

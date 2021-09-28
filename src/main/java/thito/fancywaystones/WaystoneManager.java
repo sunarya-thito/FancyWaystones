@@ -39,6 +39,7 @@ public class WaystoneManager {
     private Map<String, WaystoneModel> modelMap = new HashMap<>();
     private WaystoneModel model = new ClientSideStandardModel();
     private Map<String, WaystoneType> typeMap = new HashMap<>();
+    private Map<World, Map<Long, List<String>>> blockDataMap = new HashMap<>();
     private ConfigurationSection waystoneItem;
     private WaystoneData dummy;
 
@@ -72,6 +73,31 @@ public class WaystoneManager {
         }
     }
 
+    protected void putBlockData(Location location, UUID id) {
+        Map<Long, List<String>> map = blockDataMap.computeIfAbsent(location.getWorld(), x -> new HashMap<>());
+        List<String> list = map.computeIfAbsent(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4), x -> new ArrayList<>());
+        String string = id.toString();
+        if (!list.contains(string)) {
+            list.add(string);
+        }
+    }
+
+    protected void removeBlockData(Location location, UUID id) {
+        Map<Long, List<String>> map = blockDataMap.get(location.getWorld());
+        if (map != null) {
+            List<String> list = map.get(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4));
+            if (list != null) {
+                list.remove(id.toString());
+                if (list.isEmpty()) {
+                    map.remove(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4));
+                }
+            }
+            if (map.isEmpty()) {
+                blockDataMap.remove(location.getWorld());
+            }
+        }
+    }
+
     public void registerWaystoneType(WaystoneType type) {
         typeMap.put(type.name(), type);
     }
@@ -95,7 +121,7 @@ public class WaystoneManager {
                     OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(waystoneData.getOwnerUUID());
                     long time = System.currentTimeMillis() - offlinePlayer.getLastPlayed();
                     return (time > duration) && !offlinePlayer.isOnline();
-                } catch (Throwable t) {
+                } catch (Throwable ignored) {
                 }
             } else if ("LAST_USED".equals(mode)) {
                 long time = System.currentTimeMillis() - waystoneData.getStatistics().getLastUsed();
@@ -362,21 +388,14 @@ public class WaystoneManager {
 
     public void unloadChunk(Chunk chunk) throws IOException {
         checkIOThread();
-        List<String> list = new ArrayList<>();
-        synchronized (loadedData) {
-            loadedData.removeIf(snapshot -> {
-                WaystoneLocation waystoneLocation = snapshot.getLocation();
-                if (waystoneLocation instanceof LocalLocation) {
-                    Location location = ((LocalLocation) waystoneLocation).getLocation();
-                    if (location.getWorld() == chunk.getWorld() &&
-                            location.getBlockX() >> 4 == chunk.getX() &&
-                            location.getBlockZ() >> 4 == chunk.getZ()) {
-                        list.add(snapshot.getUUID().toString());
-                    }
-                }
-                return snapshot.shouldUnload();
-            });
+        for (int i = loadedData.size() - 1; i >= 0; i--) {
+            WaystoneData data = loadedData.get(i);
+            if (data.shouldUnload()) {
+                loadedData.remove(i);
+            }
         }
+        Map<Long, List<String>> dataMap = blockDataMap.get(chunk.getWorld());
+        List<String> list = dataMap == null ? Collections.emptyList() : dataMap.get(Util.getXY(chunk.getX(), chunk.getZ()));
         if (list.isEmpty()) {
             File target = new File(FancyWaystones.getPlugin().getDataFolder(), getWorldPath()+"/"+chunk.getWorld().getName()+"/"+chunk.getX()+"."+chunk.getZ()+".yml");
             target.delete();

@@ -54,7 +54,7 @@ Waystone Types:
 #      - EFFECT:
 #          Type: LUCK
 #          Level: 1
-#          Or:
+#          And:
 #            - EFFECT:
 #                Type: SPEED
 #                Level: 1
@@ -64,9 +64,9 @@ Waystone Types:
 #      - ENCHANTED:
 #          Type: SILK_TOUCH
 #          Level: 1
-#          Or:
+#          And:
 #            - ENCHANTED:
-#                Type: DIG_SPEED
+#                Type: DAMAGE_ALL
 #                Level: 1
 #      - IS_OWNER
 #      - IS_MEMBER
