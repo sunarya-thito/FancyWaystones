@@ -1,0 +1,160 @@
+Default Waystone Name: "My Waystone"
+
+# If you are using BungeeCord server, set this to true
+# don't forget to use MySQL Storage type to make it work
+# properly
+Proxy Mode: false
+
+Storage:
+  # FILE or MYSQL
+  Location: FILE
+  # Block Storage is saved in local
+  Block Directory: blocks
+  File:
+    Waystone Directory: waystone_data
+    Player Directory: player_data
+    Names Directory: waystone_names
+  MySQL:
+    #Url: custom url here?
+    Host: localhost
+    Port: 3306
+    Username: USERNAME HERE
+    Password: PASSWORD HERE
+    Database Name: DATABASE NAME HERE
+    Table:
+      Waystone: waystones
+      Player: players
+      Names: waystone_names
+
+# Prevents inappropriate words in waystone name
+Blacklisted Names:
+  - fuck
+  - ass
+  - shit
+  - nigga
+  - vagina
+  - dick
+  - penis
+  - bitch
+  - bastard
+  - piss
+  - damn
+  - cunt
+  - bollocks
+  - bugger
+
+Permissions:
+  # Enable the permission to craft the items?
+  Craft:
+    # fancywaystones.craft.waystones.<environment>.<type>.<model>
+    # example: fancywaystones.craft.waystones.THE_END.private.regular
+    Waystones: false
+    # fancywaystones.craft.deathbook
+    Death Book: false
+    # fancywaystones.craft.teleportationbook
+    Teleportation Book: false
+  # Enable the permission to use the items?
+  Use:
+    Waystones:
+      # fancywaystones.craft.waystones.interact.<environment>.<type>.<model>
+      # example: fancywaystones.craft.waystones.interact.THE_END.private.regular
+      Interact: false
+      # fancywaystones.craft.waystones.teleport.<environment>.<type>.<model>
+      # example: fancywaystones.craft.waystones.teleport.THE_END.private.regular
+      Teleport: false
+    # fancywaystones.craft.deathbook
+    Death Book: false
+    # fancywaystones.craft.teleportationbook
+    Teleportation Book: false
+
+Waystone Inactivity:
+  # If enabled, all waystones that are inactive, will be removed from the server
+  Enable: false
+  Duration: 40d
+  # If Instant Vanish is false, waystone will be broken and drop items
+  # if Instant Vanish is true, waystone will be disappeared and won't drop items
+  Instant Vanish:
+    server: true
+    public: false
+    private: false
+    region: false
+  # If this set to ONLINE_TIME_OWNER, the waystone inactivity will be determined by the waystone owner last online time
+  # If this set to LAST_USED, the waystone inactivity will be determined by the last time player opened the waystone
+  # If this set to LAST_VISITED, the waystone inactivity will be determined by the last time player visited the waystone
+  # If this set to LAST_VISIT, the waystone inactivity will be determined by the last time player used the waystone to visit other waystone
+  # If set otherwise, this purging system will be disabled
+  Mode: ONLINE_TIME_OWNER
+  # The check interval, it will only check loaded data.
+  Check Interval: 1m
+  Waystone Type:
+    server: false
+    public: true
+    private: true
+    region: true
+
+Waystone Item:
+  Type: BREWING_STAND
+  Display Name: "&e&lWAYSTONE"
+  Flags:
+    - HIDE_ATTRIBUTES
+    - HIDE_POTION_EFFECTS
+    - HIDE_ENCHANTS
+    - HIDE_PLACED_ON
+    - HIDE_DESTROYS
+    - HIDE_UNBREAKABLE
+  Lore:
+    - "&7Place down the waystone              &7"
+    - "&7to create a teleportation"
+    - "&7point."
+    - "&7"
+    - "&7   Type: &d{waystone_type}"
+    - "&7   Environment: &d{waystone_environment}"
+    - "&7   Model: &d{waystone_model}"
+
+Waystone Protection:
+  server:
+    # Enabling it will make the waystone can only be broken by the waystone placer
+    Enable: false
+    Explosion Protection: true
+  region:
+    Enable: false
+    Explosion Protection: true
+  public:
+    Enable: false
+    Explosion Protection: true
+  private:
+    Enable: false
+    Explosion Protection: true
+
+Safe Teleport:
+  Force If Fail: false
+  # Add protection to the player when teleporting
+  No Damage Time: 10s
+  Check Radius: 4
+  Check Height: 5
+
+Economy:
+  Level:
+    Enable: true
+    Currency Format: "{amount} levels"
+  Vault:
+    Enable: true
+    Currency Format: "${amount}"
+  Item:
+    Enable: true
+    Currency Format: "{amount}x {type}"
+    Items:
+      EnderPearl:
+        Type: ENDER_PEARL
+      Emerald:
+        Type: EMERALD
+
+Model:
+  # Used by standard waystone model
+  # for more model customization,
+  # take a look at models.yml
+  Active:
+    server: DIAMOND_BLOCK
+    public: GOLD_BLOCK
+    region: IRON_BLOCK
+    private: EMERALD_BLOCK

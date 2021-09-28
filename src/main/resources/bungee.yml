@@ -1,0 +1,5 @@
+name: FancyWaystones
+version: "1.0"
+main: thito.fancywaystones.proxy.bungeecord.FancyWaystonesBungeeCord
+author: Septogeddon
+description: BungeeCord bridge for FancyWaystones

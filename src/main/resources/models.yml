@@ -1,0 +1,231 @@
+model:
+  regular:
+    name: "Regular"
+    components:
+      # Component Types
+      # block
+      # > type (the type of the block for the specific style rule)
+      # hologram
+      #
+      # armorstand
+      # > helmet (helmet item for the armorstand, itemstack)
+      # > chestplate (chestplate item for the armorstand, itemstack)
+      # > leggings (leggings item for the armorstand, itemstack)
+      # > boots (boots item for the armorstand, itemstack)
+      # > small (set small armorstand flag, true/false by default)
+      # > marker (set marker armorstand flag, true by default/false)
+      # > no-base-plate (set no base plate armorstand flag, true/false by default)
+      # > invisible (set invisible armorstand flag, true by default/false)
+      # > arms (set arms armorstand flag, true/false by default)
+      # > head-pose
+      # > body-pose
+      # > right-arm-pose
+      # > left-arm-pose
+      # > right-leg-pose
+      # > left-leg-pose
+      # items-adder (Specialized for ItemsAdder plugin)
+      # > custom-block (the custom block name)
+      #
+      # format for itemstack can be seen at https://www.spigotmc.org/wiki/itemstack-serialization/ (replace "==" with "class")
+      # format for poses
+      # <pose>:
+      #   x: <x>
+      #   y: <y>
+      #   z: <z>
+      - type: block
+        offset:
+          x: 0
+          y: 0
+          z: 0
+        data:
+          # Style Rules
+          # * - Accepts every condition
+          # state - for specific waystone state (active/inactive, does not support block/ItemsAdder's custom-block component type)
+          # environment - for specific world environment (normal, nether, the_end)
+          # waystone_type - for specific waystone type (server, public, region, private)
+          #
+          # you can combine multiple style rules by doing this:
+          # <rule1> <rule2> ...
+          # for example:
+          # environment:normal waystone_type:server
+          #
+          # you can have multiple style rule values by doing this
+          # <rule1>:<value1>,<value2>,...
+          # for example
+          # environment:normal,the_end
+          # or you can use empty value or wildcard to accept all values
+          # for example:
+          # waystone_type state:active
+          #
+          # if none of these matches, it won't be shown.
+          'environment:normal':
+            type: 'CHISELED_STONE_BRICKS'
+          'environment:nether':
+            type: 'NETHER_BRICKS'
+          'environment:the_end':
+            type:
+              - 'PURPUR_PILLAR'
+              - 'CHISELED_SANDSTONE'
+      # pillar holder
+      - type: block
+        offset:
+          x: 0
+          y: 1
+          z: 0
+        data:
+          '*':
+            type: 'COBBLESTONE_WALL'
+      # foot
+      - type: block
+        offset:
+          x: 0
+          y: 2
+          z: 0
+        data:
+          'environment:normal':
+            type:
+            - 'SMOOTH_STONE_SLAB'
+            - 'STONE_SLAB'
+          'environment:nether':
+            type: 'NETHER_BRICK_SLAB'
+          'environment:the_end':
+            type:
+              - 'PURPUR_SLAB'
+              - 'SANDSTONE_SLAB'
+      # top
+      - type: armorstand
+        offset:
+          x: 0.5
+          y: 1.7
+          z: 0.5
+        data:
+          'environment:normal':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: POLISHED_ANDESITE
+              amount: 1
+            small: true
+          'environment:nether':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: NETHER_BRICKS
+              amount: 1
+            small: true
+          'environment:the_end':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              # You can use ; to detect which material is available on the server
+              type: PURPUR_BLOCK;END_STONE
+              amount: 1
+            small: true
+      # cap
+      - type: armorstand
+        offset:
+          x: 0.5
+          y: 0.67
+          z: 0.5
+        data:
+          'environment:normal':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: POLISHED_ANDESITE
+              amount: 1
+          'environment:nether':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: NETHER_BRICKS
+              amount: 1
+          'environment:the_end':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: PURPUR_BLOCK;END_STONE
+              amount: 1
+      # top pillar
+      - type: armorstand
+        offset:
+          x: 0.5
+          y: -0.48
+          z: 0.5
+        data:
+          'state:active waystone_type:server':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: DIAMOND_BLOCK
+              amount: 1
+          'state:active waystone_type:public':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: GOLD_BLOCK
+              amount: 1
+          'state:active waystone_type:region':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: REDSTONE_BLOCK
+              amount: 1
+          'state:active waystone_type:private':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: EMERALD_BLOCK
+              amount: 1
+          'state:inactive environment:normal':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: POLISHED_ANDESITE
+              amount: 1
+          'state:inactive environment:nether':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: NETHER_BRICKS
+              amount: 1
+          'state:inactive environment:the_end':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: PURPUR_PILLAR;CUT_SANDSTONE
+              amount: 1
+      # bottom pillar
+      - type: armorstand
+        offset:
+          x: 0.5
+          y: 0.14
+          z: 0.5
+        data:
+          'state:active waystone_type:server':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: DIAMOND_BLOCK
+              amount: 1
+          'state:active waystone_type:public':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: GOLD_BLOCK
+              amount: 1
+          'state:active waystone_type:region':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: REDSTONE_BLOCK
+              amount: 1
+          'state:active waystone_type:private':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: EMERALD_BLOCK
+              amount: 1
+          'state:inactive environment:normal':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: POLISHED_ANDESITE
+              amount: 1
+          'state:inactive environment:nether':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: NETHER_BRICKS
+              amount: 1
+          'state:inactive environment:the_end':
+            helmet:
+              class: org.bukkit.inventory.ItemStack
+              type: PURPUR_PILLAR;CUT_SANDSTONE
+              amount: 1
+      - type: hologram
+        offset:
+          x: 0.5
+          y: 2.7
+          z: 0.5

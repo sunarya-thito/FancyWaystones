@@ -1,0 +1,251 @@
+Waystone Types:
+  # careful when changing waystone type ids
+  # it might occurs some data lost if you did not
+  # set it properly
+  server:
+    # The display name of the waystone
+    Name: Server
+    # Should the waystone always loaded on the server?
+    # BEWARE
+    # This will make the plugin loads all the waystones available for this type and makes the booting time of your
+    # server a little bit longer. Use this option wisely. Set it to false if you feel any lag starts to happen.
+    # Waystone will be loaded only when the chunk containing the waystone block is loaded or any player logged in
+    # that has the waystone activated on their list, and will be unloaded when the chunk is unloaded and the player went
+    # offline. Setting this to true will make the waystone loaded at startup and  will be unloaded when the server shutdown.
+    Always Loaded: true
+    # Should the waystone always listed on the players GUI? (requires always loaded to make it work properly)
+    Always Listed: true
+    # Should the waystone requires an activation in order to use it? (if this is true, "Activation" condition is ignored)
+    Requires Activation: false
+    # Should the waystone be purged for inactivity?
+    Purge Inactive: false
+    # The waystone durability. Set to 0 to make it unlimited use.
+    Max Uses: 0
+    # Should the waystone drop the waystone item when purged?
+    Purge Drops:
+      - NEVER
+    # The criteria of who can access the waystone
+    Access:
+      - ALWAYS
+    Activation:
+      - ALWAYS
+    # The criteria of who can break the waystone
+    Breakable:
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.waystones.server.{environment}.{model}'
+          And:
+            - IS_OWNER
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.admin'
+    # Should it drop the item when broken?
+    Drops:
+      - ALWAYS
+#    Example values:
+#      - NEVER
+#      - ALWAYS
+#      - PLAYER:
+#          Members Only: true
+#          Permission: 'your.permission.here'
+#      - RANDOM:
+#          Chance: 50
+#      - ENCHANTED:
+#          Type: SILK_TOUCH
+#          Level: 1
+#      - EFFECT:
+#          Type: LUCK
+#          Level: 1
+#          Or:
+#            - EFFECT:
+#                Type: SPEED
+#                Level: 1
+#            - ENCHANTED:
+#                Type: DIG_SPEED
+#                Level: 1
+#      - ENCHANTED:
+#          Type: SILK_TOUCH
+#          Level: 1
+#          Or:
+#            - ENCHANTED:
+#                Type: DIG_SPEED
+#                Level: 1
+#      - IS_OWNER
+#      - IS_MEMBER
+#      - IS_EXPLOSION
+    # Unique Name Key
+    # if set, the waystone name will be unique (in the specified context)
+    # in this case, the waystone name is unique in "PUBLIC NAMES" context
+    # you can use any name for the context name. Waystone cannot have the same
+    # name in the same context, unless its different context. Context names are
+    # case-sensitive. Max 15 characters!
+    Unique Names: "PUBLIC NAMES"
+    # Price for teleportation
+    Price:
+      # Charge players for multiworld teleportation (teleport between worlds)?
+      Multiworld:
+        Enable: false
+        Cost:
+          Level: 1
+      # Charge players for multidimensional teleportation (teleport into other dimension i.e overworld to nether, nether to the end, the end to nether, etc)?
+      # Works with bungeecord
+      Multidimensional:
+        Enable: false
+        Cost:
+          Level: 1
+      # Charge players for multiserver teleportation (teleport to the other bungeecord server instance)
+      Multiserver:
+        Enable: false
+        Cost:
+          Level: 1
+      # Charge players depends on how long the distance between 2 waystones (will not be charged for multidimensional/multiworld/multiserver teleportation)
+      Distance:
+        Enable: false
+        Divide: 100
+        Floor Divide: true
+        Cost:
+          Level: 3
+      # Fee that added to the cost for any condition
+      Basic Fee:
+        Enable: false
+        Cost:
+          Level: 1
+  public:
+    Name: Public
+    Always Loaded: false
+    Always Listed: false
+    Requires Activation: true
+    Purge Inactive: true
+    Purge Drops:
+      - ALWAYS
+    Access:
+      - ALWAYS
+    Activation:
+      - ALWAYS
+    Breakable:
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.admin'
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.waystones.server.{environment}.{model}'
+          And:
+            - IS_OWNER
+    Drops:
+      - ALWAYS
+    Unique Names: "PUBLIC NAMES"
+    Price:
+      Multiworld:
+        Enable: false
+        Cost:
+          Level: 1
+      Multidimensional:
+        Enable: false
+        Cost:
+          Level: 1
+      Multiserver:
+        Enable: false
+        Cost:
+          Level: 1
+      Distance:
+        Enable: false
+        Divide: 100
+        Floor Divide: true
+        Cost:
+          Level: 3
+      Basic Fee:
+        Enable: false
+        Cost:
+          Level: 1
+  region:
+    Name: Region
+    Always Loaded: false
+    Always Listed: false
+    Requires Activation: true
+    Purge Inactive: true
+    Purge Drops:
+      - ALWAYS
+    Access:
+      - LAND_ACCESS
+      - MEMBERS_ONLY
+    Activation:
+      - LAND_ACCESS
+      - MEMBERS_ONLY
+    Breakable:
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.admin'
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.waystones.server.{environment}.{model}'
+          And:
+            - IS_OWNER
+    Drops:
+      - ALWAYS
+    Unique Names: "PUBLIC NAMES"
+    Price:
+      Multiworld:
+        Enable: false
+        Cost:
+          Level: 1
+      Multidimensional:
+        Enable: false
+        Cost:
+          Level: 1
+      Multiserver:
+        Enable: false
+        Cost:
+          Level: 1
+      Distance:
+        Enable: false
+        Divide: 100
+        Floor Divide: true
+        Cost:
+          Level: 3
+      Basic Fee:
+        Enable: false
+        Cost:
+          Level: 1
+  private:
+    Name: Private
+    Always Loaded: false
+    Always Listed: false
+    Requires Activation: true
+    Purge Inactive: true
+    Purge Drops:
+      - ALWAYS
+    Access:
+      - IS_OWNER
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.admin'
+    Activation:
+      - IS_OWNER
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.admin'
+    Breakable:
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.admin'
+      - HAS_PERMISSION:
+          Permission: 'fancywaystones.waystones.server.{environment}.{model}'
+          And:
+            - IS_OWNER
+    Drops:
+      - ALWAYS
+    Unique Names: "PUBLIC NAMES"
+    Price:
+      Multiworld:
+        Enable: false
+        Cost:
+          Level: 1
+      Multidimensional:
+        Enable: false
+        Cost:
+          Level: 1
+      Multiserver:
+        Enable: false
+        Cost:
+          Level: 1
+      Distance:
+        Enable: false
+        Divide: 100
+        Floor Divide: true
+        Cost:
+          Level: 3
+      Basic Fee:
+        Enable: false
+        Cost:
+          Level: 1

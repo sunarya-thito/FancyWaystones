@@ -1,0 +1,344 @@
+Members Menu:
+  Title: "&1Edit Members"
+  Item Display:
+    Layout Key: "A"
+    Type: PLAYER_HEAD
+    Display Name: "&a&l{waystone_member_name}"
+    Lore:
+      - "&e{waystone_member_uuid}"
+      - "&7Shift + Right Click to Remove"
+  Add Member Item:
+    Layout Key: G
+    Type: NETHER_STAR
+    Display Name: "&a&lADD MEMBERS"
+  Close Item:
+    Layout Key: H
+    Type: BARRIER
+    Display Name: "&c&lCLOSE"
+  Category:
+    BLACKLIST:
+      Layout Key: E
+      Empty:
+        Type: LIGHT_GRAY_WOOL
+        Display Name: "&7Blacklisted Players"
+      Not Empty:
+        Type: RED_WOOL
+        Display Name: "&aBlacklisted Players"
+    WHITELIST:
+      Layout Key: F
+      Empty:
+        Type: LIGHT_GRAY_WOOL
+        Display Name: "&7Whitelisted Players"
+      Not Empty:
+        Type: LIME_WOOL
+        Display Name: "&aWhitelisted Players"
+  Previous Page Item:
+    Layout Key: "C"
+    Enable:
+      Type: SLIME_BALL
+      Display Name: "&a←"
+    Disable:
+      Type: FIREWORK_STAR
+      Display Name: "&7←"
+  Next Page Item:
+    Layout Key: "D"
+    Enable:
+      Type: SLIME_BALL
+      Display Name: "&a→"
+    Disable:
+      Type: FIREWORK_STAR
+      Display Name: "&7→"
+  Other Items:
+    B:
+      Item:
+        Type: BLACK_STAINED_GLASS_PANE
+        Display Name: "&7  "
+  Layout:
+    - "AAAAAAAAA"
+    - "AAAAAAAAA"
+    - "AAAAAAAAA"
+    - "AAAAAAAAA"
+    - "AAAAAAAAA"
+    - "CBBFEGBBD"
+Waystone Menu:
+  Title: "&1Waystone [{page}/{max_page}] &8- &5{waystone_name}"
+  Item Display:
+    Layout Key: "C"
+    INACTIVE:
+      Type: BEDROCK
+      Display Name: "&8&l{waystone_name}"
+      Lore:
+        - "&7Activate this waystone by right"
+        - "&7clicking the block in order to use"
+        - "&7it."
+    NORMAL:
+      Type: GRASS_BLOCK
+      Display Name: "&a&l{waystone_name}"
+      Lore:
+        - "&7by &f{waystone_owner_name}"
+        - "&7"
+        - "&7    Teleportation Cost:"
+        - "&7    &e{waystone_teleportation_cost}"
+        - "&7    Total Visitors:"
+        - "&7    &e{waystone_statistics_visitors}"
+        - "&7    Date Created/Age:"
+        - "&7    &e{waystone_statistics_date_created}"
+        - "&7    &e{waystone_statistics_age}"
+        - "&7"
+        - "&5  [&b &lRIGHT CLICK&d to Teleport &5]  &5"
+    NETHER:
+      Type: NETHERRACK
+      Display Name: "&c&l{waystone_name}"
+      Lore:
+        - "&7by &f{waystone_owner_name}"
+        - "&7"
+        - "&7    Teleportation Cost:"
+        - "&7    &e{waystone_teleportation_cost}"
+        - "&7    Total Visitors:"
+        - "&7    &e{waystone_statistics_visitors}"
+        - "&7    Date Created/Age:"
+        - "&7    &e{waystone_statistics_date_created}"
+        - "&7    &e{waystone_statistics_age}"
+        - "&7"
+        - "&5  [&b &lRIGHT CLICK&d to Teleport &5]  &5"
+    THE_END:
+      Type: END_STONE
+      Display Name: "&d&l{waystone_name}"
+      Lore:
+        - "&7by &f{waystone_owner_name}"
+        - "&7"
+        - "&7    Teleportation Cost:"
+        - "&7    &e{waystone_teleportation_cost}"
+        - "&7    Total Visitors:"
+        - "&7    &e{waystone_statistics_visitors}"
+        - "&7    Date Created/Age:"
+        - "&7    &e{waystone_statistics_date_created}"
+        - "&7    &e{waystone_statistics_age}"
+        - "&7"
+        - "&5  [&b &lRIGHT CLICK&d to Teleport &5]  &5"
+    CUSTOM:
+      Type: END_STONE
+      Display Name: "&e&l{waystone_name}"
+      Lore:
+        - "&7by &f{waystone_owner_name}"
+        - "&7"
+        - "&7    Teleportation Cost:"
+        - "&7    &e{waystone_teleportation_cost}"
+        - "&7    Total Visitors:"
+        - "&7    &e{waystone_statistics_visitors}"
+        - "&7    Date Created/Age:"
+        - "&7    &e{waystone_statistics_date_created}"
+        - "&7    &e{waystone_statistics_age}"
+        - "&7"
+        - "&5  [&b &lRIGHT CLICK&d to Teleport &5]  &5"
+  Sort Item:
+    Layout Key: "J"
+    By Name:
+      Type: MINECART
+      Display Name: "&dSort By"
+      Lore:
+        - "&aName"
+        - "&7Date Created"
+        - "&7Users"
+        - "&7Visits"
+        - "&7Visitors"
+        - "&7Used Time"
+    By Date Created:
+      Type: MINECART
+      Display Name: "&dSort By"
+      Lore:
+        - "&7Name"
+        - "&aDate Created"
+        - "&7Users"
+        - "&7Visits"
+        - "&7Visitors"
+        - "&7Used Time"
+    By Users:
+      Type: MINECART
+      Display Name: "&dSort By"
+      Lore:
+        - "&7Name"
+        - "&7Date Created"
+        - "&aUsers"
+        - "&7Visits"
+        - "&7Visitors"
+        - "&7Used Time"
+    By Visits:
+      Type: MINECART
+      Display Name: "&dSort By"
+      Lore:
+        - "&7Name"
+        - "&7Date Created"
+        - "&7Users"
+        - "&aVisits"
+        - "&7Visitors"
+        - "&7Used Time"
+    By Visitors:
+      Type: MINECART
+      Display Name: "&dSort By"
+      Lore:
+        - "&7Name"
+        - "&7Date Created"
+        - "&7Users"
+        - "&7Visits"
+        - "&aVisitors"
+        - "&7Used Time"
+    By Used Time:
+      Type: MINECART
+      Display Name: "&dSort By"
+      Lore:
+        - "&7Name"
+        - "&7Date Created"
+        - "&7Users"
+        - "&7Visits"
+        - "&7Visitors"
+        - "&aUsed Time"
+  Order Item:
+    Layout Key: "K"
+    Ascend Order:
+      Type: HOPPER
+      Display Name: "&dSort Order"
+      Lore:
+        - "&a{order_ascend} &7{order_descend}"
+    Descend Order:
+      Type: HOPPER
+      Display Name: "&dSort Order"
+      Lore:
+        - "&7{order_ascend} &a{order_descend}"
+  Previous Page Item:
+    Layout Key: "A"
+    Enable:
+      Type: SLIME_BALL
+      Display Name: "&a←"
+    Disable:
+      Type: FIREWORK_STAR
+      Display Name: "&7←"
+  Next Page Item:
+    Layout Key: "B"
+    Enable:
+      Type: SLIME_BALL
+      Display Name: "&a→"
+    Disable:
+      Type: FIREWORK_STAR
+      Display Name: "&7→"
+  Category:
+    server:
+      Layout Key: D
+      Not Empty:
+        Type: BLUE_WOOL
+        Display Name: "&e&lSERVER WAYSTONES"
+      Empty:
+        Type: LIGHT_GRAY_WOOL
+        Display Name: "&7&lSERVER WAYSTONES"
+    public:
+      Layout Key: E
+      Not Empty:
+        Type: GREEN_WOOL
+        Display Name: "&e&lPUBLIC WAYSTONES"
+      Empty:
+        Type: LIGHT_GRAY_WOOL
+        Display Name: "&7&lPUBLIC WAYSTONES"
+    region:
+      Layout Key: F
+      Not Empty:
+        Type: YELLOW_WOOL
+        Display Name: "&e&lREGIONAL WAYSTONES"
+      Empty:
+        Type: LIGHT_GRAY_WOOL
+        Display Name: "&7&lREGIONAL WAYSTONES"
+    private:
+      Layout Key: G
+      Not Empty:
+        Type: RED_WOOL
+        Display Name: "&e&lPRIVATE WAYSTONES"
+      Empty:
+        Type: LIGHT_GRAY_WOOL
+        Display Name: "&7&lPRIVATE WAYSTONES"
+  Close Item:
+    Layout Key: H
+    Type: BARRIER
+    Display Name: "&c&lCLOSE"
+  Edit Members:
+    Layout Key: M
+    Enable:
+      Type: PLAYER_HEAD
+      Display Name: "&b&lEDIT MEMBERS"
+      Lore:
+        - "&7Click here to add specific player"
+        - "&7to be able to access this waystone."
+    Disable:
+      Type: PLAYER_HEAD
+      Display Name: "&7&lEDIT MEMBERS"
+      Lore:
+        - "&8Edit members only available"
+        - "&8for regional and private type"
+        - "&8of waystone."
+    No Access:
+      Type: PLAYER_HEAD
+      Display Name: "&c&lEDIT MEMBERS"
+      Lore:
+        - "&7You don't have access to"
+        - "&7edit waystone members."
+  Rename Item:
+    Layout Key: I
+    Enable:
+      Type: NAME_TAG
+      Display Name: "&b&lRENAME"
+      Lore:
+        - "&7Click here to rename this"
+        - "&7waystone."
+        - "&7"
+        - "&7  Current Name:"
+        - "&d  {waystone_name}"
+    Disable:
+      Type: NAME_TAG
+      Display Name: "&7&lRENAME"
+      Lore:
+        - "&7Only the &d{waystone_owner}"
+        - "&7can rename this waystone."
+  Search Item:
+    Layout Key: P
+    Inactive:
+      Type: GLASS_BOTTLE
+      Display Name: "&dSearch Filter"
+      Lore:
+        - "&8Click here to change"
+    Active:
+      Type: POTION
+      Display Name: "&dSearch Filter"
+      Flags:
+        - HIDE_POTION_EFFECTS
+      Lore:
+        - "&7Current Search Keyword:"
+        - "&f{search_keyword}"
+        - ""
+        - "&8Left Click to change"
+        - "&8Right Click to clear"
+  Other Items:
+    O:
+      Item:
+        Type: BLACK_STAINED_GLASS_PANE
+        Display Name: "&7  "
+    X:
+      Item:
+        Type: RAIL
+        Display Name: "&7  "
+    L:
+      Item:
+        Type: BOOK
+        Display Name: "&d&lSTATISTICS"
+        Lore:
+          - "&7    Name: &b{waystone_name}"
+          - "&7    Owner: &b{waystone_owner_name}"
+          - "&7"
+          - "&7    Visits: &e{waystone_statistics_visits}"
+          - "&7    Visitors: &e{waystone_statistics_visitors}"
+          - "&7    Users: &e{waystone_statistics_users}"
+          - "&7    Date Created: &e{waystone_statistics_date_created}"
+          - "&7    Age: &e{waystone_statistics_age}"
+  Layout:
+    - "OOLMJKPOO"
+    - "OXCCCCCXO"
+    - "AXCCCCCXB"
+    - "OXCCCCCXO"
+    - "OODEFGIOO"

@@ -1,0 +1,62 @@
+Books:
+  Teleportation Book:
+    Enable: true
+    Charge Back On Invalid Waystone: true
+    Empty Item:
+      Type: ENCHANTED_BOOK
+      Display Name: "&eEmpty Teleportation Book"
+      Lore:
+        - "&7 * Right Click with this item"
+        - "&7   on a waystone to specify"
+        - "&7   the target waystone."
+    Item:
+      Type: ENCHANTED_BOOK
+      Display Name: "&eTeleport to &d{waystone_name}"
+      Lore:
+        - "&7 * Right Click with this item"
+        - "&7   to teleport instantly to the"
+        - "&7   targeted waystone."
+        - "&6 * This does not cost anything."
+    Recipe:
+      Shape:
+        - " Y "
+        - "YXY"
+        - " Y "
+      Materials:
+        X:
+          Type: BOOK
+        Y:
+          Type: ENDER_PEARL
+  Death Book:
+    Enable: true
+    Extra No Damage Time: 20s
+    Ignore Unsafe Destination: true
+    Check Height: 10
+    Check Radius: 10
+    # Use "-1" or "unlimited" to disable location time out
+    Location Time Out: 10m
+    # Empty world whitelist will allow all world except if blacklisted is not empty
+    World Whitelist: []
+    # Empty world blacklist will allow all world except if whitelisted is not empty
+    World Blacklist: []
+    Item:
+      Type: ENCHANTED_BOOK
+      Display Name: "&eTeleport to Your Death Location"
+      Lore:
+        - "&7 * Right Click with this item"
+        - "&7   to teleport instantly to your"
+        - "&7   last death location."
+        - "&6 * This does not cost anything."
+    Recipe:
+      Shape:
+        - " Y "
+        - "YXY"
+        - " Z "
+      Materials:
+        X:
+          Type: BOOK
+        Y:
+          Type: ENDER_PEARL
+        Z:
+          Type: TOTEM_OF_UNDYING;GOLDEN_APPLE
+

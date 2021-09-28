@@ -1,0 +1,180 @@
+Waystone Recipes:
+  - Model: 'regular'
+    Environment: 'NORMAL'
+    Waystone Type: 'server'
+    # Available placeholder for permission:
+    # {environment} - the waystone environment type (NORMAL, NETHER, THE_END)
+    # {model} - the waystone model id (in models.yml)
+    # {type} - the waystone type name (in waystones.yml)
+    Permission: 'fancywaystones.waystones.craft.{model}.{environment}.{type}'
+    Shape:
+      - "XYX"
+      - "BAB"
+      - "AZA"
+    Materials:
+      X:
+        Type: SMOOTH_STONE_SLAB
+      Y:
+        Type: POLISHED_ANDESITE
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: DIAMOND_BLOCK
+      B:
+        Type: BEACON
+  - Model: 'regular'
+    Environment: 'NORMAL'
+    Waystone Type: 'public'
+    Shape:
+      - "XYX"
+      - " A "
+      - "AZA"
+    Materials:
+      X:
+        Type: SMOOTH_STONE_SLAB
+      Y:
+        Type: POLISHED_ANDESITE
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: GOLD_BLOCK
+  - Model: 'regular'
+    Environment: 'NORMAL'
+    Waystone Type: 'private'
+    Shape:
+      - "XYX"
+      - "BAB"
+      - "AZA"
+    Materials:
+      X:
+        Type: SMOOTH_STONE_SLAB
+      Y:
+        Type: POLISHED_ANDESITE
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: EMERALD_BLOCK
+      B:
+        Type: NAME_TAG
+  - Model: 'regular'
+    Environment: 'NORMAL'
+    Waystone Type: 'region'
+    Shape:
+      - "XYX"
+      - "BAB"
+      - "AZA"
+    Materials:
+      X:
+        Type: SMOOTH_STONE_SLAB
+      Y:
+        Type: POLISHED_ANDESITE
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: IRON_BLOCK
+      B:
+        Type: BOOK
+  - Model: 'regular'
+    Environment: 'NETHER'
+    Waystone Type: 'public'
+    Shape:
+      - "XYX"
+      - " Y "
+      - "AZA"
+    Materials:
+      X:
+        Type: NETHER_BRICK_SLAB
+      Y:
+        Type: NETHER_BRICKS
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: GOLD_BLOCK
+  - Model: 'regular'
+    Environment: 'NETHER'
+    Waystone Type: 'private'
+    Shape:
+      - "XYX"
+      - "BAB"
+      - "AZA"
+    Materials:
+      X:
+        Type: NETHER_BRICK_SLAB
+      Y:
+        Type: NETHER_BRICKS
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: EMERALD_BLOCK
+      B:
+        Type: NAME_TAG
+  - Model: 'regular'
+    Environment: 'NETHER'
+    Waystone Type: 'region'
+    Shape:
+      - "XYX"
+      - "BAB"
+      - "AZA"
+    Materials:
+      X:
+        Type: NETHER_BRICK_SLAB
+      Y:
+        Type: NETHER_BRICKS
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: IRON_BLOCK
+      B:
+        Type: BOOK
+  - Model: 'regular'
+    Environment: 'THE_END'
+    Waystone Type: 'public'
+    Shape:
+      - "XYX"
+      - " A "
+      - "AZA"
+    Materials:
+      X:
+        Type: PURPUR_SLAB;SANDSTONE_SLAB
+      Y:
+        Type: PURPUR_BLOCK;END_STONE
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: GOLD_BLOCK
+  - Model: 'regular'
+    Environment: 'THE_END'
+    Waystone Type: 'private'
+    Shape:
+      - "XYX"
+      - "BAB"
+      - "AZA"
+    Materials:
+      X:
+        Type: PURPUR_SLAB;SANDSTONE_SLAB
+      Y:
+        Type: PURPUR_BLOCK;END_STONE
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: EMERALD_BLOCK
+      B:
+        Type: NAME_TAG
+  - Model: 'regular'
+    Environment: 'THE_END'
+    Waystone Type: 'region'
+    Shape:
+      - "XYX"
+      - "BAB"
+      - "AZA"
+    Materials:
+      X:
+        Type: PURPUR_SLAB;SANDSTONE_SLAB
+      Y:
+        Type: PURPUR_BLOCK;END_STONE
+      Z:
+        Type: ENDER_CHEST
+      A:
+        Type: IRON_BLOCK
+      B:
+        Type: BOOK
