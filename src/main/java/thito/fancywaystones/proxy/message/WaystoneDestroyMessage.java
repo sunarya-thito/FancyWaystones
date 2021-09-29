@@ -2,11 +2,11 @@ package thito.fancywaystones.proxy.message;
 
 import java.util.*;
 
-public class WaystoneUnloadMessage extends Message {
+public class WaystoneDestroyMessage extends Message {
     private UUID id;
     private String reason;
 
-    public WaystoneUnloadMessage(UUID id, String reason) {
+    public WaystoneDestroyMessage(UUID id, String reason) {
         this.id = id;
         this.reason = reason;
     }

@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.entity.*;
 import thito.fancywaystones.*;
+import thito.fancywaystones.proxy.*;
 
 import java.util.*;
 
@@ -88,6 +89,10 @@ public class PlaceWaystoneTask implements Runnable {
         FancyWaystones.getPlugin().submitIO(() -> {
             WaystoneManager.getManager().placeWaystone(data, center);
             WaystoneManager.getManager().saveWaystone(data);
+            ProxyWaystone pw = plugin.getProxyWaystone();
+            if (pw != null && data.getType().isAlwaysListed()) {
+                pw.dispatchWaystoneLoad(data.getUUID());
+            }
         });
     }
 

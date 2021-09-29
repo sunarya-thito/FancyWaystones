@@ -105,7 +105,11 @@ public class WaystoneData {
 
         ProxyWaystone pw = FancyWaystones.getPlugin().getProxyWaystone();
         if (pw != null) {
-            pw.dispatchWaystoneDestroy(getUUID(), reason);
+            if (type.isActivationRequired()) {
+                pw.dispatchWaystoneDestroy(getUUID(), reason);
+            } else if (type.isAlwaysListed()) {
+                pw.dispatchWaystoneUnload(getUUID());
+            }
         }
 
         WaystoneStorage storage = WaystoneManager.getManager().getStorage();
@@ -123,6 +127,7 @@ public class WaystoneData {
             waystoneBlock.destroyModel();
             setWaystoneBlock(null);
         }
+
     }
 
     public WaystoneModel getModel() {

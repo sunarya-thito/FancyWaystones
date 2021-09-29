@@ -6,7 +6,6 @@ import thito.fancywaystones.*;
 import thito.fancywaystones.location.*;
 import thito.fancywaystones.proxy.message.*;
 
-import java.io.*;
 import java.util.*;
 
 public class ProxyWaystone {
@@ -27,7 +26,15 @@ public class ProxyWaystone {
     }
 
     public void dispatchWaystoneDestroy(UUID uuid, String reason) {
-        sendMessage(new WaystoneUnloadMessage(uuid, reason));
+        sendMessage(new WaystoneDestroyMessage(uuid, reason));
+    }
+
+    public void dispatchWaystoneUnload(UUID id) {
+        sendMessage(new WaystoneUnloadRequestMessage(id));
+    }
+
+    public void dispatchWaystoneLoad(UUID id) {
+        sendMessage(new WaystoneLoadRequestMessage(id));
     }
 
     private void sendPluginMessage(Player player, byte[] data) {
