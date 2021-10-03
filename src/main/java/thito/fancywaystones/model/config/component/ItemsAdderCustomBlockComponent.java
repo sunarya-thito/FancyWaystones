@@ -47,6 +47,11 @@ public class ItemsAdderCustomBlockComponent implements ComponentType {
         }
 
         @Override
+        public boolean hasBlockHitBox() {
+            return true;
+        }
+
+        @Override
         public ComponentType getType() {
             return ItemsAdderCustomBlockComponent.this;
         }
@@ -64,6 +69,11 @@ public class ItemsAdderCustomBlockComponent implements ComponentType {
                 customBlock.place(component.getLocation());
                 oldCustomBlock = customBlock;
             }
+        }
+
+        @Override
+        public void destroyImmediately() {
+            // DO NOTHING AS IT REQUIRES TO BE EXECUTED IN DIFFERENT THREAD
         }
 
         @Override

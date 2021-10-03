@@ -4,6 +4,7 @@ import org.bukkit.configuration.*;
 import org.bukkit.entity.*;
 import thito.fancywaystones.*;
 import thito.fancywaystones.condition.*;
+import thito.fancywaystones.condition.handler.*;
 import thito.fancywaystones.config.*;
 import thito.fancywaystones.economy.*;
 import thito.fancywaystones.location.*;
@@ -189,5 +190,11 @@ public class ConfigWaystoneType implements WaystoneType {
     public boolean isBreakable(Player player, WaystoneData waystoneData) {
         return breakCondition.test(new Placeholder().putContent(Placeholder.PLAYER, player)
                 .putContent(Placeholder.WAYSTONE, waystoneData));
+    }
+
+    @Override
+    public boolean isBreakableByExplosion(WaystoneData waystoneData) {
+        return breakCondition.test(new Placeholder().putContent(Placeholder.WAYSTONE, waystoneData)
+        .putContent(ExplosionConditionHandler.EXPLOSION_CAUSE, true));
     }
 }

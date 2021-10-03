@@ -71,13 +71,6 @@ Waystone Inactivity:
   # If enabled, all waystones that are inactive, will be removed from the server
   Enable: false
   Duration: 40d
-  # If Instant Vanish is false, waystone will be broken and drop items
-  # if Instant Vanish is true, waystone will be disappeared and won't drop items
-  Instant Vanish:
-    server: true
-    public: false
-    private: false
-    region: false
   # If this set to ONLINE_TIME_OWNER, the waystone inactivity will be determined by the waystone owner last online time
   # If this set to LAST_USED, the waystone inactivity will be determined by the last time player opened the waystone
   # If this set to LAST_VISITED, the waystone inactivity will be determined by the last time player visited the waystone
@@ -86,11 +79,6 @@ Waystone Inactivity:
   Mode: ONLINE_TIME_OWNER
   # The check interval, it will only check loaded data.
   Check Interval: 1m
-  Waystone Type:
-    server: false
-    public: true
-    private: true
-    region: true
 
 Waystone Item:
   Type: BREWING_STAND

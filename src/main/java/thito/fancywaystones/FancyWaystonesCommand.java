@@ -5,6 +5,7 @@ import org.bukkit.command.*;
 import org.bukkit.configuration.file.*;
 import org.bukkit.entity.*;
 import org.bukkit.util.*;
+import thito.fancywaystones.proxy.*;
 import thito.fancywaystones.storage.*;
 
 import java.io.*;
@@ -69,6 +70,12 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                                 Arrays.stream(FancyWaystones.getPlugin().getStorageReadWriteSpeed())
                                         .mapToObj(Long::toString)
                                         .collect(Collectors.joining(", ")));
+                        ProxyWaystone pw = FancyWaystones.getPlugin().getProxyWaystone();
+                        if (pw != null) {
+                            if (sender instanceof Player) {
+                                pw.showInfo((Player) sender);
+                            }
+                        }
                         return true;
                     }
                     if (args[0].equalsIgnoreCase("localtomysql")) {
@@ -102,48 +109,22 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                                     File serverWaystonesDirectory = new File(FancyWaystones.getPlugin().getDataFolder(), "server_waystones");
                                     File[] list = playersDirectory.listFiles();
                                     WaystoneStorage storage = WaystoneManager.getManager().getStorage();
-                                    for (File f : list) {
-                                        if (f.getName().endsWith(".yml")) {
-                                            try {
-                                                FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Migrating "+f);
-                                                byte[] data = Files.readAllBytes(f.toPath());
-                                                UUID uuid = UUID.fromString(f.getName().replace(".yml", ""));
-                                                storage.writePlayerData(uuid, data);
-                                            } catch (Throwable t) {
-                                                t.printStackTrace();
+                                    if (list != null) {
+                                        for (File f : list) {
+                                            if (f.getName().endsWith(".yml")) {
+                                                try {
+                                                    FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Migrating "+f);
+                                                    byte[] data = Files.readAllBytes(f.toPath());
+                                                    UUID uuid = UUID.fromString(f.getName().replace(".yml", ""));
+                                                    storage.writePlayerData(uuid, data);
+                                                } catch (Throwable t) {
+                                                    t.printStackTrace();
+                                                }
                                             }
                                         }
                                     }
-                                    list = waystonesDirectory.listFiles();
-                                    for (File f : list) {
-                                        if (f.getName().endsWith(".yml")) {
-                                            try {
-                                                FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Migrating "+f);
-                                                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(f);
-                                                configuration.set("serverName", FancyWaystones.getPlugin().getServerName());
-                                                WaystoneType type = WaystoneManager.getManager().getType(configuration.getString("type"));
-                                                if (type == null) continue;
-                                                storage.writeWaystoneData(type, UUID.fromString(f.getName().replace(".yml", "")), configuration.saveToString().getBytes(StandardCharsets.UTF_8));
-                                            } catch (Throwable t) {
-                                                t.printStackTrace();
-                                            }
-                                        }
-                                    }
-                                    list = serverWaystonesDirectory.listFiles();
-                                    for (File f : list) {
-                                        if (f.getName().endsWith(".yml")) {
-                                            try {
-                                                FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Migrating "+f);
-                                                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(f);
-                                                configuration.set("serverName", FancyWaystones.getPlugin().getServerName());
-                                                WaystoneType type = WaystoneManager.getManager().getType(configuration.getString("type"));
-                                                if (type == null) continue;
-                                                storage.writeWaystoneData(type, UUID.fromString(f.getName().replace(".yml", "")), configuration.saveToString().getBytes(StandardCharsets.UTF_8));
-                                            } catch (Throwable t) {
-                                                t.printStackTrace();
-                                            }
-                                        }
-                                    }
+                                    migrateWaystoneData(waystonesDirectory, storage);
+                                    migrateWaystoneData(serverWaystonesDirectory, storage);
                                     FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Done migrating!");
                                     sender.sendMessage(prefix + "Data Migration done!");
                                 });
@@ -386,6 +367,27 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(prefix + "An error occurred while executing this command: "+t);
             t.printStackTrace();
             return true;
+        }
+    }
+
+    private void migrateWaystoneData(File waystonesDirectory, WaystoneStorage storage) {
+        File[] list;
+        list = waystonesDirectory.listFiles();
+        if (list != null) {
+            for (File f : list) {
+                if (f.getName().endsWith(".yml")) {
+                    try {
+                        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Migrating "+f);
+                        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(f);
+                        configuration.set("serverName", FancyWaystones.getPlugin().getServerName());
+                        WaystoneType type = WaystoneManager.getManager().getType(configuration.getString("type"));
+                        if (type == null) continue;
+                        storage.writeWaystoneData(type, UUID.fromString(f.getName().replace(".yml", "")), configuration.saveToString().getBytes(StandardCharsets.UTF_8));
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }
+            }
         }
     }
 

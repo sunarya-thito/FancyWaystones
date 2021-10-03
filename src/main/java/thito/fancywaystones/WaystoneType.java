@@ -27,4 +27,5 @@ public interface WaystoneType {
     boolean hasAccess(Player player, WaystoneData waystoneData);
     boolean hasActivationAccess(Player player, WaystoneData waystoneData);
     boolean isBreakable(Player player, WaystoneData waystoneData);
+    boolean isBreakableByExplosion(WaystoneData waystoneData);
 }

@@ -64,13 +64,21 @@ public class ConfigModel extends WaystoneModel {
         public Handler(WaystoneModel model, WaystoneData data) {
             super(model);
             this.data = data;
-            components = Arrays.stream(componentConfigs).map(x -> x.createComponent(data)).toArray(Component[]::new);
             WaystoneModel.ACTIVE_HANDLERS.add(this);
+            components = Arrays.stream(componentConfigs).map(x -> x.createComponent(data)).toArray(Component[]::new);
         }
 
         @Override
         public WaystoneData getData() {
             return data;
+        }
+
+        @Override
+        public void destroyImmediately() {
+            WaystoneModel.ACTIVE_HANDLERS.remove(this);
+            for (Component c : components) {
+                c.destroyImmediately();
+            }
         }
 
         @Override
@@ -82,6 +90,7 @@ public class ConfigModel extends WaystoneModel {
         @Override
         public boolean isPart(Location loc) {
             for (Component c : components) {
+                if (!c.getHandler().hasBlockHitBox()) continue;
                 Location o = c.getLocation();
                 if (o.getWorld() == loc.getWorld() &&
                     o.getBlockX() == loc.getBlockX() &&

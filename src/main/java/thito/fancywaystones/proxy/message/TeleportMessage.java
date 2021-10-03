@@ -1,5 +1,7 @@
 package thito.fancywaystones.proxy.message;
 
+import thito.fancywaystones.proxy.SerializableLocation;
+
 import java.util.*;
 
 public class TeleportMessage extends Message {

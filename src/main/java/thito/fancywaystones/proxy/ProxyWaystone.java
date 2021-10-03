@@ -14,15 +14,15 @@ public class ProxyWaystone {
         sendMessage(player, new ServerIntroductionMessage(FancyWaystones.getPlugin().getServerName()));
     }
 
-    public void transportPlayer(Player player, ProxyLocation location) {
+    public void transportPlayer(Player player, ProxyLocation location, UUID sourceWaystoneId, UUID waystoneId) {
         Location loc = player.getLocation();
         sendMessage(player, new TeleportMessage(player.getUniqueId(), true,
-                new SerializableLocation(FancyWaystones.getPlugin().getServerName(), loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ()),
-                new SerializableLocation(location.getServerName(), location.getWorldName(), location.getX(), location.getY(), location.getZ())));
+                new SerializableLocation(sourceWaystoneId, FancyWaystones.getPlugin().getServerName(), loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ()),
+                new SerializableLocation(waystoneId, location.getServerName(), location.getWorldName(), location.getX(), location.getY(), location.getZ())));
     }
 
     public void dispatchWaystoneReload(UUID uuid) {
-        sendMessage(new WaystoneReloadMessage(uuid));
+        sendMessage(new WaystoneReloadRequestMessage(uuid));
     }
 
     public void dispatchWaystoneDestroy(UUID uuid, String reason) {
@@ -33,6 +33,10 @@ public class ProxyWaystone {
         sendMessage(new WaystoneUnloadRequestMessage(id));
     }
 
+    public void showInfo(Player player) {
+        sendMessage(player, new RequestInfoMessage());
+    }
+
     public void dispatchWaystoneLoad(UUID id) {
         sendMessage(new WaystoneLoadRequestMessage(id));
     }
@@ -41,13 +45,13 @@ public class ProxyWaystone {
         player.sendPluginMessage(FancyWaystones.getPlugin(), "fancywaystones:waystone", data);
     }
 
-    private void sendMessage(Message message) {
+    public void sendMessage(Message message) {
         Bukkit.getOnlinePlayers().stream().findAny().ifPresent(player -> {
             sendMessage(player, message);
         });
     }
 
-    private void sendMessage(Player player, Message message) {
+    public void sendMessage(Player player, Message message) {
         sendPluginMessage(player, message.write());
     }
 

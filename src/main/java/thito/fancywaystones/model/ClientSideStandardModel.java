@@ -75,6 +75,7 @@ public class ClientSideStandardModel extends WaystoneModel {
 
         public Handler(WaystoneData data, Location location) {
             super(ClientSideStandardModel.this);
+            ACTIVE_HANDLERS.add(this);
             try {
                 activeBlock = Util.material(FancyWaystones.getPlugin().getConfig().getString("Model.Active." + data.getType().name(), "DIAMOND_BLOCK")).parseItem();
             } catch (Throwable t) {
@@ -181,8 +182,6 @@ public class ClientSideStandardModel extends WaystoneModel {
                     location.clone().add(0, 2, 0).getBlock().setType(finalTopMaterial.parseMaterial());
                 });
             }
-
-            ACTIVE_HANDLERS.add(this);
         }
 
         @Override
@@ -266,7 +265,23 @@ public class ClientSideStandardModel extends WaystoneModel {
         }
 
         @Override
+        public void destroyImmediately() {
+            ACTIVE_HANDLERS.remove(this);
+            hologramTop.remove();
+            hologramBottom.remove();
+            for (FakeArmorStand a : pillars) {
+                a.remove();
+            }
+            for (FakeArmorStand a : active) {
+                a.remove();
+            }
+            top.remove();
+            cap.remove();
+        }
+
+        @Override
         public void destroy() {
+            ACTIVE_HANDLERS.remove(this);
             hologramTop.remove();
             hologramBottom.remove();
             for (FakeArmorStand a : pillars) {
@@ -284,7 +299,6 @@ public class ClientSideStandardModel extends WaystoneModel {
                     loc.clone().add(0, 2, 0).getBlock().setType(XMaterial.AIR.parseMaterial());
                 });
             }
-            ACTIVE_HANDLERS.remove(this);
         }
 
         public class NoAccessAnimation extends Task {

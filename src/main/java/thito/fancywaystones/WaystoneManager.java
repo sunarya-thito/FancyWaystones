@@ -20,6 +20,7 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.logging.*;
+import java.util.stream.*;
 
 import static thito.fancywaystones.FancyWaystones.checkIOThread;
 
@@ -40,7 +41,7 @@ public class WaystoneManager {
     private Map<String, WaystoneModel> modelMap = new HashMap<>();
     private WaystoneModel model = new ClientSideStandardModel();
     private Map<String, WaystoneType> typeMap = new HashMap<>();
-    private Map<World, Map<Long, List<String>>> blockDataMap = new HashMap<>();
+    private Map<World, Map<Long, List<UUID>>> blockDataMap = new HashMap<>();
     private ConfigurationSection waystoneItem;
     private WaystoneData dummy;
 
@@ -75,20 +76,19 @@ public class WaystoneManager {
     }
 
     protected void putBlockData(Location location, UUID id) {
-        Map<Long, List<String>> map = blockDataMap.computeIfAbsent(location.getWorld(), x -> new HashMap<>());
-        List<String> list = map.computeIfAbsent(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4), x -> new ArrayList<>());
-        String string = id.toString();
-        if (!list.contains(string)) {
-            list.add(string);
+        Map<Long, List<UUID>> map = blockDataMap.computeIfAbsent(location.getWorld(), x -> new HashMap<>());
+        List<UUID> list = map.computeIfAbsent(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4), x -> new ArrayList<>());
+        if (!list.contains(id)) {
+            list.add(id);
         }
     }
 
     protected void removeBlockData(Location location, UUID id) {
-        Map<Long, List<String>> map = blockDataMap.get(location.getWorld());
+        Map<Long, List<UUID>> map = blockDataMap.get(location.getWorld());
         if (map != null) {
-            List<String> list = map.get(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4));
+            List<UUID> list = map.get(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4));
             if (list != null) {
-                list.remove(id.toString());
+                list.remove(id);
                 if (list.isEmpty()) {
                     map.remove(Util.getXY(location.getBlockX() >> 4, location.getBlockZ() >> 4));
                 }
@@ -97,6 +97,17 @@ public class WaystoneManager {
                 blockDataMap.remove(location.getWorld());
             }
         }
+    }
+
+    public WaystoneData getDataAt(Location location) {
+        synchronized (WaystoneModel.ACTIVE_HANDLERS) {
+            for (WaystoneModelHandler handler : WaystoneModel.ACTIVE_HANDLERS) {
+                if (handler.isPart(location)) {
+                    return handler.getData();
+                }
+            }
+        }
+        return null;
     }
 
     public void registerWaystoneType(WaystoneType type) {
@@ -255,28 +266,37 @@ public class WaystoneManager {
         playerDataList.clear();
         loadedData.clear();
         this.storage = storage;
-        for (WaystoneType type : getTypes()) {
-            if (type.isAlwaysListed()) {
-                try {
-                    List<byte[]> dataList = storage.readWaystones(type);
-                    if (dataList != null) {
-                        for (byte[] data : dataList) {
+        if (FancyWaystones.getPlugin().isEnabled()) {
+            Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
+                FancyWaystones.getPlugin().submitIO(() -> {
+                    // PAPER FORKS TENDS TO HAVE THE WORLD LAZY LOADED
+                    for (WaystoneType type : getTypes()) {
+                        if (type.isAlwaysLoaded()) {
                             try {
-                                _loadWaystoneData(data);
+                                List<byte[]> dataList = storage.readWaystones(type);
+                                if (dataList != null) {
+                                    for (byte[] data : dataList) {
+                                        try {
+                                            WaystoneData waystoneData = _loadWaystoneData(data);
+                                        } catch (Throwable t) {
+                                            plugin.getLogger().log(Level.SEVERE, "Failed to load waystone data", t);
+                                        }
+                                    }
+                                }
                             } catch (Throwable t) {
-                                plugin.getLogger().log(Level.SEVERE, "Failed to load waystone data", t);
+                                plugin.getLogger().log(Level.SEVERE, "Failed to list waystone data", t);
                             }
                         }
                     }
-                } catch (Throwable t) {
-                    plugin.getLogger().log(Level.SEVERE, "Failed to list waystone data", t);
+                });
+                for (World world : Bukkit.getWorlds()) {
+                    for (Chunk c : world.getLoadedChunks()) {
+                        FancyWaystones.getPlugin().submitIO(() -> {
+                            loadChunk(c);
+                        });
+                    }
                 }
-            }
-        }
-        for (World world : Bukkit.getWorlds()) {
-            for (Chunk c : world.getLoadedChunks()) {
-                loadChunk(c);
-            }
+            });
         }
     }
 
@@ -425,18 +445,27 @@ public class WaystoneManager {
         checkIOThread();
         for (int i = loadedData.size() - 1; i >= 0; i--) {
             WaystoneData data = loadedData.get(i);
+            WaystoneBlock waystoneBlock = data.getWaystoneBlock();
+            WaystoneLocation loc = data.getLocation();
+            if (loc instanceof LocalLocation && waystoneBlock != null) {
+                Location location = ((LocalLocation) loc).getLocation();
+                if (location.getWorld() == chunk.getWorld() && location.getBlockX() >> 4 == chunk.getX() && location.getBlockZ() >> 4 == chunk.getZ()) {
+                    waystoneBlock.destroyModelImmediately();
+                    data._setWaystoneBlock(null);
+                }
+            }
             if (data.shouldUnload()) {
                 loadedData.remove(i);
             }
         }
-        Map<Long, List<String>> dataMap = blockDataMap.get(chunk.getWorld());
-        List<String> list = dataMap == null ? Collections.emptyList() : dataMap.get(Util.getXY(chunk.getX(), chunk.getZ()));
+        Map<Long, List<UUID>> dataMap = blockDataMap.get(chunk.getWorld());
+        List<UUID> list = dataMap == null ? Collections.emptyList() : dataMap.get(Util.getXY(chunk.getX(), chunk.getZ()));
         if (list == null || list.isEmpty()) {
             File target = new File(FancyWaystones.getPlugin().getDataFolder(), getWorldPath()+"/"+chunk.getWorld().getName()+"/"+chunk.getX()+"."+chunk.getZ()+".yml");
             target.delete();
         } else {
             YamlConfiguration configuration = new YamlConfiguration();
-            configuration.set("blocks", list);
+            configuration.set("blocks", list.stream().map(UUID::toString).collect(Collectors.toList()));
             File target = new File(FancyWaystones.getPlugin().getDataFolder(), getWorldPath()+"/"+chunk.getWorld().getName()+"/"+chunk.getX()+"."+chunk.getZ()+".yml");
             target.getParentFile().mkdirs();
             configuration.save(target);
@@ -460,6 +489,16 @@ public class WaystoneManager {
             data = loadWaystoneDataPrintError(id);
         }
         return data;
+    }
+
+    public boolean prepare(UUID id) {
+        checkIOThread();
+        WaystoneData data = getLoadedData(id);
+        if (data == null) {
+            loadWaystoneDataPrintError(id);
+            return true;
+        }
+        return false;
     }
 
     public void unloadPlayerData(UUID id) {
@@ -602,7 +641,9 @@ public class WaystoneManager {
         YamlConfiguration config = new YamlConfiguration();
         config.loadFromString(new String(bytes, StandardCharsets.UTF_8));
         WaystoneType type = getType(config.getString("type"));
-        if (type == null) return null;
+        if (type == null) {
+            return null;
+        }
         WaystoneData data = new WaystoneData(
                 UUID.fromString(Objects.requireNonNull(config.getString("uuid"))),
                 type, getModelMap().getOrDefault(config.getString("model"), getDefaultModel()),
@@ -614,12 +655,21 @@ public class WaystoneManager {
         String serverName = config.getString("serverName");
         if (FancyWaystones.getPlugin().getServerName().equals(serverName)) {
             World world = Bukkit.getWorld(config.getString("world"));
-            if (world == null) return null;
+            if (world == null) {
+                return null;
+            }
             data.setLocation(new LocalLocation(new Location(world, config.getInt("x"), config.getInt("y"), config.getInt("z"))));
         } else {
             data.setLocation(new ProxyLocation(serverName == null ? FancyWaystones.getPlugin().getServerName() : serverName, config.getString("world"),
                     config.getInt("x"), config.getInt("y"), config.getInt("z"), data.getEnvironment()));
         }
+        loadMembers(config, data);
+        loadedData.add(data);
+        data.validateBlock();
+        return data;
+    }
+
+    private void loadMembers(YamlConfiguration config, WaystoneData data) {
         if (config.isConfigurationSection("members")) {
             for (String key : config.getConfigurationSection("members").getKeys(false)) {
                 try {
@@ -638,10 +688,8 @@ public class WaystoneManager {
                 }
             }
         }
-        loadedData.add(data);
-        data.validateBlock();
-        return data;
     }
+
     protected WaystoneData _loadWaystoneData(UUID target) throws IOException {
         checkIOThread();
         long time = System.currentTimeMillis();
@@ -676,24 +724,7 @@ public class WaystoneManager {
             WaystoneModel model = getModelMap().getOrDefault(config.getString("model"), getDefaultModel());
             WaystoneData data = new WaystoneData(uuid, getType(config.getString("type")),
                     model, World.Environment.valueOf(config.getString("environment")));
-            if (config.isConfigurationSection("members")) {
-                for (String key : config.getConfigurationSection("members").getKeys(false)) {
-                    try {
-                        data.getMembers().add(new WaystoneMember(UUID.fromString(key), config.getString("members." + key)));
-                    } catch (Exception e) {
-                        // invalid UUID?
-                    }
-                }
-            }
-            if (config.isConfigurationSection("blacklist")) {
-                for (String key : config.getConfigurationSection("blacklist").getKeys(false)) {
-                    try {
-                        data.getBlacklist().add(new WaystoneMember(UUID.fromString(key), config.getString("members." + key)));
-                    } catch (Exception e) {
-                        // invalid UUID?
-                    }
-                }
-            }
+            loadMembers(config, data);
             data.setName(getDefaultWaystoneName());
             loadedData.add(data);
             return data;

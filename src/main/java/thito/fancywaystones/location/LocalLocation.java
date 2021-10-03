@@ -44,7 +44,7 @@ public class LocalLocation implements WaystoneLocation {
     }
 
     @Override
-    public void transport(Player player, Consumer<TeleportState> stateConsumer) {
+    public void transport(Player player, WaystoneData source, WaystoneData target, Consumer<TeleportState> stateConsumer) {
         if (FancyWaystones.getPlugin().isEnabled()) {
             Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), new TeleportTask(
                     player, location, FancyWaystones.getPlugin().getCheckRadius(),

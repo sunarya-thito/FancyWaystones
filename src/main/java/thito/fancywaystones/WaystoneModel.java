@@ -3,7 +3,7 @@ package thito.fancywaystones;
 import java.util.*;
 
 public abstract class WaystoneModel {
-    public static final List<WaystoneModelHandler> ACTIVE_HANDLERS = new ArrayList<>();
+    public static final List<WaystoneModelHandler> ACTIVE_HANDLERS = Collections.synchronizedList(new ArrayList<>());
 
     public abstract String getId();
     public abstract String getName();

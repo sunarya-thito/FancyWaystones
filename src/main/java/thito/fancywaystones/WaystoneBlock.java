@@ -34,6 +34,10 @@ public class WaystoneBlock {
         modelHandler.destroy();
     }
 
+    public void destroyModelImmediately() {
+        modelHandler.destroyImmediately();
+    }
+
     public boolean isPart(Location loc) {
         return modelHandler.isPart(loc);
     }

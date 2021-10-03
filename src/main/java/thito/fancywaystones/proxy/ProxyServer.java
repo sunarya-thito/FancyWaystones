@@ -8,6 +8,7 @@ public abstract class ProxyServer {
     private final String alias;
     private Set<UUID> loadRequest = new HashSet<>();
     private Set<UUID> unloadRequest = new HashSet<>();
+    private Set<UUID> reloadRequest = new HashSet<>();
 
     public ProxyServer(String alias) {
         this.alias = alias;
@@ -15,6 +16,10 @@ public abstract class ProxyServer {
 
     public String getAlias() {
         return alias;
+    }
+
+    public void addRequest(WaystoneReloadRequestMessage message) {
+        reloadRequest.add(message.getId());
     }
 
     public void addRequest(WaystoneLoadRequestMessage message) {
@@ -25,10 +30,11 @@ public abstract class ProxyServer {
     public void removeRequest(WaystoneUnloadRequestMessage message) {
         loadRequest.remove(message.getId());
         unloadRequest.add(message.getId());
+        reloadRequest.remove(message.getId());
     }
 
     public WaystoneUpdateMessage flushRequest() {
-        WaystoneUpdateMessage message = new WaystoneUpdateMessage(loadRequest, unloadRequest);
+        WaystoneUpdateMessage message = new WaystoneUpdateMessage(loadRequest, unloadRequest, reloadRequest);
         loadRequest = new HashSet<>();
         unloadRequest = new HashSet<>();
         return message;

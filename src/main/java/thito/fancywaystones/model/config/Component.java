@@ -36,6 +36,10 @@ public class Component {
         handler.destroy();
     }
 
+    public void destroyImmediately() {
+        handler.destroyImmediately();
+    }
+
     public void update(WaystoneData waystoneData, WaystoneState state, Player player) {
         ComponentData data = requestData(waystoneData, state);
         if (data != null) {

@@ -31,10 +31,12 @@ public class WaystoneListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent e) {
-        FancyWaystones.getPlugin().submitIO(() -> {
-            PlayerData data = WaystoneManager.getManager().getPlayerData(e.getEntity());
-            data.dispatchDeath(e.getEntity().getLocation());
-        });
+        if (FancyWaystones.getPlugin().getDeathBook().isEnableListener()) {
+            FancyWaystones.getPlugin().submitIO(() -> {
+                PlayerData data = WaystoneManager.getManager().getPlayerData(e.getEntity());
+                data.dispatchDeath(e.getEntity().getLocation());
+            });
+        }
     }
 
     @EventHandler
@@ -62,7 +64,7 @@ public class WaystoneListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void blockBreak(EntityExplodeEvent e) {
-        Set<WaystoneBlock> destroyed = new HashSet<>();
+        Set<WaystoneData> destroyed = new HashSet<>();
         String reason;
         if (e.getEntityType() == EntityType.CREEPER) {
             reason = "{language.reason-creeper-explosion}";
@@ -72,30 +74,22 @@ public class WaystoneListener implements Listener {
             reason = "{language-reason-unknown-explosion}";
         }
         for (Block b : new ArrayList<>(e.blockList())) {
-            WaystoneBlock wb = null;
-            List<MetadataValue> valueList = b.getMetadata("FW:WD");
-            for (MetadataValue v : valueList) {
-                Object value = v.value();
-                if (value instanceof WaystoneData) {
-                    wb = ((WaystoneData) value).getWaystoneBlock();
-                    break;
-                }
-            }
+            WaystoneData wb = WaystoneManager.getManager().getDataAt(b.getLocation());
             if (wb != null) {
                 e.blockList().remove(b);
                 destroyed.add(wb);
             }
         }
-        for (WaystoneBlock wb : destroyed) {
-            if (FancyWaystones.getPlugin().getConfig().getBoolean("Waystone Protection."+wb.getData().getType().name()+".Explosion Protection")) {
+        for (WaystoneData wb : destroyed) {
+            if (!wb.getType().isBreakableByExplosion(wb)) {
                 continue;
             }
             FancyWaystones.getPlugin().submitIO(() -> {
-                wb.getData().destroy(reason);
-            });
-            WaystoneManager.getManager().createWaystoneItem(wb.getData(), false, result -> {
-                Location location = ((LocalLocation) wb.getData().getLocation()).getLocation();
-                location.getWorld().dropItemNaturally(location.clone().add(.5, 0, .5), result);
+                wb.destroy(reason);
+                WaystoneManager.getManager().createWaystoneItem(wb, false, result -> {
+                    Location location = ((LocalLocation) wb.getLocation()).getLocation();
+                    location.getWorld().dropItemNaturally(location.clone().add(.5, 0, .5), result);
+                });
             });
         }
     }
@@ -104,34 +98,29 @@ public class WaystoneListener implements Listener {
     public void join(PlayerJoinEvent e) {
         ProxyWaystone proxyWaystone = FancyWaystones.getPlugin().getProxyWaystone();
         if (proxyWaystone != null) {
-            // Introduce the server UUID to the proxy server
-            proxyWaystone.introduceServer(e.getPlayer());
+            Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
+                // Introduce the server UUID to the proxy server
+                proxyWaystone.introduceServer(e.getPlayer());
+            });
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void preBlockBreak(BlockBreakEvent e) {
-        Block block = e.getBlock();
-        WaystoneBlock waystoneBlock = null;
-        List<MetadataValue> valueList = block.getMetadata("FW:WD");
-        for (MetadataValue v : valueList) {
-            Object value = v.value();
-            if (value instanceof WaystoneData) {
-                waystoneBlock = ((WaystoneData) value).getWaystoneBlock();
-                break;
-            }
-        }
-        if (waystoneBlock != null) {
-            if (FancyWaystones.getPlugin().getConfig().getBoolean("Waystone Protection."+waystoneBlock.getData().getType().name()+".Enable")) {
-                // prevents other plugin to do further actions on this block
-                e.setCancelled(true);
-                // making the event only accessible by FancyWaystones
-                // of course this would work if theres no bad coded plugin
-                // that does not check Cancellable#isCancelled or EventHandler#ignoreCancelled
-                // for the handler
-            }
-        }
-    }
+//    @EventHandler(priority = EventPriority.LOWEST)
+//    public void preBlockBreak(BlockBreakEvent e) {
+//        Block block = e.getBlock();
+//        WaystoneData data = WaystoneManager.getManager().getDataAt(block.getLocation());
+//        if (data != null) {
+//            // prevents other plugin to do further actions on this block
+//
+//            // making the event only accessible by FancyWaystones
+//            // of course this would work if theres no bad coded plugin
+//            // that does not check Cancellable#isCancelled or EventHandler#ignoreCancelled
+//            // for the handler
+////            if (FancyWaystones.getPlugin().getConfig().getBoolean("Waystone Protection."+data.getType().name()+".Enable")) {
+////
+////            }
+//        }
+//    }
 
     private boolean hasAccess(Player player, WaystoneData waystoneData) {
         WaystoneType type = waystoneData.getType();
@@ -143,30 +132,21 @@ public class WaystoneListener implements Listener {
         if (Util.dummy.remove(e)) return;
         boolean wasCancelled = e.isCancelled();
         Block block = e.getBlock();
-        WaystoneBlock waystoneBlock = null;
-        List<MetadataValue> valueList = block.getMetadata("FW:WD");
-        for (MetadataValue v : valueList) {
-            Object value = v.value();
-            if (value instanceof WaystoneData) {
-                waystoneBlock = ((WaystoneData) value).getWaystoneBlock();
-                break;
-            }
-        }
-        if (waystoneBlock != null) {
+        WaystoneData data = WaystoneManager.getManager().getDataAt(block.getLocation());
+        if (data != null) {
             e.setCancelled(true);
-            if (!waystoneBlock.getData().getType().isBreakable(e.getPlayer(), waystoneBlock.getData())) {
-                if (!e.getPlayer().getUniqueId().equals(waystoneBlock.getData().getOwnerUUID())) {
+            if (!data.getType().isBreakable(e.getPlayer(), data)) {
+                if (!e.getPlayer().getUniqueId().equals(data.getOwnerUUID())) {
                     e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.PLAYER, e.getPlayer())
-                    .putContent(Placeholder.WAYSTONE, waystoneBlock.getData()).replace("{language.cannot-break-not-owner}"));
+                    .putContent(Placeholder.WAYSTONE, data).replace("{language.cannot-break-not-owner}"));
                     return;
                 }
             } else if (wasCancelled) return;
             ItemStack used = e.getPlayer().getItemInHand();
-            WaystoneBlock finalWaystoneBlock = waystoneBlock;
             FancyWaystones.getPlugin().submitIO(() -> {
-                finalWaystoneBlock.getData().destroy(e.getPlayer().getName());
-                if (finalWaystoneBlock.getData().getType().shouldDrop(e.getPlayer(), finalWaystoneBlock.getData())) {
-                    WaystoneManager.getManager().createWaystoneItem(finalWaystoneBlock.getData(),
+                data.destroy(e.getPlayer().getName());
+                if (data.getType().shouldDrop(e.getPlayer(), data)) {
+                    WaystoneManager.getManager().createWaystoneItem(data,
                             used.hasItemMeta() && used.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH),
                             result -> {
                                 if (FancyWaystones.getPlugin().isEnabled()) {
@@ -198,33 +178,35 @@ public class WaystoneListener implements Listener {
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = e.getClickedBlock();
             if (block != null && !e.getPlayer().isSneaking()) {
-                for (WaystoneModelHandler handler : WaystoneModel.ACTIVE_HANDLERS) {
-                    if (handler.isPart(block.getLocation())) {
-                        try {
-                            if (e.getHand() != EquipmentSlot.HAND) {
-                                e.setCancelled(true);
-                                return;
+                synchronized (WaystoneModel.ACTIVE_HANDLERS) {
+                    for (WaystoneModelHandler handler : WaystoneModel.ACTIVE_HANDLERS) {
+                        if (handler.isPart(block.getLocation())) {
+                            try {
+                                if (e.getHand() != EquipmentSlot.HAND) {
+                                    e.setCancelled(true);
+                                    return;
+                                }
+                            } catch (Throwable ignored) {
                             }
-                        } catch (Throwable ignored) {
+                            e.setCancelled(true);
+                            if (handler.getData().getEnvironment() != e.getPlayer().getLocation().getWorld().getEnvironment()) {
+                                e.getPlayer().sendMessage(new Placeholder()
+                                        .putContent(Placeholder.PLAYER, e.getPlayer())
+                                        .putContent(Placeholder.WAYSTONE, handler.getData())
+                                        .replace("{language.invalid-environment}"));
+                                ParticleEffect.SMOKE_LARGE
+                                        .display(((LocalLocation) handler.getData().getLocation()).getLocation().clone()
+                                                        .subtract(handler.getMinX() - .5, handler.getMinY() - .5, handler.getMinZ() - .5),
+                                                new Vector(handler.getMaxX() + .5, handler.getMaxY() + .5, handler.getMaxZ() + .5),
+                                                0, 50, null, e.getPlayer());
+                            } else {
+                                FancyWaystones.getPlugin().submitIO(() -> {
+                                    PlayerData data = WaystoneManager.getManager().getPlayerData(e.getPlayer());
+                                    handlePlayerClick(e, handler, data);
+                                });
+                            }
+                            return;
                         }
-                        e.setCancelled(true);
-                        if (handler.getData().getEnvironment() != e.getPlayer().getLocation().getWorld().getEnvironment()) {
-                            e.getPlayer().sendMessage(new Placeholder()
-                            .putContent(Placeholder.PLAYER, e.getPlayer())
-                            .putContent(Placeholder.WAYSTONE, handler.getData())
-                            .replace("{language.invalid-environment}"));
-                            ParticleEffect.SMOKE_LARGE
-                                    .display(((LocalLocation) handler.getData().getLocation()).getLocation().clone()
-                                            .subtract(handler.getMinX() - .5, handler.getMinY() - .5, handler.getMinZ() - .5),
-                                            new Vector(handler.getMaxX() + .5, handler.getMaxY() + .5, handler.getMaxZ() + .5),
-                                            0, 50, null, e.getPlayer());
-                        } else {
-                            FancyWaystones.getPlugin().submitIO(() -> {
-                                PlayerData data = WaystoneManager.getManager().getPlayerData(e.getPlayer());
-                                handlePlayerClick(e, handler, data);
-                            });
-                        }
-                        return;
                     }
                 }
             }
@@ -325,7 +307,7 @@ public class WaystoneListener implements Listener {
             finalItem.setAmount(1);
             FancyWaystones.getPlugin().submitIO(() -> {
                 PlayerData data = WaystoneManager.getManager().getPlayerData(e.getPlayer());
-                Location death = data.getDeathLocation();
+                DeathLocation death = data.getDeathLocation();
                 if (death == null || (System.currentTimeMillis() - data.getDeathTime()) >= Util.tickToMillis(
                         FancyWaystones.getPlugin().getDeathBook().getDeathLocationTimeout()
                 )) {
@@ -335,13 +317,7 @@ public class WaystoneListener implements Listener {
                     new DeathBookWarmUpTask(e.getPlayer()) {
                         @Override
                         public void onDone() {
-                            DeathBookTeleportTask bookTeleportTask = new DeathBookTeleportTask(FancyWaystones.getPlugin(), e.getPlayer(), death,
-                                    FancyWaystones.getPlugin().getDeathBook().getCheckRadius(),
-                                    FancyWaystones.getPlugin().getDeathBook().getCheckHeight(),
-                                    FancyWaystones.getPlugin().getDeathBook().ignoreSafeTeleport());
-                            bookTeleportTask.setNoDamageTicks((int) (FancyWaystones.getPlugin().getNoDamageTime() +
-                                    FancyWaystones.getPlugin().getDeathBook().getExtraNoDamageTime()));
-                            bookTeleportTask.start();
+                            death.teleport(e.getPlayer());
                         }
 
                         @Override
@@ -431,11 +407,16 @@ public class WaystoneListener implements Listener {
                     new TeleportationBookWarmUpTask(e.getPlayer(), data) {
                         @Override
                         public void onDone() {
-                            data.getLocation().transport(e.getPlayer(), state -> {
+                            data.getLocation().transport(e.getPlayer(), null, data, state -> {
                                 if (state != TeleportState.SUCCESS) {
                                     Util.placeInHand(e.getPlayer(), usedItem);
                                 } else {
                                     e.getPlayer().setNoDamageTicks((int) (e.getPlayer().getNoDamageTicks() + FancyWaystones.getPlugin().getNoDamageTicks()));
+                                }
+                                if (state == TeleportState.UNSAFE) {
+                                    e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, data).replace("{language.unsafe-waystone}"));
+                                } else if (state == TeleportState.INVALID) {
+                                    e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, data).replace("{language.invalid-waystone}"));
                                 }
                             });
                         }

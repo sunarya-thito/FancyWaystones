@@ -65,10 +65,10 @@ public class ProxyLocation implements WaystoneLocation {
     }
 
     @Override
-    public void transport(Player player, Consumer<TeleportState> stateConsumer) {
+    public void transport(Player player, WaystoneData source, WaystoneData target, Consumer<TeleportState> stateConsumer) {
         ProxyWaystone proxyWaystone = FancyWaystones.getPlugin().getProxyWaystone();
         if (proxyWaystone != null) {
-            proxyWaystone.transportPlayer(player, this);
+            proxyWaystone.transportPlayer(player, this, source == null ? null : source.getUUID(), target == null ? null : target.getUUID());
             stateConsumer.accept(TeleportState.SUCCESS);
         }
     }

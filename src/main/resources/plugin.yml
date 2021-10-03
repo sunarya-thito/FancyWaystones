@@ -1,8 +1,9 @@
 name: "FancyWaystones"
 main: thito.fancywaystones.FancyWaystones
 api-version: 1.13
-version: 1.0.14
+version: 1.0.20
 author: Septogeddon
+load: STARTUP
 softdepend:
   - ProtocolLib
 commands:

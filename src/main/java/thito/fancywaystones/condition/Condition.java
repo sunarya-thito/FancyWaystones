@@ -8,6 +8,7 @@ import thito.fancywaystones.config.*;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
 
 public class Condition {
     public static final Map<String, Function<MapSection, ConditionHandler>> HANDLER_FACTORY_MAP = new HashMap<>();
@@ -34,7 +35,10 @@ public class Condition {
         HANDLER_FACTORY_MAP.put("IS_MEMBER", map -> new MemberConditionHandler());
         HANDLER_FACTORY_MAP.put("HAS_PERMISSION", map -> new PermissionConditionHandler(map.getString("Permission").orElse(null)));
         HANDLER_FACTORY_MAP.put("IS_OWNER", map -> new OwnerConditionHandler());
+        HANDLER_FACTORY_MAP.put("IS_EXPLOSION", map -> new ExplosionConditionHandler());
+        HANDLER_FACTORY_MAP.put("WORLD_WHITELIST", map -> new WorldConditionHandler(map.getList("Worlds").orElse(ListSection.empty()).stream().map(String::valueOf).collect(Collectors.toList())));
 
+        NO_PARAM_HANDLER_FACTORY_MAP.put("IS_EXPLOSION", ExplosionConditionHandler::new);
         NO_PARAM_HANDLER_FACTORY_MAP.put("ALWAYS", AlwaysConditionHandler::new);
         NO_PARAM_HANDLER_FACTORY_MAP.put("NEVER", NeverConditionHandler::new);
         NO_PARAM_HANDLER_FACTORY_MAP.put("LAND_ACCESS", LandAccessConditionHandler::new);

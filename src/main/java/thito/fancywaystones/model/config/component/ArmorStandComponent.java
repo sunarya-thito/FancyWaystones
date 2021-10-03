@@ -112,6 +112,11 @@ public class ArmorStandComponent implements ComponentType {
             armorStand.spawn();
         }
 
+        @Override
+        public boolean hasBlockHitBox() {
+            return false;
+        }
+
         public void supplyIsActive(Player player, Consumer<Boolean> result) {
             if (!waystoneData.getType().isActivationRequired()) {
                 result.accept(true);
@@ -135,6 +140,11 @@ public class ArmorStandComponent implements ComponentType {
         @Override
         public void update(ComponentData data, WaystoneState state, Player player) {
             armorStand.update(player, ((ArmorStandComponentData) data).getMeta());
+        }
+
+        @Override
+        public void destroyImmediately() {
+            destroy();
         }
 
         @Override

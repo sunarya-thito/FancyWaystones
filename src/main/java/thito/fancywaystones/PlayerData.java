@@ -3,6 +3,7 @@ package thito.fancywaystones;
 import org.bukkit.*;
 import org.bukkit.configuration.*;
 import org.bukkit.entity.*;
+import thito.fancywaystones.location.DeathLocation;
 
 import java.io.*;
 import java.util.*;
@@ -15,7 +16,7 @@ public class PlayerData {
     private UUID uuid;
     private final List<WaystoneData> knownWaystones = Collections.synchronizedList(new ArrayList<>());
     private long deathTime;
-    private Location deathLocation;
+    private DeathLocation deathLocation;
 
     public PlayerData(Player player, UUID uuid) {
         this.player = player;
@@ -50,7 +51,7 @@ public class PlayerData {
     }
 
     public void dispatchDeath(Location location) {
-        this.deathLocation = location;
+        this.deathLocation = new DeathLocation(location);
         this.deathTime = System.currentTimeMillis();
         attemptSave();
     }
@@ -85,11 +86,11 @@ public class PlayerData {
         }
     }
 
-    public Location getDeathLocation() {
+    public DeathLocation getDeathLocation() {
         return deathLocation;
     }
 
-    public void setDeathLocation(Location deathLocation) {
+    public void setDeathLocation(DeathLocation deathLocation) {
         this.deathLocation = deathLocation;
         attemptSave();
     }
@@ -157,11 +158,11 @@ public class PlayerData {
             deathTime = section.getLong("deathTime");
             ConfigurationSection death = section.getConfigurationSection("deathLocation");
             if (death != null) {
-                World world = Bukkit.getWorld(death.getString("world"));
-                if (world != null) {
-                    deathLocation = new Location(world,
-                            death.getDouble("x"), death.getDouble("y"), death.getDouble("z"),
-                            (float) death.getDouble("yaw"), (float) death.getDouble("pitch"));
+                String server = death.getString("server");
+                String world = death.getString("world");
+                if (server != null && world != null) {
+                    deathLocation = new DeathLocation(server, world,
+                            death.getDouble("x"), death.getDouble("y"), death.getDouble("z"));
                 }
             }
             List<String> known = section.getStringList("knownWaystones");
@@ -182,12 +183,11 @@ public class PlayerData {
                 section.set("knownWaystones", knownWaystones.stream().map(x -> x.getUUID().toString()).collect(Collectors.toList()));
             }
             if (deathLocation != null) {
-                section.set("deathLocation.world", deathLocation.getWorld().getName());
+                section.set("deathLocation.server", deathLocation.getServerName());
+                section.set("deathLocation.world", deathLocation.getWorldName());
                 section.set("deathLocation.x", deathLocation.getX());
                 section.set("deathLocation.y", deathLocation.getY());
                 section.set("deathLocation.z", deathLocation.getZ());
-                section.set("deathLocation.yaw", (double) deathLocation.getYaw());
-                section.set("deathLocation.pitch", (double) deathLocation.getPitch());
             }
         }
     }

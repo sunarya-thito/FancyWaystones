@@ -16,4 +16,12 @@ public class Cost {
     public int getAmount() {
         return amount;
     }
+
+    @Override
+    public String toString() {
+        return "Cost{" +
+                "service=" + service.getId() +
+                ", amount=" + amount +
+                '}';
+    }
 }

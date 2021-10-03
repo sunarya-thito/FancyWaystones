@@ -29,6 +29,7 @@ Books:
           Type: ENDER_PEARL
   Death Book:
     Enable: true
+    Enable Listener: true
     Extra No Damage Time: 20s
     Ignore Unsafe Destination: true
     Check Height: 10

@@ -1,11 +1,12 @@
 package thito.fancywaystones.proxy;
 
-import net.md_5.bungee.api.config.*;
-import net.md_5.bungee.api.connection.*;
-import net.md_5.bungee.api.event.*;
+import net.md_5.bungee.api.*;
 import thito.fancywaystones.config.*;
+import thito.fancywaystones.location.TeleportState;
 import thito.fancywaystones.proxy.message.*;
 
+import java.sql.Ref;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.logging.*;
 
@@ -61,7 +62,22 @@ public class ProxyWaystoneBridge {
                 }
             }
             proxyServerList.add(handler.createProxyServer(player, ((ServerIntroductionMessage) message).getServerName()));
-            handler.getLogger().log(Level.INFO, "New Server: "+((ServerIntroductionMessage) message).getServerName()+" = "+player.getServerName());
+            handler.getLogger().log(Level.INFO, "New Server: " + ((ServerIntroductionMessage) message).getServerName() + " = " + player.getServerName());
+        } else if (message instanceof RequestInfoMessage) {
+            player.sendMessage(ChatColor.GRAY + "Server List");
+            for (ProxyServer server : proxyServerList) {
+                player.sendMessage(ChatColor.YELLOW + server.getName() + ChatColor.GRAY + " - " + ChatColor.WHITE + server.getAlias());
+            }
+        } else if (message instanceof RefundTeleportationMessage) {
+            String sourceServerName = ((RefundTeleportationMessage) message).getSource().getServerName();
+            ProxyServer sourceServer = getServerByAlias(sourceServerName);
+            if (sourceServer != null) {
+                player.connect(sourceServer, (result, error) -> {
+                    if (result != null) {
+                        sourceServer.sendData("fancywaystones:waystone", data, false);
+                    }
+                });
+            }
         } else if (message instanceof TeleportMessage) {
             String targetServerName = ((TeleportMessage) message).getTarget().getServerName();
             ProxyServer targetServer = getServerByAlias(targetServerName);
@@ -69,44 +85,66 @@ public class ProxyWaystoneBridge {
             if (targetServer != null) {
                 player.connect(targetServer, (result, error) -> {
                     if (result) {
-                        handler.runLater(() -> {
-                            targetServer.sendData("fancywaystones:waystone", data, false);
-                        });
+                        targetServer.sendData("fancywaystones:waystone", data, false);
                     } else {
-                        if (((TeleportMessage) message).isSendFeedback() && source != null) {
-                            player.sendData("fancywaystones:waystone",
-                                    new TeleportMessage(((TeleportMessage) message).getPlayerUUID(), false, null, ((TeleportMessage) message).getSource()).write());
-                        }
+                        sendRefund((TeleportMessage) message, source, TeleportState.INVALID);
                     }
                 });
             } else {
-                if (((TeleportMessage) message).isSendFeedback() && source != null) {
-                    player.sendData("fancywaystones:waystone",
-                            new TeleportMessage(((TeleportMessage) message).getPlayerUUID(), false, null, ((TeleportMessage) message).getSource()).write());
-                }
+                sendRefund((TeleportMessage) message, source, TeleportState.INVALID);
             }
         } else if (message instanceof WaystoneLoadRequestMessage) {
-            ProxyServer server = getServerByName(player.getServerName());
-            if (server != null) {
-                if (server.getPlayerCount() <= 0) {
-                    server.addRequest((WaystoneLoadRequestMessage) message);
-                } else {
-                    server.sendData("fancywaystones:waystone", message.write(), false);
+            String sourceServerName = player.getServerName();
+            for (ProxyServer server : getProxyServerList()) {
+                if (!server.getName().equals(sourceServerName)) {
+                    if (server.getPlayerCount() <= 0) {
+                        server.addRequest((WaystoneLoadRequestMessage) message);
+                    } else {
+                        server.sendData("fancywaystones:waystone", data, false);
+                    }
+                }
+            }
+        } else if (message instanceof WaystoneReloadRequestMessage) {
+            String sourceServerName = player.getServerName();
+            for (ProxyServer server : getProxyServerList()) {
+                if (!server.getName().equals(sourceServerName)) {
+                    if (server.getPlayerCount() <= 0) {
+                        server.addRequest((WaystoneReloadRequestMessage) message);
+                    } else {
+                        server.sendData("fancywaystones:waystone", data, false);
+                    }
                 }
             }
         } else if (message instanceof WaystoneUnloadRequestMessage) {
-            ProxyServer server = getServerByName(player.getServerName());
-            if (server != null) {
-                if (server.getPlayerCount() <= 0) {
-                    server.removeRequest((WaystoneUnloadRequestMessage) message);
-                } else {
-                    server.sendData("fancywaystones:waystone", message.write(), false);
+            String sourceServerName = player.getServerName();
+            for (ProxyServer server : getProxyServerList()) {
+                if (!server.getName().equals(sourceServerName)) {
+                    if (server.getPlayerCount() <= 0) {
+                        server.removeRequest((WaystoneUnloadRequestMessage) message);
+                    } else {
+                        server.sendData("fancywaystones:waystone", data, false);
+                    }
                 }
             }
         } else {
             for (ProxyServer server : proxyServerList) {
                 if (server.getName().equals(player.getServerName())) continue;
                 server.sendData("fancywaystones:waystone", data, false);
+            }
+        }
+    }
+
+    private void sendRefund(TeleportMessage message, SerializableLocation source, TeleportState state) {
+        if (message.isSendFeedback() && source != null) {
+            ProxyServer sourceServer = getServerByAlias(source.getServerName());
+            if (sourceServer != null) {
+                sourceServer.sendData("fancywaystones:waystone",
+                        new RefundTeleportationMessage(
+                                message.getSource(),
+                                message.getTarget(),
+                                message.getPlayerUUID(),
+                                state
+                        ).write(), false);
             }
         }
     }

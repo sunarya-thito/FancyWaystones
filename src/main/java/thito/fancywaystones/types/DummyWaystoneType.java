@@ -72,4 +72,9 @@ public class DummyWaystoneType implements WaystoneType {
     public boolean isBreakable(Player player, WaystoneData waystoneData) {
         return false;
     }
+
+    @Override
+    public boolean isBreakableByExplosion(WaystoneData waystoneData) {
+        return false;
+    }
 }

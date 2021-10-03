@@ -75,6 +75,11 @@ public class HologramComponent implements ComponentType {
             hologramTop.spawn();
         }
 
+        @Override
+        public boolean hasBlockHitBox() {
+            return false;
+        }
+
         public void supplyIsActive(Player player, Consumer<Boolean> result) {
             if (!waystoneData.getType().isActivationRequired()) {
                 result.accept(true);
@@ -117,6 +122,11 @@ public class HologramComponent implements ComponentType {
                 meta.setCustomName(isActive ? placeholder.replace("{language.hologram.active}") : placeholder.replace("{language.hologram.tip-click}"));
                 hologramBottom.updateMetadata(player, meta);
             }
+        }
+
+        @Override
+        public void destroyImmediately() {
+            destroy();
         }
 
         @Override

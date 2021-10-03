@@ -31,6 +31,10 @@ public class DeathBook {
         return FancyWaystones.getPlugin().getBooksYml().getConfig().getInt("Books.Death Book.Check Height");
     }
 
+    public boolean isEnableListener() {
+        return FancyWaystones.getPlugin().getBooksYml().getConfig().getBoolean("Books.Death Book.Enable Listener",true);
+    }
+
     public ItemStack createItem() {
         MinecraftItem item = new MinecraftItem();
         item.load(FancyWaystones.getPlugin().getBooksYml().getConfig().getConfigurationSection("Books.Death Book.Item"));

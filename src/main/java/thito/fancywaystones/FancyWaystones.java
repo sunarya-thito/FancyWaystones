@@ -150,17 +150,17 @@ public class FancyWaystones extends JavaPlugin {
         cmd.setTabCompleter(command);
         cmd.setExecutor(command);
 
-        submitIO(() -> {
-            for (World world : Bukkit.getWorlds()) {
-                for (Chunk chunk : world.getLoadedChunks()) {
-                    try {
-                        WaystoneManager.getManager().loadChunk(chunk);
-                    } catch (Throwable t) {
-                        getLogger().log(Level.SEVERE, "Failed to load chunk data X:"+chunk.getX()+" Z:"+chunk.getZ()+" W:"+world.getName(), t);
-                    }
-                }
-            }
-        });
+//        submitIO(() -> {
+//            for (World world : Bukkit.getWorlds()) {
+//                for (Chunk chunk : world.getLoadedChunks()) {
+//                    try {
+//                        WaystoneManager.getManager().loadChunk(chunk);
+//                    } catch (Throwable t) {
+//                        getLogger().log(Level.SEVERE, "Failed to load chunk data X:"+chunk.getX()+" Z:"+chunk.getZ()+" W:"+world.getName(), t);
+//                    }
+//                }
+//            }
+//        });
 
         checkTask.start();
     }
@@ -295,7 +295,7 @@ public class FancyWaystones extends JavaPlugin {
             getLogger().log(Level.INFO, "Shutting down "+ IOService.getActiveCount()+" IO tasks...");
             IOService.shutdown();
             try {
-                if (IOService.awaitTermination(30, TimeUnit.SECONDS)) {
+                if (!IOService.awaitTermination(30, TimeUnit.SECONDS)) {
                     getLogger().log(Level.SEVERE, "IO Service has been terminated too early! There is still a lot of tasks remaining!");
                 }
             } catch (InterruptedException ignored) {
@@ -348,28 +348,6 @@ public class FancyWaystones extends JavaPlugin {
         effectsYml.reload();
         modelsYml.reload();
         waystonesYml.reload();
-
-        submitIO(() -> {
-            String storageLoc = getConfig().getString("Storage.Location");
-            if (storageLoc.equals("FILE")) {
-                WaystoneManager.getManager().setStorage(createFileStorage());
-                getLogger().log(Level.INFO, "Uses File Waystone Storage");
-            } else if (storageLoc.equals("MYSQL")) {
-                try {
-                    MySQLWaystoneStorage mysqlStorage = createMySQLStorage();
-                    WaystoneManager.getManager().setStorage(mysqlStorage);
-                    getLogger().log(Level.INFO, "Uses MySQL Waystone Storage");
-                } catch (SQLException t) {
-                    getLogger().log(Level.SEVERE, "SQL connection error: ", t);
-                    t.printStackTrace();
-                    getLogger().log(Level.SEVERE, "Using VoidWaystoneStorage");
-                    WaystoneManager.getManager().setStorage(new VoidWaystoneStorage());
-                }
-            } else {
-                getLogger().log(Level.SEVERE, "Unknown Waystone Storage: "+storageLoc);
-                WaystoneManager.getManager().setStorage(new VoidWaystoneStorage());
-            }
-        });
 
         serverUUID = new ServerUUID();
         try {
@@ -431,6 +409,7 @@ public class FancyWaystones extends JavaPlugin {
             }
         }
 
+
         if (XMaterial.isNewVersion()) {
             getLogger().log(Level.INFO, "Preparing recipe manager: "+ModernRecipeManager.class);
             recipeManager = new ModernRecipeManager(this);
@@ -439,6 +418,27 @@ public class FancyWaystones extends JavaPlugin {
             recipeManager = new LegacyRecipeManager(this);
         }
         recipeManager.registerCustomRecipes();
+        submitIO(() -> {
+            String storageLoc = getConfig().getString("Storage.Location");
+            if (storageLoc.equals("FILE")) {
+                WaystoneManager.getManager().setStorage(createFileStorage());
+                getLogger().log(Level.INFO, "Uses File Waystone Storage");
+            } else if (storageLoc.equals("MYSQL")) {
+                try {
+                    MySQLWaystoneStorage mysqlStorage = createMySQLStorage();
+                    WaystoneManager.getManager().setStorage(mysqlStorage);
+                    getLogger().log(Level.INFO, "Uses MySQL Waystone Storage");
+                } catch (SQLException t) {
+                    getLogger().log(Level.SEVERE, "SQL connection error: ", t);
+                    t.printStackTrace();
+                    getLogger().log(Level.SEVERE, "Using VoidWaystoneStorage");
+                    WaystoneManager.getManager().setStorage(new VoidWaystoneStorage());
+                }
+            } else {
+                getLogger().log(Level.SEVERE, "Unknown Waystone Storage: "+storageLoc);
+                WaystoneManager.getManager().setStorage(new VoidWaystoneStorage());
+            }
+        });
     }
 
     public MySQLWaystoneStorage createMySQLStorage() throws SQLException {

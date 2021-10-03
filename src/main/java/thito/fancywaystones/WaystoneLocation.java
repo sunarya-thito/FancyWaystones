@@ -13,7 +13,7 @@ public interface WaystoneLocation {
     static boolean isCrossServer(double distance) {
         return Double.isNaN(distance);
     }
-    void transport(Player player, Consumer<TeleportState> stateConsumer);
+    void transport(Player player, WaystoneData source, WaystoneData target, Consumer<TeleportState> stateConsumer);
     double distance(WaystoneLocation location);
     int getBlockX();
     int getBlockY();

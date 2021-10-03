@@ -40,6 +40,7 @@ public abstract class WaystoneModelHandler {
 
     public abstract WaystoneData getData();
     public abstract void destroy();
+    public abstract void destroyImmediately();
     public abstract boolean isPart(Location loc);
     public abstract void update(Player player);
     public abstract void update();

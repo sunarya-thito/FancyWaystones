@@ -5,6 +5,7 @@ import org.bukkit.inventory.*;
 import thito.fancywaystones.*;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class MetaRecipe {
     private ShapedRecipe recipe;
@@ -61,11 +62,9 @@ public class MetaRecipe {
                 array[i] = array[i] + ' ';
             }
         }
-        System.out.println(
-                "\n["+array[0]+"]["+array[1]+"]["+array[2]+"]\n" +
-                "["+array[3]+"]["+array[4]+"]["+array[5]+"]\n" +
-                "["+array[6]+"]["+array[7]+"]["+array[8]+"]"
-        );
+        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[0]+"]["+array[1]+"]["+array[2]+"]");
+        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[3]+"]["+array[4]+"]["+array[5]+"]");
+        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[6]+"]["+array[7]+"]["+array[8]+"]");
     }
 
     public static void printMatrix(ItemStack[] matrix) {
@@ -77,11 +76,9 @@ public class MetaRecipe {
                 array[i] = array[i] + ' ';
             }
         }
-        System.out.println(
-                "\n["+array[0]+"]["+array[1]+"]["+array[2]+"]\n" +
-                        "["+array[3]+"]["+array[4]+"]["+array[5]+"]\n" +
-                        "["+array[6]+"]["+array[7]+"]["+array[8]+"]"
-        );
+        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[0]+"]["+array[1]+"]["+array[2]+"]");
+        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[3]+"]["+array[4]+"]["+array[5]+"]");
+        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[6]+"]["+array[7]+"]["+array[8]+"]");
     }
 
     static String toString(ItemStack itemStack) {

@@ -6,4 +6,6 @@ public interface ComponentHandler {
     ComponentType getType();
     void update(ComponentData data, WaystoneState state, Player player);
     void destroy();
+    void destroyImmediately();
+    boolean hasBlockHitBox();
 }

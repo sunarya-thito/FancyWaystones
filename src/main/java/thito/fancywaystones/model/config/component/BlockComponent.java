@@ -59,15 +59,6 @@ public class BlockComponent implements ComponentType {
             } catch (Throwable t) {
                 t.printStackTrace();
             }
-            block.setMetadata("FW:WD", new FixedMetadataValue(FancyWaystones.getPlugin(), wb));
-//            try {
-//                BlockData blockData = Bukkit.getServer().createBlockData(this.type);
-//                location.getBlock().setBlockData(blockData);
-//                return;
-//            } catch (Throwable t) {
-//                t.printStackTrace();
-//            }
-//
         }
     }
 
@@ -79,6 +70,11 @@ public class BlockComponent implements ComponentType {
             this.waystoneData = waystoneData;
             this.component = component;
             update(component.requestData(waystoneData, WaystoneState.INACTIVE), WaystoneState.INACTIVE, null);
+        }
+
+        @Override
+        public boolean hasBlockHitBox() {
+            return true;
         }
 
         public Component getComponent() {
@@ -97,6 +93,11 @@ public class BlockComponent implements ComponentType {
         @Override
         public void update(ComponentData data, WaystoneState state, Player player) {
             ((BlockComponentData) data).setBlockAt(waystoneData, component.getLocation());
+        }
+
+        @Override
+        public void destroyImmediately() {
+            // DO NOTHING AS IT REQUIRES TO BE EXECUTED IN DIFFERENT THREAD
         }
 
         @Override

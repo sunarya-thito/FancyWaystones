@@ -108,6 +108,7 @@ public class Util {
         if (player.isOnline()) {
             try {
                 ProtocolLibrary.getProtocolManager().sendServerPacket(player, packet);
+            } catch (IllegalArgumentException ignored) {
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }

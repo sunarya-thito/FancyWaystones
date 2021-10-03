@@ -202,36 +202,11 @@ public class WaystoneMenu implements AttachedMenu {
                     if (next == null) continue;
                     if (playerData.knowWaystone(next)) {
                         ConfigurationSection itemSection = itemDisplay.getConfigurationSection(next.getEnvironment().name());
-                        item.getPlaceholder().putContent(Placeholder.WAYSTONE, next);
-                        if (itemSection == null) {
-                            continue;
-                        }
-                        item.load(itemSection);
-                        item.addClickListener((inv, ph) -> {
-                            inv.getWhoClicked().closeInventory();
-                            FancyWaystones.getPlugin().submitIO(() -> {
-                                WaystoneData waystoneData = WaystoneManager.getManager().getData(next.getUUID());
-                                if (waystoneData != null) {
-                                    proceedTeleport(waystoneData);
-                                }
-                            });
-                        });
+                        createWaystoneIcon(item, next, itemSection);
                     } else {
                         ConfigurationSection itemSection = itemDisplay.getConfigurationSection("INACTIVE");
-                        item.getPlaceholder().putContent(Placeholder.WAYSTONE, next);
-                        if (itemSection == null) {
-                            continue;
-                        }
-                        item.load(itemSection);
-                        item.addClickListener((inv, ph) -> {
-                            inv.getWhoClicked().closeInventory();
-                            FancyWaystones.getPlugin().submitIO(() -> {
-                                WaystoneData waystoneData = WaystoneManager.getManager().getData(next.getUUID());
-                                if (waystoneData != null) {
-                                    proceedTeleport(waystoneData);
-                                }
-                            });
-                        });
+                        createWaystoneIcon(item, next, itemSection);
+                        continue;
                     }
                 }
             } else if (current == Objects.requireNonNull(sortItem.getString("Layout Key")).charAt(0)) {
@@ -390,6 +365,23 @@ public class WaystoneMenu implements AttachedMenu {
         }
         menu.setTitle(title);
         menu.open(playerData.getPlayer());
+    }
+
+    private void createWaystoneIcon(MinecraftItem item, WaystoneData next, ConfigurationSection itemSection) {
+        item.getPlaceholder().putContent(Placeholder.WAYSTONE, next);
+        if (itemSection == null) {
+            return;
+        }
+        item.load(itemSection);
+        item.addClickListener((inv, ph) -> {
+            inv.getWhoClicked().closeInventory();
+            FancyWaystones.getPlugin().submitIO(() -> {
+                WaystoneData waystoneData = WaystoneManager.getManager().getData(next.getUUID());
+                if (waystoneData != null) {
+                    proceedTeleport(waystoneData);
+                }
+            });
+        });
     }
 
     private void proceedTeleport(WaystoneData data) {

@@ -71,6 +71,9 @@ Waystone Types:
 #      - IS_OWNER
 #      - IS_MEMBER
 #      - IS_EXPLOSION
+#      - WORLD_WHITELIST:
+#          Worlds:
+#          - world_the_end
     # Unique Name Key
     # if set, the waystone name will be unique (in the specified context)
     # in this case, the waystone name is unique in "PUBLIC NAMES" context

@@ -2,10 +2,10 @@ package thito.fancywaystones.proxy.message;
 
 import java.util.*;
 
-public class WaystoneReloadMessage extends Message {
+public class WaystoneReloadRequestMessage extends Message {
     private UUID id;
 
-    public WaystoneReloadMessage(UUID id) {
+    public WaystoneReloadRequestMessage(UUID id) {
         this.id = id;
     }
 

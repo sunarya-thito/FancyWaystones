@@ -46,6 +46,8 @@ public class WaystoneData {
                 World world = ((LocalLocation) location).getLocation().getWorld();
                 if (world.isChunkLoaded(chunkX, chunkZ)) {
                     FancyWaystones.getPlugin().submitIO(this::directValidateBlock);
+                } else {
+                    WaystoneManager.getManager().putBlockData(((LocalLocation) location).getLocation(), getUUID());
                 }
             });
         }
@@ -63,6 +65,10 @@ public class WaystoneData {
         return attached;
     }
 
+    protected void _setWaystoneBlock(WaystoneBlock block) {
+        this.waystoneBlock = block;
+    }
+
     public synchronized void setWaystoneBlock(WaystoneBlock waystoneBlock) {
         FancyWaystones.checkIOThread();
         if (location instanceof LocalLocation) {
@@ -72,7 +78,7 @@ public class WaystoneData {
                 WaystoneManager.getManager().putBlockData(((LocalLocation) location).getLocation(), getUUID());
             }
         }
-        this.waystoneBlock = waystoneBlock;
+        _setWaystoneBlock(waystoneBlock);
     }
 
     public synchronized void addAttached(PlayerData playerData) {
@@ -187,10 +193,10 @@ public class WaystoneData {
 
     public void attemptSave() {
         if (location != null) {
-            ProxyWaystone pw = FancyWaystones.getPlugin().getProxyWaystone();
-            if (pw != null) pw.dispatchWaystoneReload(getUUID());
             FancyWaystones.getPlugin().submitIO(() -> {
                 WaystoneManager.getManager().saveWaystone(this);
+                ProxyWaystone pw = FancyWaystones.getPlugin().getProxyWaystone();
+                if (pw != null) pw.dispatchWaystoneReload(getUUID());
             });
         }
     }
@@ -251,10 +257,24 @@ public class WaystoneData {
     }
 
     public void teleport(WaystoneData source, Player player) {
-        location.transport(player, state -> {
+        if (source != null) {
+            source.getStatistics().setTotalVisits(source.getStatistics().getTotalVisits() + 1);
+            source.getStatistics().setLastVisit(System.currentTimeMillis());
+            source.attemptSave();
+        }
+
+        getStatistics().setTotalVisitors(getStatistics().getTotalVisitors() + 1);
+        getStatistics().setLastVisited(System.currentTimeMillis());
+        attemptSave();
+
+        location.transport(player, source, this, state -> {
             if (state == TeleportState.SUCCESS) {
                 player.setNoDamageTicks((int) (player.getNoDamageTicks() + FancyWaystones.getPlugin().getNoDamageTicks()));
                 FancyWaystones.getPlugin().postTeleport("Waystone", player, source, this);
+            } else if (state == TeleportState.UNSAFE) {
+                player.sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, this).replace("{language.unsafe-waystone}"));
+            } else if (state == TeleportState.INVALID) {
+                player.sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, this).replace("{language.invalid-waystone}"));
             }
         });
     }
