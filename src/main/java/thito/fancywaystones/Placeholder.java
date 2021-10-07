@@ -108,6 +108,9 @@ public class Placeholder {
             case Calendar.WEDNESDAY:
                 day = "{language.day-name.wednesday}";
                 break;
+            case Calendar.THURSDAY:
+                day = "{language.day-name.thursday}";
+                break;
             case Calendar.FRIDAY:
                 day = "{language.day-name.friday}";
                 break;

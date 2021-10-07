@@ -1,5 +1,8 @@
 package thito.fancywaystones.model.config.component;
 
+import dev.lone.itemsadder.api.CustomStack;
+import dev.lone.itemsadder.api.ItemsAdder;
+import io.th0rgal.oraxen.items.OraxenItems;
 import org.bukkit.*;
 import org.bukkit.configuration.serialization.*;
 import org.bukkit.entity.*;
@@ -47,10 +50,10 @@ public class ArmorStandComponent implements ComponentType {
         private ArmorStandMeta meta = new ArmorStandMeta();
         public ArmorStandComponentData(ComponentData other) {
             super(other);
-            meta.setHelmet((ItemStack) ConfigurationSerialization.deserializeObject(validateItemStack(getConfig().getMap("helmet").orElse(DEFAULT_ITEM))));
-            meta.setBoots((ItemStack) ConfigurationSerialization.deserializeObject(validateItemStack(getConfig().getMap("chestplate").orElse(DEFAULT_ITEM))));
-            meta.setLeggings((ItemStack) ConfigurationSerialization.deserializeObject(validateItemStack(getConfig().getMap("leggings").orElse(DEFAULT_ITEM))));
-            meta.setBoots((ItemStack) ConfigurationSerialization.deserializeObject(validateItemStack(getConfig().getMap("boots").orElse(DEFAULT_ITEM))));
+            meta.setHelmet(deserializeItemStack(getConfig().getMap("helmet").orElse(DEFAULT_ITEM)));
+            meta.setBoots(deserializeItemStack(getConfig().getMap("chestplate").orElse(DEFAULT_ITEM)));
+            meta.setLeggings(deserializeItemStack(getConfig().getMap("leggings").orElse(DEFAULT_ITEM)));
+            meta.setBoots(deserializeItemStack(getConfig().getMap("boots").orElse(DEFAULT_ITEM)));
             meta.setCustomNameVisible(getConfig().getBoolean("custom-name-visible").orElse(false));
             meta.setCustomName(getConfig().getString("custom-name").orElse(null));
             meta.setMarker(getConfig().getBoolean("marker").orElse(true));
@@ -69,6 +72,23 @@ public class ArmorStandComponent implements ComponentType {
         public ArmorStandMeta getMeta() {
             return meta;
         }
+
+        private static ItemStack deserializeItemStack(Map<String, Object> map) {
+            Object className = map.getOrDefault("class", "org.bukkit.inventory.ItemStack");
+            if ("Oraxen".equals(className)) {
+                try {
+                    return OraxenItems.getItemById(String.valueOf(map.get("item-id"))).build();
+                } catch (Throwable ignored) {
+                }
+            }
+            if ("ItemsAdder".equals(className)) {
+                try {
+                    return CustomStack.getInstance(String.valueOf(map.get("namespace-id"))).getItemStack();
+                } catch (Throwable ignored) {
+                }
+            }
+            return (ItemStack) ConfigurationSerialization.deserializeObject(validateItemStack(map));
+        };
 
         private static Map<String, Object> validateItemStack(Map<String, Object> map) {
             map.putIfAbsent("==", map.getOrDefault("class", "org.bukkit.inventory.ItemStack"));

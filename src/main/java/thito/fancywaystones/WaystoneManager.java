@@ -1,5 +1,6 @@
 package thito.fancywaystones;
 
+import dev.lone.itemsadder.api.ItemsAdder;
 import org.bukkit.*;
 import org.bukkit.configuration.*;
 import org.bukkit.configuration.file.*;
@@ -70,7 +71,13 @@ public class WaystoneManager {
         componentTypeMap.put("armorstand", new ArmorStandComponent());
 
         try {
+            Class.forName("dev.lone.itemsadder.api.ItemsAdder");
             componentTypeMap.put("items-adder", new ItemsAdderCustomBlockComponent());
+        } catch (Throwable ignored) {
+        }
+        try {
+            Class.forName("io.th0rgal.oraxen.OraxenPlugin");
+            componentTypeMap.put("oraxen", new OraxenCustomBlockComponent());
         } catch (Throwable ignored) {
         }
     }

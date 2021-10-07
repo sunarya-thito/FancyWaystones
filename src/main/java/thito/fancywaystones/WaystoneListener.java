@@ -88,7 +88,9 @@ public class WaystoneListener implements Listener {
                 wb.destroy(reason);
                 WaystoneManager.getManager().createWaystoneItem(wb, false, result -> {
                     Location location = ((LocalLocation) wb.getLocation()).getLocation();
-                    location.getWorld().dropItemNaturally(location.clone().add(.5, 0, .5), result);
+                    Util.submitSync(() -> {
+                        location.getWorld().dropItemNaturally(location.clone().add(.5, 0, .5), result);
+                    });
                 });
             });
         }
@@ -145,17 +147,19 @@ public class WaystoneListener implements Listener {
             ItemStack used = e.getPlayer().getItemInHand();
             FancyWaystones.getPlugin().submitIO(() -> {
                 data.destroy(e.getPlayer().getName());
-                if (data.getType().shouldDrop(e.getPlayer(), data)) {
-                    WaystoneManager.getManager().createWaystoneItem(data,
-                            used.hasItemMeta() && used.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH),
-                            result -> {
-                                if (FancyWaystones.getPlugin().isEnabled()) {
-                                    Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
-                                        block.getWorld().dropItemNaturally(block.getLocation().clone().add(.5, 0, .5), result);
-                                    });
-                                }
-                            });
-                }
+                Util.submitSync(() -> {
+                    if (data.getType().shouldDrop(e.getPlayer(), data)) {
+                        WaystoneManager.getManager().createWaystoneItem(data,
+                                used.hasItemMeta() && used.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH),
+                                result -> {
+                                    if (FancyWaystones.getPlugin().isEnabled()) {
+                                        Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
+                                            block.getWorld().dropItemNaturally(block.getLocation().clone().add(.5, 0, .5), result);
+                                        });
+                                    }
+                                });
+                    }
+                });
             });
         }
     }
@@ -202,7 +206,9 @@ public class WaystoneListener implements Listener {
                             } else {
                                 FancyWaystones.getPlugin().submitIO(() -> {
                                     PlayerData data = WaystoneManager.getManager().getPlayerData(e.getPlayer());
-                                    handlePlayerClick(e, handler, data);
+                                    Util.submitSync(() -> {
+                                        handlePlayerClick(e, handler, data);
+                                    });
                                 });
                             }
                             return;
@@ -278,7 +284,9 @@ public class WaystoneListener implements Listener {
             } else {
                 if (!handler.getData().getBlacklist().contains(new WaystoneMember(data.getUUID())) &&
                         handler.getData().getType().hasActivationAccess(e.getPlayer(), handler.getData())) {
-                    data.addWaystone(handler.getData().getUUID());
+                    FancyWaystones.getPlugin().submitIO(() -> {
+                        data.addWaystone(handler.getData().getUUID());
+                    });
                 } else {
                     e.getPlayer().sendMessage(new Placeholder()
                             .putContent(Placeholder.PLAYER, e.getPlayer())

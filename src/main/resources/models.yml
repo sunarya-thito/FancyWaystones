@@ -27,6 +27,16 @@ model:
       # > custom-block (the custom block name)
       #
       # format for itemstack can be seen at https://www.spigotmc.org/wiki/itemstack-serialization/ (replace "==" with "class")
+      # you can use this format for specific plugins:
+      #
+      # FOR ORAXEN
+      # class: Oraxen
+      # item-id: <your oraxen item id>
+      #
+      # FOR ITEMSADDER
+      # class: ItemsAdder
+      # namespace-id: <your itemsadder item namespace id>
+      #
       # format for poses
       # <pose>:
       #   x: <x>

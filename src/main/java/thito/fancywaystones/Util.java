@@ -381,6 +381,12 @@ public class Util {
         });
     }
 
+    public static void submitSync(Runnable r) {
+        if (FancyWaystones.getPlugin().isEnabled()) {
+            Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), r);
+        }
+    }
+
     public static boolean checkDirectAccess(Player player, Block block) {
         BlockBreakEvent event = new BlockBreakEvent(block, player);
         event.setCancelled(false);
