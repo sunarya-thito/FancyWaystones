@@ -6,6 +6,7 @@ author: Septogeddon
 load: STARTUP
 softdepend:
   - ProtocolLib
+  - ItemsAdder
 commands:
   fancywaystones:
     description: Waystone command
