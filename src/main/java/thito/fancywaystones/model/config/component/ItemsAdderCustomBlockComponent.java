@@ -29,7 +29,8 @@ public class ItemsAdderCustomBlockComponent implements ComponentType {
         private CustomBlock customBlock;
         public ItemsAdderCustomBlockComponentData(ComponentData other) {
             super(other);
-            customBlock = CustomBlock.getInstance(getConfig().getString("custom-block").orElse(null));
+            String namespacedID = getConfig().getString("custom-block").orElse(null);
+            customBlock = namespacedID == null ? null : CustomBlock.getInstance(namespacedID);
         }
 
         public CustomBlock getCustomBlock() {

@@ -14,6 +14,7 @@ import org.mozilla.javascript.*;
 import thito.fancywaystones.books.*;
 import thito.fancywaystones.economy.*;
 import thito.fancywaystones.effect.Effect;
+import thito.fancywaystones.hook.LateHookLoader;
 import thito.fancywaystones.model.*;
 import thito.fancywaystones.proxy.*;
 import thito.fancywaystones.recipes.*;
@@ -106,9 +107,10 @@ public class FancyWaystones extends JavaPlugin {
         waystonesYml = new Configuration("waystones.yml", false);
         new WaystoneManager(this);
 
-        if (!getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+        PluginManager pluginManager = getServer().getPluginManager();
+        if (!pluginManager.isPluginEnabled("ProtocolLib")) {
             getLogger().log(Level.SEVERE, "This plugin requires ProtocolLib to be installed and enabled on your server!");
-            getServer().getPluginManager().disablePlugin(this);
+            pluginManager.disablePlugin(this);
             return;
         }
         success = true;
@@ -134,11 +136,13 @@ public class FancyWaystones extends JavaPlugin {
         } catch (Throwable t) {
         }
 
-        getServer().getPluginManager().registerEvents(new WaystoneListener(), this);
-        getServer().getPluginManager().registerEvents(new MenuListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerInput(), this);
+        pluginManager.registerEvents(new WaystoneListener(), this);
+        pluginManager.registerEvents(new MenuListener(), this);
+//        pluginManager.registerEvents(new PlayerInput(), this);
+        LateHookLoader lateHookLoader = new LateHookLoader();
+        pluginManager.registerEvents(lateHookLoader, this);
         if (XMaterial.isNewVersion()) {
-            getServer().getPluginManager().registerEvents(new ModernWaystoneListener(), this);
+            pluginManager.registerEvents(new ModernWaystoneListener(), this);
         }
         deathBook = new DeathBook();
         teleportationBook = new TeleportationBook();
@@ -161,7 +165,7 @@ public class FancyWaystones extends JavaPlugin {
 //                }
 //            }
 //        });
-
+        lateHookLoader.checkStatus();
         checkTask.start();
     }
 
