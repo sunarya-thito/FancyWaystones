@@ -37,6 +37,7 @@
                 <copy />
                 <copy />
                 <copy />
+                <copy />
               </target>
             </configuration>
           </execution>
@@ -46,12 +47,20 @@
   </build>
   <repositories>
     <repository>
-      <id>CustomBlockData</id>
-      <url>https://repo.jeff-media.de/maven2</url>
+      <id>spigot-repo</id>
+      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+    </repository>
+    <repository>
+      <id>bungeecord-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </repository>
     <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
+    </repository>
+    <repository>
+      <id>CustomBlockData</id>
+      <url>https://repo.jeff-media.de/maven2</url>
     </repository>
     <repository>
       <id>dmulloy2-repo</id>
@@ -62,15 +71,17 @@
       <url>https://repo.codemc.io/repository/maven-snapshots/</url>
     </repository>
     <repository>
-      <id>spigot-repo</id>
-      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-    </repository>
-    <repository>
-      <id>bungeecord-repo</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <id>velocity</id>
+      <url>https://nexus.velocitypowered.com/repository/maven-public/</url>
     </repository>
   </repositories>
   <dependencies>
+    <dependency>
+      <groupId>com.velocitypowered</groupId>
+      <artifactId>velocity-api</artifactId>
+      <version>3.0.1</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>net.md-5</groupId>
       <artifactId>bungeecord-api</artifactId>
@@ -111,8 +122,9 @@
     <dependency>
       <groupId>com.github.oraxen</groupId>
       <artifactId>oraxen</artifactId>
-      <version>-SNAPSHOT</version>
-      <scope>provided</scope>
+      <version>master-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/library/oraxen-master-8fa12aab68-1-all.jar</systemPath>
     </dependency>
   </dependencies>
   <properties>

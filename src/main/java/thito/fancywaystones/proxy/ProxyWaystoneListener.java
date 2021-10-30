@@ -11,6 +11,7 @@ import thito.fancywaystones.proxy.message.*;
 import thito.fancywaystones.task.*;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class ProxyWaystoneListener implements PluginMessageListener {
     @Override
@@ -21,6 +22,8 @@ public class ProxyWaystoneListener implements PluginMessageListener {
                 FancyWaystones.getPlugin().submitIO(() -> {
                     WaystoneManager.getManager().refresh(((WaystoneReloadRequestMessage) message).getId());
                 });
+            } else if (message instanceof ServerIntroductionResponseMessage) {
+//                FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Found a response from a Proxy server! Do \"/ws info\" to see available server list.");
             } else if (message instanceof WaystoneDestroyMessage) {
                 FancyWaystones.getPlugin().submitIO(() -> {
                     WaystoneData waystoneData = WaystoneManager.getManager().getData(((WaystoneDestroyMessage) message).getId());

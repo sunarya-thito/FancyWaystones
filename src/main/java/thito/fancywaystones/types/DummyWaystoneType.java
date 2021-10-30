@@ -14,6 +14,11 @@ public class DummyWaystoneType implements WaystoneType {
     }
 
     @Override
+    public boolean canRedirectCompass(Player player, WaystoneData waystoneData) {
+        return false;
+    }
+
+    @Override
     public boolean isAlwaysLoaded() {
         return false;
     }

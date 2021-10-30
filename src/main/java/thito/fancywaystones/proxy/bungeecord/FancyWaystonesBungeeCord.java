@@ -21,7 +21,6 @@ public class FancyWaystonesBungeeCord extends Plugin implements Listener, ProxyH
 
     private static FancyWaystonesBungeeCord instance;
     private Map<ProxiedPlayer, BiConsumer<Boolean, Throwable>> callbackMap = new HashMap<>();
-    private Map<String, ServerInfo> serverMap = new HashMap<>();
     private ProxyWaystoneBridge bridge;
 
     public static FancyWaystonesBungeeCord getInstance() {
@@ -58,7 +57,7 @@ public class FancyWaystonesBungeeCord extends Plugin implements Listener, ProxyH
         try {
             Files.write(target.toPath(), Section.toString(bridge.saveConfig()).getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            getLogger().log(Level.SEVERE, "Failed to save config.yml");
+            getLogger().log(Level.SEVERE, "Failed to save config.yml", e);
         }
     }
 

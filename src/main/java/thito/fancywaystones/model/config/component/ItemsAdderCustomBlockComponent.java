@@ -26,16 +26,22 @@ public class ItemsAdderCustomBlockComponent implements ComponentType {
     }
 
     public static class ItemsAdderCustomBlockComponentData extends ComponentData {
-        private CustomBlock customBlock;
+//        private CustomBlock customBlock;
+        private String namespaceId;
         public ItemsAdderCustomBlockComponentData(ComponentData other) {
             super(other);
-            String namespacedID = getConfig().getString("custom-block").orElse(null);
-            customBlock = namespacedID == null ? null : CustomBlock.getInstance(namespacedID);
+            namespaceId = getConfig().getString("custom-block").orElse(null);
+//            customBlock = namespacedID == null ? null : CustomBlock.getInstance(namespacedID);
         }
 
-        public CustomBlock getCustomBlock() {
-            return customBlock;
+
+        public String getNamespaceId() {
+            return namespaceId;
         }
+
+//        public CustomBlock getCustomBlock() {
+//            return customBlock;
+//        }
     }
 
     public class Handler implements ComponentHandler {
@@ -65,7 +71,9 @@ public class ItemsAdderCustomBlockComponent implements ComponentType {
                 Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> update(finalData, state, player));
                 return;
             }
-            CustomBlock customBlock = ((ItemsAdderCustomBlockComponentData) data).getCustomBlock();
+            String nm = ((ItemsAdderCustomBlockComponentData) data).getNamespaceId();
+            if (nm == null) return;
+            CustomBlock customBlock = CustomBlock.getInstance(nm);
             if (customBlock != null && oldCustomBlock != customBlock && !customBlock.isPlaced()) {
                 customBlock.place(component.getLocation());
                 oldCustomBlock = customBlock;

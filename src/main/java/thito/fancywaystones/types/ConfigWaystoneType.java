@@ -15,7 +15,7 @@ public class ConfigWaystoneType implements WaystoneType {
     private final String id;
     private final String name;
     private final boolean alwaysLoaded, alwaysListed, requiresActivation, purge;
-    private final Condition accessCondition, activationCondition, purgeDropsCondition, breakCondition, dropCondition;
+    private final Condition accessCondition, activationCondition, purgeDropsCondition, breakCondition, dropCondition, redirectCompassCondition;
     private final String uniqueKey;
 
     private final boolean multiWorldCostEnabled, multiDimensionalCostEnabled, multiServerCostEnabled, distanceCostEnabled, basicFeeEnabled;
@@ -40,6 +40,7 @@ public class ConfigWaystoneType implements WaystoneType {
         purgeDropsCondition = Condition.fromConfig(new ListSection(section.getList("Purge Drops")));
         breakCondition = Condition.fromConfig(new ListSection(section.getList("Breakable")));
         dropCondition = Condition.fromConfig(new ListSection(section.getList("Drops")));
+        redirectCompassCondition = Condition.fromConfig(new ListSection(section.getList("Compass Redirection")));
         uniqueKey = section.getString("Unique Names");
         multiWorldCostEnabled = section.getBoolean("Price.Multiworld.Enable");
         multiDimensionalCostEnabled = section.getBoolean("Price.Multidimensional.Enable");
@@ -53,6 +54,11 @@ public class ConfigWaystoneType implements WaystoneType {
         multiServerCostMap = parseCost(section.getConfigurationSection("Price.Multiserver.Cost"));
         distanceCostMap = parseCost(section.getConfigurationSection("Price.Distance.Cost"));
         basicFeeCostMap = parseCost(section.getConfigurationSection("Price.Basic Fee.Cost"));
+    }
+
+    @Override
+    public boolean canRedirectCompass(Player player, WaystoneData waystoneData) {
+        return redirectCompassCondition.test(new Placeholder().putContent(Placeholder.PLAYER, player).putContent(Placeholder.WAYSTONE, waystoneData));
     }
 
     private static Map<EconomyService, Integer> parseCost(ConfigurationSection section) {

@@ -122,7 +122,7 @@ public class FileWaystoneStorage implements WaystoneStorage {
         File directory = new File(waystonesDirectory, type.name());
         File[] list = directory.listFiles();
         if (list != null) {
-            ArrayList<byte[]> dataList = new ArrayList<>();
+            ArrayList<byte[]> dataList = new ArrayList<>(list.length);
             for (File f : list) {
                 try {
                     dataList.add(Files.readAllBytes(f.toPath()));
@@ -130,6 +130,7 @@ public class FileWaystoneStorage implements WaystoneStorage {
                     t.printStackTrace();
                 }
             }
+            return dataList;
         }
         return Collections.emptyList();
     }

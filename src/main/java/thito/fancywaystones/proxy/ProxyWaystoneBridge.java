@@ -1,14 +1,12 @@
 package thito.fancywaystones.proxy;
 
-import net.md_5.bungee.api.*;
-import thito.fancywaystones.config.*;
+import thito.fancywaystones.config.MapSection;
+import thito.fancywaystones.config.Section;
 import thito.fancywaystones.location.TeleportState;
 import thito.fancywaystones.proxy.message.*;
 
-import java.sql.Ref;
-import java.sql.SQLOutput;
-import java.util.*;
-import java.util.logging.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProxyWaystoneBridge {
     private List<ProxyServer> proxyServerList = new ArrayList<>();
@@ -58,15 +56,19 @@ public class ProxyWaystoneBridge {
         if (message instanceof ServerIntroductionMessage) {
             for (ProxyServer server : proxyServerList) {
                 if (server.getAlias().equals(((ServerIntroductionMessage) message).getServerName())) {
+                    server.sendData("fancywaystones:waystone", new ServerIntroductionResponseMessage().write(), false);
                     return;
                 }
             }
-            proxyServerList.add(handler.createProxyServer(player, ((ServerIntroductionMessage) message).getServerName()));
-            handler.getLogger().log(Level.INFO, "New Server: " + ((ServerIntroductionMessage) message).getServerName() + " = " + player.getServerName());
+            ProxyServer proxyServer = handler.createProxyServer(player, ((ServerIntroductionMessage) message).getServerName());
+            if (proxyServer != null) {
+                proxyServerList.add(proxyServer);
+                proxyServer.sendData("fancywaystones:waystone", new ServerIntroductionResponseMessage().write(), false);
+            }
         } else if (message instanceof RequestInfoMessage) {
-            player.sendMessage(ChatColor.GRAY + "Server List");
+            player.sendMessage("Server List");
             for (ProxyServer server : proxyServerList) {
-                player.sendMessage(ChatColor.YELLOW + server.getName() + ChatColor.GRAY + " - " + ChatColor.WHITE + server.getAlias());
+                player.sendMessage(server.getName() + " - " + server.getAlias());
             }
         } else if (message instanceof RefundTeleportationMessage) {
             String sourceServerName = ((RefundTeleportationMessage) message).getSource().getServerName();

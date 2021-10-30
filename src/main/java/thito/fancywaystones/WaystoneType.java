@@ -22,6 +22,7 @@ public interface WaystoneType {
 
     List<Cost> calculateCost(WaystoneLocation source, WaystoneData target);
 
+    boolean canRedirectCompass(Player player, WaystoneData waystoneData);
     boolean shouldDrop(Player player, WaystoneData waystoneData);
     boolean shouldDropPurge(WaystoneData waystoneData);
     boolean hasAccess(Player player, WaystoneData waystoneData);

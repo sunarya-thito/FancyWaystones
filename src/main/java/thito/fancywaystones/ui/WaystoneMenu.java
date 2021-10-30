@@ -206,7 +206,6 @@ public class WaystoneMenu implements AttachedMenu {
                     } else {
                         ConfigurationSection itemSection = itemDisplay.getConfigurationSection("INACTIVE");
                         createWaystoneIcon(item, next, itemSection);
-                        continue;
                     }
                 }
             } else if (current == Objects.requireNonNull(sortItem.getString("Layout Key")).charAt(0)) {

@@ -39,7 +39,7 @@ public class FancyWaystones extends JavaPlugin {
         return instance;
     }
 
-    private long[] storageReadWriteSpeed = new long[5];
+    private final long[] storageReadWriteSpeed = new long[5];
     private Context context;
     private Configuration guiYml;
     private Configuration messagesYml;
@@ -58,6 +58,7 @@ public class FancyWaystones extends JavaPlugin {
 
     private Thread serviceThread, IOServiceThread;
 
+    private ServerIntroductionTask introductionTask;
     private WaystoneInactivityCheckTask checkTask;
     private ProxyWaystone proxyWaystone;
     private ServerUUID serverUUID;
@@ -107,6 +108,8 @@ public class FancyWaystones extends JavaPlugin {
         waystonesYml = new Configuration("waystones.yml", false);
         new WaystoneManager(this);
 
+        introductionTask = new ServerIntroductionTask();
+
         PluginManager pluginManager = getServer().getPluginManager();
         if (!pluginManager.isPluginEnabled("ProtocolLib")) {
             getLogger().log(Level.SEVERE, "This plugin requires ProtocolLib to be installed and enabled on your server!");
@@ -140,6 +143,7 @@ public class FancyWaystones extends JavaPlugin {
         pluginManager.registerEvents(new MenuListener(), this);
 //        pluginManager.registerEvents(new PlayerInput(), this);
         LateHookLoader lateHookLoader = new LateHookLoader();
+        lateHookLoader.checkStatus();
         pluginManager.registerEvents(lateHookLoader, this);
         if (XMaterial.isNewVersion()) {
             pluginManager.registerEvents(new ModernWaystoneListener(), this);
@@ -165,8 +169,11 @@ public class FancyWaystones extends JavaPlugin {
 //                }
 //            }
 //        });
-        lateHookLoader.checkStatus();
         checkTask.start();
+    }
+
+    public ServerIntroductionTask getIntroductionTask() {
+        return introductionTask;
     }
 
     public ServerUUID getServerUUID() {

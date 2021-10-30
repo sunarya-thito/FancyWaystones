@@ -43,6 +43,21 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                         sender.sendMessage(prefix + "Configuration has been reloaded! Loaded waystone might not reloaded, server restart is required for efficient waystone data reload.");
                         return true;
                     }
+                    if (args[0].equalsIgnoreCase("introduce")) {
+                        ProxyWaystone proxyWaystone = FancyWaystones.getPlugin().getProxyWaystone();
+                        if (proxyWaystone == null) {
+                            sender.sendMessage(prefix + "FancyWaystone is not on Proxy Mode!");
+                            return true;
+                        }
+                        Player player = sender instanceof Player ? (Player) sender : Bukkit.getOnlinePlayers().stream().findAny().orElse(null);
+                        if (player == null) {
+                            sender.sendMessage(prefix + "Must be at least 1 player online on the server!");
+                            return true;
+                        }
+                        proxyWaystone.introduceServer(player);
+                        sender.sendMessage(prefix + "Server introduced to the proxy server for Player: "+player.getName());
+                        return true;
+                    }
                     if (args[0].equalsIgnoreCase("mysqltolocal")) {
                         if (args.length > 1 && args[1].equals("CONFIRM")) {
                             sender.sendMessage(prefix + "Moving data from MySQL to Local...");
@@ -397,6 +412,7 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
         try {
             if (sender.hasPermission("fancywaystones.admin")) {
                 if (args.length == 1) {
+                    suggestions.add("introduce");
                     suggestions.add("reload");
                     suggestions.add("give");
                     suggestions.add("giveBook");

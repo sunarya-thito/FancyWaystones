@@ -100,10 +100,10 @@ public class WaystoneListener implements Listener {
     public void join(PlayerJoinEvent e) {
         ProxyWaystone proxyWaystone = FancyWaystones.getPlugin().getProxyWaystone();
         if (proxyWaystone != null) {
-            Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
+            Bukkit.getScheduler().runTaskLater(FancyWaystones.getPlugin(), () -> {
                 // Introduce the server UUID to the proxy server
                 proxyWaystone.introduceServer(e.getPlayer());
-            });
+            }, 20L);
         }
     }
 
@@ -193,6 +193,15 @@ public class WaystoneListener implements Listener {
                             } catch (Throwable ignored) {
                             }
                             e.setCancelled(true);
+                            if (item != null && item.getType() == Material.COMPASS && !e.getPlayer().isSneaking()) {
+                                if (handler.getData().getType().canRedirectCompass(e.getPlayer(), handler.getData())) {
+                                    WaystoneLocation location = handler.getData().getLocation();
+                                    if (location instanceof LocalLocation) {
+                                        e.getPlayer().setCompassTarget(((LocalLocation) location).getLocation());
+                                    }
+                                }
+                                return;
+                            }
                             if (handler.getData().getEnvironment() != e.getPlayer().getLocation().getWorld().getEnvironment()) {
                                 e.getPlayer().sendMessage(new Placeholder()
                                         .putContent(Placeholder.PLAYER, e.getPlayer())
@@ -411,35 +420,38 @@ public class WaystoneListener implements Listener {
             usedItem.setAmount(1);
             FancyWaystones.getPlugin().submitIO(() -> {
                 WaystoneData data = FancyWaystones.getPlugin().getTeleportationBook().getWaystoneData(usedItem);
-                if (data != null) {
-                    new TeleportationBookWarmUpTask(e.getPlayer(), data) {
-                        @Override
-                        public void onDone() {
-                            data.getLocation().transport(e.getPlayer(), null, data, state -> {
-                                if (state != TeleportState.SUCCESS) {
-                                    Util.placeInHand(e.getPlayer(), usedItem);
-                                } else {
-                                    e.getPlayer().setNoDamageTicks((int) (e.getPlayer().getNoDamageTicks() + FancyWaystones.getPlugin().getNoDamageTicks()));
-                                }
-                                if (state == TeleportState.UNSAFE) {
-                                    e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, data).replace("{language.unsafe-waystone}"));
-                                } else if (state == TeleportState.INVALID) {
-                                    e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, data).replace("{language.invalid-waystone}"));
-                                }
-                            });
-                        }
+                FancyWaystones.getPlugin().submit(() -> {
+                    if (data != null) {
+                        new TeleportationBookWarmUpTask(e.getPlayer(), data) {
+                            @Override
+                            public void onDone() {
+                                data.getLocation().transport(e.getPlayer(), null, data, state -> {
+                                    if (state != TeleportState.SUCCESS) {
+                                        Util.placeInHand(e.getPlayer(), usedItem);
+                                    } else {
+                                        FancyWaystones.getPlugin().postTeleport("Teleportation Book", e.getPlayer(), null, data);
+                                        e.getPlayer().setNoDamageTicks((int) (e.getPlayer().getNoDamageTicks() + FancyWaystones.getPlugin().getNoDamageTicks()));
+                                    }
+                                    if (state == TeleportState.UNSAFE) {
+                                        e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, data).replace("{language.unsafe-waystone}"));
+                                    } else if (state == TeleportState.INVALID) {
+                                        e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, data).replace("{language.invalid-waystone}"));
+                                    }
+                                });
+                            }
 
-                        @Override
-                        public void onCancelled() {
-                            Util.placeInHand(e.getPlayer(), usedItem);
+                            @Override
+                            public void onCancelled() {
+                                Util.placeInHand(e.getPlayer(), usedItem);
+                            }
+                        }.schedule(FancyWaystones.getPlugin().getService(), 1L, 1L);
+                    } else {
+                        if (FancyWaystones.getPlugin().getTeleportationBook().canChargeBack()) {
+                            Util.placeInHand(e.getPlayer(), FancyWaystones.getPlugin().getTeleportationBook().createEmptyItem());
                         }
-                    }.schedule(FancyWaystones.getPlugin().getService(), 1L, 1L);
-                } else {
-                    if (FancyWaystones.getPlugin().getTeleportationBook().canChargeBack()) {
-                        Util.placeInHand(e.getPlayer(), FancyWaystones.getPlugin().getTeleportationBook().createEmptyItem());
+                        e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.PLAYER, e.getPlayer()).replace("{language.invalid-unknown-waystone}"));
                     }
-                    e.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.PLAYER, e.getPlayer()).replace("{language.invalid-unknown-waystone}"));
-                }
+                });
             });
             return true;
         }

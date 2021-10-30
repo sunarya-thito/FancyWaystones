@@ -7,6 +7,7 @@ import thito.fancywaystones.config.*;
 import thito.fancywaystones.location.*;
 
 import java.util.*;
+import java.util.logging.Level;
 
 public class ComponentConfig {
     private ComponentType type;
@@ -30,7 +31,10 @@ public class ComponentConfig {
             componentDataList.add(componentData);
         }
         data = componentDataList.toArray(new ComponentData[0]);
-        if (type == null) return;
+        if (type == null) {
+            FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Failed to find type "+section.getString("type").orElse(null));
+            return;
+        }
         type.bakeData(data);
     }
 

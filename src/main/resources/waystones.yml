@@ -24,6 +24,9 @@ Waystone Types:
     # Should the waystone drop the waystone item when purged?
     Purge Drops:
       - NEVER
+    # Should players be able to right-click with compass to set the compass direction to the waystone location?
+    Compass Redirection:
+      - ALWAYS
     # The criteria of who can access the waystone
     Access:
       - ALWAYS
@@ -119,6 +122,8 @@ Waystone Types:
     Purge Inactive: true
     Purge Drops:
       - ALWAYS
+    Compass Redirection:
+      - ALWAYS
     Access:
       - ALWAYS
     Activation:
@@ -162,6 +167,8 @@ Waystone Types:
     Always Listed: false
     Requires Activation: true
     Purge Inactive: true
+    Compass Redirection:
+      - ALWAYS
     Purge Drops:
       - ALWAYS
     Access:
@@ -209,6 +216,8 @@ Waystone Types:
     Always Listed: false
     Requires Activation: true
     Purge Inactive: true
+    Compass Redirection:
+      - ALWAYS
     Purge Drops:
       - ALWAYS
     Access:

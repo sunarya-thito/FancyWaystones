@@ -32,6 +32,7 @@ public class WaystoneManager {
         return manager;
     }
 
+    private boolean hasEverBeenLoaded;
     private WaystoneStorage storage;
     private FancyWaystones plugin;
     private List<PlayerData> playerDataList = new ArrayList<>();
@@ -234,31 +235,45 @@ public class WaystoneManager {
 
     public void setStorage(WaystoneStorage storage) {
         checkIOThread();
-        for (World world : Bukkit.getWorlds()) {
-            for (Chunk c : world.getLoadedChunks()) {
-                try {
-                    unloadChunk(c);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        Logger logger = FancyWaystones.getPlugin().getLogger();
+        int countA = 0, countB = 0;
         for (WaystoneData snapshot : loadedData) {
             WaystoneBlock waystoneBlock = snapshot.getWaystoneBlock();
             if (waystoneBlock != null) {
                 waystoneBlock.destroyModel();
+                countA++;
+            } else {
+                countB++;
             }
             saveWaystone(snapshot);
         }
+        logger.log(Level.INFO, "Unloaded "+countA+" physical waystones");
+        logger.log(Level.INFO, "Unloaded "+countB+" virtual waystones");
+        for (World world : Bukkit.getWorlds()) {
+            int count = 0;
+            for (Chunk c : world.getLoadedChunks()) {
+                try {
+                    unloadChunk(c);
+                    count++;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            logger.log(Level.INFO, "Unloaded "+count+" chunk data from "+world.getName());
+        }
+        int countP = 0;
         for (PlayerData playerData : playerDataList) {
             try {
                 savePlayerData(playerData);
+                countP++;
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        logger.log(Level.INFO, "Unloaded "+countP+" player datas");
         if (this.storage != null) {
             this.storage.close();
+            logger.log(Level.INFO, "Closed old storage connection");
         }
         playerDataList.clear();
         loadedData.clear();
@@ -269,12 +284,14 @@ public class WaystoneManager {
                     // PAPER FORKS TENDS TO HAVE THE WORLD LAZY LOADED
                     for (WaystoneType type : getTypes()) {
                         if (type.isAlwaysLoaded()) {
+                            int count = 0;
                             try {
                                 List<byte[]> dataList = storage.readWaystones(type);
                                 if (dataList != null) {
                                     for (byte[] data : dataList) {
                                         try {
-                                            WaystoneData waystoneData = _loadWaystoneData(data);
+                                            _loadWaystoneData(data);
+                                            count++;
                                         } catch (Throwable t) {
                                             plugin.getLogger().log(Level.SEVERE, "Failed to load waystone data", t);
                                         }
@@ -283,18 +300,23 @@ public class WaystoneManager {
                             } catch (Throwable t) {
                                 plugin.getLogger().log(Level.SEVERE, "Failed to list waystone data", t);
                             }
+                            logger.log(Level.INFO, "Loaded "+count+" "+type.name()+" static waystones");
                         }
                     }
                 });
                 for (World world : Bukkit.getWorlds()) {
+                    int count = 0;
                     for (Chunk c : world.getLoadedChunks()) {
                         FancyWaystones.getPlugin().submitIO(() -> {
                             loadChunk(c);
                         });
+                        count++;
                     }
+                    logger.log(Level.INFO, "Attempting to load "+count+" chunks of "+world.getName());
                 }
             });
         }
+        hasEverBeenLoaded = true;
     }
 
     public WaystoneStorage getStorage() {
@@ -457,6 +479,7 @@ public class WaystoneManager {
         }
         Map<Long, List<UUID>> dataMap = blockDataMap.get(chunk.getWorld());
         List<UUID> list = dataMap == null ? Collections.emptyList() : dataMap.get(Util.getXY(chunk.getX(), chunk.getZ()));
+        if (!hasEverBeenLoaded) return;
         if (list == null || list.isEmpty()) {
             File target = new File(FancyWaystones.getPlugin().getDataFolder(), getWorldPath()+"/"+chunk.getWorld().getName()+"/"+chunk.getX()+"."+chunk.getZ()+".yml");
             target.delete();
