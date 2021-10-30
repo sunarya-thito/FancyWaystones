@@ -197,7 +197,11 @@ public class WaystoneListener implements Listener {
                                 if (handler.getData().getType().canRedirectCompass(e.getPlayer(), handler.getData())) {
                                     WaystoneLocation location = handler.getData().getLocation();
                                     if (location instanceof LocalLocation) {
-                                        e.getPlayer().setCompassTarget(((LocalLocation) location).getLocation());
+                                        if (((LocalLocation) location).getLocation().equals(e.getPlayer().getCompassTarget())) {
+                                            e.getPlayer().setCompassTarget(e.getPlayer().getWorld().getSpawnLocation());
+                                        } else {
+                                            e.getPlayer().setCompassTarget(((LocalLocation) location).getLocation());
+                                        }
                                     }
                                 }
                                 return;
