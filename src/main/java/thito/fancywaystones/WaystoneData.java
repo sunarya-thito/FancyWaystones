@@ -2,6 +2,9 @@ package thito.fancywaystones;
 
 import org.bukkit.*;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
+import thito.fancywaystones.event.FWEvent;
+import thito.fancywaystones.event.WaystonePostTeleportEvent;
 import thito.fancywaystones.location.*;
 import thito.fancywaystones.proxy.*;
 import thito.fancywaystones.ui.*;
@@ -24,6 +27,7 @@ public class WaystoneData {
     private Set<AttachedMenu> openedMenus = Collections.newSetFromMap(new WeakHashMap<>());
     private Set<WaystoneMember> blacklist = new LinkedHashSet<>();
     private WaystoneStatistics statistics = new WaystoneStatistics();
+    private ItemStack customIcon;
 
     public WaystoneData(UUID uuid, WaystoneType type, WaystoneModel model, World.Environment environment) {
         this.uuid = uuid;
@@ -32,8 +36,21 @@ public class WaystoneData {
         this.environment = environment;
     }
 
+    public ItemStack getCustomIcon() {
+        return customIcon;
+    }
+
+    public void setCustomIcon(ItemStack customIcon) {
+        this.customIcon = customIcon;
+        attemptSave();
+    }
+
+    public boolean isNaturalWaystone() {
+        return ownerUUID == null || (ownerUUID.getLeastSignificantBits() == 0 && ownerUUID.getMostSignificantBits() == 0);
+    }
+
     public void directValidateBlock() {
-        if (getWaystoneBlock() == null) {
+        if (getWaystoneBlock() == null && location instanceof LocalLocation) {
             WaystoneManager.getManager().placeWaystone(this, ((LocalLocation) location).getLocation());
         }
     }
@@ -70,7 +87,6 @@ public class WaystoneData {
     }
 
     public synchronized void setWaystoneBlock(WaystoneBlock waystoneBlock) {
-        FancyWaystones.checkIOThread();
         if (location instanceof LocalLocation) {
             if (waystoneBlock == null) {
                 WaystoneManager.getManager().removeBlockData(((LocalLocation) location).getLocation(), getUUID());
@@ -93,11 +109,12 @@ public class WaystoneData {
         return attached.isEmpty() && waystoneBlock == null && !type.isAlwaysLoaded();
     }
 
-    public void destroy(String reason) {
-        FancyWaystones.checkIOThread();
+    public synchronized void destroy(String reason) {
         if (type.isActivationRequired()) {
             for (PlayerData d : attached) {
-                d.removeWaystone(getUUID());
+                FancyWaystones.getPlugin().submitIO(() -> {
+                    d.removeWaystone(getUUID());
+                });
                 Player online = d.getPlayer();
                 if (online != null) {
                     Placeholder placeholder = new Placeholder()
@@ -169,8 +186,10 @@ public class WaystoneData {
     }
 
     public void removeMember(UUID member) {
-        PlayerData playerData = WaystoneManager.getManager().getPlayerData(null, member);
-        playerData.removeWaystone(getUUID());
+        FancyWaystones.getPlugin().submitIO(() -> {
+            PlayerData playerData = WaystoneManager.getManager().getPlayerData(null, member);
+            playerData.removeWaystone(getUUID());
+        });
     }
 
     public void setOwnerName(String ownerName) {
@@ -271,6 +290,7 @@ public class WaystoneData {
             if (state == TeleportState.SUCCESS) {
                 player.setNoDamageTicks((int) (player.getNoDamageTicks() + FancyWaystones.getPlugin().getNoDamageTicks()));
                 FancyWaystones.getPlugin().postTeleport("Waystone", player, source, this);
+                FWEvent.call(new WaystonePostTeleportEvent(source, player, this));
             } else if (state == TeleportState.UNSAFE) {
                 player.sendMessage(new Placeholder().putContent(Placeholder.WAYSTONE, this).replace("{language.unsafe-waystone}"));
             } else if (state == TeleportState.INVALID) {

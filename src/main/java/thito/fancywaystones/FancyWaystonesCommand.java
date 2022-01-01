@@ -4,9 +4,15 @@ import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.*;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.*;
 import thito.fancywaystones.proxy.*;
 import thito.fancywaystones.storage.*;
+import thito.fancywaystones.structure.Selection;
+import thito.fancywaystones.structure.Structure;
+import thito.fancywaystones.structure.StructureManager;
+import thito.fancywaystones.task.UUIDRecoveryTask;
 
 import java.io.*;
 import java.nio.charset.*;
@@ -32,12 +38,107 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
 
     World.Environment[] ENVIRONMENTS = { World.Environment.NORMAL, World.Environment.THE_END, World.Environment.NETHER};
 
+    public static String getSelectionSize(Selection selection) {
+        Location loc1 = selection.getPos1();
+        Location loc2 = selection.getPos2();
+        return loc1 == null || loc2 == null ? "" : " (" + (Math.abs(loc1.getBlockX() - loc2.getBlockX()) *
+                Math.abs(loc1.getBlockY() - loc2.getBlockY()) *
+                Math.abs(loc1.getBlockZ() - loc2.getBlockZ()))+")";
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
         String prefix = ChatColor.translateAlternateColorCodes('&', Language.getLanguage().get("prefix"));
         try {
             if (sender.hasPermission("fancywaystones.admin")) {
                 if (args.length > 0) {
+                    if (sender instanceof Player) {
+                        if (args[0].equalsIgnoreCase("wand")) {
+                            ItemStack itemStack = new ItemStack(Material.IRON_AXE);
+                            ItemMeta itemMeta = itemStack.getItemMeta();
+                            itemMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6&lFANCY&f&lWAYSTONES &d&lWAND"));
+                            itemStack.setItemMeta(itemMeta);
+                            NBTUtil.setData(itemStack, "FW:WAND", "DUMMY".getBytes(StandardCharsets.UTF_8));
+                            ((Player) sender).getInventory().addItem(itemStack);
+                            sender.sendMessage(prefix + "You have been given a wand!");
+                            return true;
+                        }
+                        if (args[0].equalsIgnoreCase("pos1")) {
+                            Selection selection = Selection.getSelection((Player) sender);
+                            selection.setPos1(((Player) sender).getLocation());
+                            sender.sendMessage(prefix + "Pos 1 has been set!" + getSelectionSize(selection));
+                            return true;
+                        }
+                        if (args[0].equalsIgnoreCase("pos2")) {
+                            Selection selection = Selection.getSelection((Player) sender);
+                            selection.setPos2(((Player) sender).getLocation());
+                            sender.sendMessage(prefix + "Pos 2 has been set!" + getSelectionSize(selection));
+                            return true;
+                        }
+                        if (args[0].equalsIgnoreCase("saveStructure")) {
+                            if (args.length > 1) {
+                                boolean overwrite = false;
+                                if (args.length > 2) {
+                                    if (args[2].equalsIgnoreCase("--overwrite") || args[2].equalsIgnoreCase("--ow")) {
+                                        overwrite = true;
+                                    }
+                                }
+                                Selection selection = Selection.getSelection((Player) sender);
+                                if (selection.getPos1() == null) {
+                                    sender.sendMessage(prefix + "Pos 1 is not set!");
+                                    return true;
+                                }
+                                if (selection.getPos2() == null) {
+                                    sender.sendMessage(prefix + "Pos 2 is not set!");
+                                    return true;
+                                }
+                                if (selection.getWidth() > 16 || selection.getLength() > 16) {
+                                    sender.sendMessage(prefix + "Selection is too big for a structure! Maximum is 16 x 16 block!");
+                                    return true;
+                                }
+                                File target = new File(FancyWaystones.getPlugin().getDataFolder(),
+                                        FancyWaystones.getPlugin().getConfig().getString("Storage.Structure Directory") + "/" + args[1] + ".bin");
+                                if (target.exists() && !overwrite) {
+                                    sender.sendMessage(prefix + "Structure with that name is already exist! Do \"/"+s+" " + args[1] + " --overwrite\" to overwrite existing file.");
+                                    return true;
+                                }
+                                target.getParentFile().mkdirs();
+                                selection = selection.generalize();
+                                StructureManager structureManager = StructureManager.getInstance();
+                                sender.sendMessage(prefix + "Saving structure...");
+                                Structure structure = structureManager.createStructure(args[1], selection);
+                                try (FileOutputStream fileOutputStream = new FileOutputStream(target)) {
+                                    structureManager.writeToOutputStream(structure, fileOutputStream);
+                                    sender.sendMessage(prefix + "Structure has been saved! (" + target + ")");
+                                } catch (Throwable t) {
+                                    t.printStackTrace();
+                                    sender.sendMessage(prefix + "Failed to save structure! See console for more information!");
+                                }
+                                return true;
+                            }
+                            sender.sendMessage(prefix + "Save structure from selection. Usage: /" + s + " <structure name> [--overwrite]");
+                            return true;
+                        }
+                        if (args[0].equalsIgnoreCase("testStructure")) {
+                            if (args.length > 1) {
+                                Structure structure = StructureManager.getInstance().getStructure(args[1]);
+                                if (structure == null) {
+                                    sender.sendMessage(prefix + "Structure with name "+args[1]+" cannot be found!");
+                                    return true;
+                                }
+                                sender.sendMessage(prefix + "Placing structure...");
+                                structure.placeAt(((Player) sender).getLocation(), (location, structureBlock) -> true);
+                                sender.sendMessage(prefix + "Structure has been placed!");
+                                return true;
+                            }
+                            sender.sendMessage(prefix + "Place a structure on your location. Usage: /"+s+" <structure name>");
+                            return true;
+                        }
+                    }
+                    if (args[0].equalsIgnoreCase("listStructure")) {
+                        sender.sendMessage(prefix + "Loaded structures: " + String.join(", ", StructureManager.getInstance().getStructureMap().keySet()));
+                        return true;
+                    }
                     if (args[0].equalsIgnoreCase("reload")) {
                         FancyWaystones.getPlugin().reloadConfig();
                         sender.sendMessage(prefix + "Configuration has been reloaded! Loaded waystone might not reloaded, server restart is required for efficient waystone data reload.");
@@ -149,6 +250,30 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                         sender.sendMessage(prefix + "Please create a backup of your old data and then do /"+s+" migrate CONFIRM");
                         return true;
                     }
+                    if (args[0].equalsIgnoreCase("dump")) {
+                        sender.sendMessage(prefix + "Dumping data...");
+                        File file = new File(FancyWaystones.getPlugin().getDataFolder(), "dump.txt");
+                        try (FileWriter fileWriter = new FileWriter(file)) {
+                            DataDumper.dump(fileWriter);
+                        }
+                        sender.sendMessage(prefix + "Data dumped at "+file.getAbsolutePath());
+                        return true;
+                    }
+                    if (args[0].equalsIgnoreCase("devmode")) {
+                        sender.sendMessage(prefix + "Service Busyness: " + FancyWaystones.getPlugin().getServiceBusyness()+"ms");
+                        sender.sendMessage(prefix + "IOService Busyness: " + FancyWaystones.getPlugin().getIOServiceBusyness()+"ms");
+                        return true;
+                    }
+                    if (args[0].equalsIgnoreCase("debugmode")) {
+                        if (Debug.listener.contains(sender)) {
+                            Debug.listener.remove(sender);
+                            sender.sendMessage(prefix + "You are no longer in debug mode");
+                        } else {
+                            sender.sendMessage(prefix + "You are now in debug mode");
+                            Debug.listener.add(sender);
+                        }
+                        return true;
+                    }
                     if (args[0].equalsIgnoreCase("open")) {
                         if (!(sender instanceof Player)) {
                             sender.sendMessage(prefix + "You must be a player to do this!");
@@ -194,7 +319,24 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                         }
                         sender.sendMessage(prefix + "Open Waystone GUI as other player. Usage:");
                         sender.sendMessage(prefix + "/"+s+" open uuid <uuid>");
-                        sender.sendMessage(prefix + "/"+s+" open name <name>");
+                        sender.sendMessage(prefix + "/"+s+" open player <name>");
+                        return true;
+                    }
+                    if (args[0].equalsIgnoreCase("recoverUUID")) {
+                        sender.sendMessage(prefix + "Recovering UUID... Please wait");
+                        new UUIDRecoveryTask() {
+                            @Override
+                            public void notFound() {
+                                super.notFound();
+                                sender.sendMessage(prefix + "Server UUID cannot be recovered");
+                            }
+
+                            @Override
+                            public void found(UUID serverName) throws IOException {
+                                super.found(serverName);
+                                sender.sendMessage(prefix + "Server UUID recovered: "+serverName);
+                            }
+                        }.runTaskAsynchronously(FancyWaystones.getPlugin());
                         return true;
                     }
 //                    if (args[0].equalsIgnoreCase("cleanUpEntities")) {
@@ -227,7 +369,7 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                                 if (args.length > 2) {
                                     try {
                                         amount = Integer.parseInt(args[2]);
-                                    } catch (Throwable t) {
+                                    } catch (Throwable ignored) {
                                     }
                                 }
                             } else {
@@ -237,7 +379,7 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                                     if (args.length > 3) {
                                         try {
                                             amount = Integer.parseInt(args[3]);
-                                        } catch (Throwable t) {
+                                        } catch (Throwable ignored) {
                                         }
                                     }
                                 }
@@ -412,6 +554,15 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
         try {
             if (sender.hasPermission("fancywaystones.admin")) {
                 if (args.length == 1) {
+                    if (sender instanceof Player) {
+                        suggestions.add("pos1");
+                        suggestions.add("pos2");
+                        suggestions.add("saveStructure");
+                        suggestions.add("testStructure");
+                        suggestions.add("wand");
+                    }
+                    suggestions.add("recoverUUID");
+                    suggestions.add("listStructure");
                     suggestions.add("introduce");
                     suggestions.add("reload");
                     suggestions.add("give");
@@ -421,6 +572,9 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                     suggestions.add("mysqltolocal");
                     suggestions.add("localtomysql");
                     suggestions.add("info");
+                    suggestions.add("dump");
+                    suggestions.add("debugmode");
+                    suggestions.add("devmode");
                 } else if (args.length == 2) {
                     if (args[0].equalsIgnoreCase("give")) {
                         for (Player p : Bukkit.getOnlinePlayers()) {

@@ -17,8 +17,8 @@ public class ProxyWaystone {
     public void transportPlayer(Player player, ProxyLocation location, UUID sourceWaystoneId, UUID waystoneId) {
         Location loc = player.getLocation();
         sendMessage(player, new TeleportMessage(player.getUniqueId(), true,
-                new SerializableLocation(sourceWaystoneId, FancyWaystones.getPlugin().getServerName(), loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ()),
-                new SerializableLocation(waystoneId, location.getServerName(), location.getWorldName(), location.getX(), location.getY(), location.getZ())));
+                new SerializableLocation(sourceWaystoneId, FancyWaystones.getPlugin().getServerName(), loc.getWorld().getUID(), loc.getX(), loc.getY(), loc.getZ()),
+                new SerializableLocation(waystoneId, location.getServerName(), location.getWorldUUID(), location.getX(), location.getY(), location.getZ())));
     }
 
     public void dispatchWaystoneReload(UUID uuid) {

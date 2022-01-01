@@ -94,7 +94,8 @@ public class ListSection extends ArrayList<Object> implements Section {
 
     @Override
     public boolean addAll(Collection<?> c) {
-        c.forEach(o -> add(o));
+        if (c == null) return false;
+        c.forEach(this::add);
         return !c.isEmpty();
     }
 

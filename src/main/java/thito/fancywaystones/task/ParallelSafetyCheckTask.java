@@ -7,67 +7,94 @@ import java.util.*;
 
 public abstract class ParallelSafetyCheckTask implements Runnable {
 
-//    private WaystoneModelHandler modelHandler;
     private Location location;
     private int checkRadius, checkHeight;
 
     public ParallelSafetyCheckTask(Location location, int checkRadius, int checkHeight) {
-//        this.modelHandler = handler;
         this.location = location;
         this.checkRadius = checkRadius;
         this.checkHeight = checkHeight;
     }
 
-    private List<ChunkCheckTask> checkTaskList = new ArrayList<>();
+    private int index = 0;
+    private List<ChunkCheckTask> checkTaskList;
+    private Map<Long, Chunk> cachedChunkMap = new HashMap<>();
 
-    private Iterator<ChunkCheckTask> iterator;
     private Location safest;
-    private double safestDistance = Double.MAX_VALUE;
 
     @Override
     public void run() {
-        double minX = location.getBlockX() - checkRadius;
-        double maxX = location.getBlockX() + checkRadius;
-        double minY = location.getBlockY() - checkHeight;
-        double maxY = location.getBlockY() + checkHeight;
-        double minZ = location.getBlockZ() - checkRadius;
-        double maxZ = location.getBlockZ() + checkRadius;
-        for (double x = minX; x <= maxX; x++) {
-            for (double z = minZ; z <= maxZ; z++) {
-                int chunkX = (int)x >> 4;
-                int chunkZ = (int)z >> 4;
-                double finalX = x;
-                double finalZ = z;
-                ChunkCheckTask chunkCheckTask = new ChunkCheckTask(location.getWorld(), chunkX, chunkZ) {
-                    @Override
-                    protected void done() {
-                        for (double y = minY; y <= maxY; y++) {
-                            double finalY = y;
-                            PositionSafetyCheckTask positionSafetyCheckTask = new PositionSafetyCheckTask(getChunk(), (int) finalX,  (int) finalY, (int) finalZ) {
-                                @Override
-                                public void done() {
-                                    if (isSafe()) {
-                                        Location location = new Location(getChunk().getWorld(), finalX, finalY, finalZ);
-                                        double distance = distance(location, ParallelSafetyCheckTask.this.location);
-                                        if (safest == null || distance < safestDistance) {
-                                            safest = location;
-                                            safestDistance = distance;
-                                        }
+        index = 0;
+        checkTaskList = new ArrayList<>(checkRadius * checkRadius);
+        for (int radius = 1; radius <= checkRadius; radius++) {
+            int xMin = location.getBlockX() - radius;
+            int xMax = location.getBlockX() + radius;
+            int zMin = location.getBlockZ() - radius;
+            int zMax = location.getBlockZ() + radius;
+            for (int x = xMin; x <= xMax; x++) {
+                for (int z = zMin; z <= zMax; z++) {
+                    int chunkX = x >> 4;
+                    int chunkZ = z >> 4;
+                    if (x == xMin || x == xMax || z == zMin || z == zMax) {
+                        int finalX = x;
+                        int finalZ = z;
+                        ChunkCheckTask chunkCheckTask = new ChunkCheckTask(cachedChunkMap, location.getWorld(), chunkX, chunkZ) {
+
+                            List<PositionSafetyCheckTask> safetyCheckTaskList;
+                            int taskIndex;
+                            @Override
+                            protected void done() {
+                                safetyCheckTaskList = new ArrayList<>((checkHeight + 1) * 2);
+                                for (int height = 0; height <= checkHeight; height++) {
+                                    int yMin = location.getBlockY() - height;
+                                    if (height > 0) {
+                                        int yMax = location.getBlockY() + height;
+                                        PositionSafetyCheckTask positionSafetyCheckTask2 = new PositionSafetyCheckTask(getChunk(), finalX, yMax, finalZ) {
+                                            @Override
+                                            public void done() {
+                                                if (isSafe()) {
+                                                    safest = new Location(getChunk().getWorld(), finalX + 0.5, yMax, finalZ + 0.5);
+                                                    proceed();
+                                                } else {
+                                                    nextTask();
+                                                }
+                                            }
+                                        };
+                                        safetyCheckTaskList.add(positionSafetyCheckTask2);
                                     }
+                                    PositionSafetyCheckTask positionSafetyCheckTask = new PositionSafetyCheckTask(getChunk(), finalX, yMin, finalZ) {
+                                        @Override
+                                        public void done() {
+                                            if (isSafe()) {
+                                                safest = new Location(getChunk().getWorld(), finalX + 0.5, yMin, finalZ + 0.5);
+                                                proceed();
+                                            } else {
+                                                nextTask();
+                                            }
+                                        }
+                                    };
+
+                                    safetyCheckTaskList.add(positionSafetyCheckTask);
                                 }
-                            };
-                            if (FancyWaystones.getPlugin().isEnabled()) {
-                                Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), positionSafetyCheckTask);
+                                nextTask();
                             }
-                        }
-                        checkNext();
+                            private void nextTask() {
+                                if (taskIndex >= safetyCheckTaskList.size()) {
+                                    nextChunk();
+                                    return;
+                                }
+                                int index = taskIndex++;
+                                if (FancyWaystones.getPlugin().isEnabled()) {
+                                    Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), safetyCheckTaskList.get(index));
+                                }
+                            }
+                        };
+                        checkTaskList.add(chunkCheckTask);
                     }
-                };
-                checkTaskList.add(chunkCheckTask);
+                }
             }
         }
-        iterator = checkTaskList.iterator();
-        checkNext();
+        nextChunk();
     }
 
     public Location getSafest() {
@@ -76,9 +103,9 @@ public abstract class ParallelSafetyCheckTask implements Runnable {
 
     protected abstract void proceed();
 
-    protected void checkNext() {
-        if (iterator.hasNext()) {
-            ChunkCheckTask task = iterator.next();
+    protected void nextChunk() {
+        if (index < checkTaskList.size()) {
+            ChunkCheckTask task = checkTaskList.get(index++);
             if (task != null && FancyWaystones.getPlugin().isEnabled()) {
                 Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), task);
             }

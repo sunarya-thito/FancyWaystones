@@ -8,10 +8,10 @@ public class SerializableLocation implements Serializable {
 
     private UUID waystoneId;
     private String serverName;
-    private String worldName;
+    private UUID worldName;
     private double x, y, z;
 
-    public SerializableLocation(UUID waystoneId, String serverName, String worldName, double x, double y, double z) {
+    public SerializableLocation(UUID waystoneId, String serverName, UUID worldName, double x, double y, double z) {
         this.waystoneId = waystoneId;
         this.serverName = serverName;
         this.worldName = worldName;
@@ -28,7 +28,7 @@ public class SerializableLocation implements Serializable {
         return serverName;
     }
 
-    public String getWorldName() {
+    public UUID getWorldName() {
         return worldName;
     }
 

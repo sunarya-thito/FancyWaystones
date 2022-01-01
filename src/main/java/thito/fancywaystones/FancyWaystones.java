@@ -1,35 +1,58 @@
 package thito.fancywaystones;
 
-import com.comphenix.protocol.wrappers.*;
-import com.zaxxer.hikari.*;
+import com.comphenix.protocol.wrappers.EnumWrappers;
+import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.*;
-import org.bukkit.command.*;
-import org.bukkit.configuration.*;
-import org.bukkit.entity.*;
-import org.bukkit.event.*;
-import org.bukkit.inventory.*;
-import org.bukkit.plugin.*;
-import org.bukkit.plugin.java.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
 import org.mozilla.javascript.*;
-import thito.fancywaystones.books.*;
-import thito.fancywaystones.economy.*;
+import thito.fancywaystones.books.DeathBook;
+import thito.fancywaystones.books.TeleportationBook;
+import thito.fancywaystones.config.MapSection;
+import thito.fancywaystones.config.Section;
+import thito.fancywaystones.economy.EconomyService;
+import thito.fancywaystones.economy.ItemEconomyService;
 import thito.fancywaystones.effect.Effect;
 import thito.fancywaystones.hook.LateHookLoader;
-import thito.fancywaystones.model.*;
-import thito.fancywaystones.proxy.*;
-import thito.fancywaystones.recipes.*;
-import thito.fancywaystones.storage.*;
-import thito.fancywaystones.task.*;
-import thito.fancywaystones.types.*;
-import thito.fancywaystones.ui.*;
+import thito.fancywaystones.model.ConfigModel;
+import thito.fancywaystones.model.ItemModel;
+import thito.fancywaystones.proxy.ProxyWaystone;
+import thito.fancywaystones.proxy.ProxyWaystoneListener;
+import thito.fancywaystones.proxy.ServerIntroductionTask;
+import thito.fancywaystones.recipes.LegacyRecipeManager;
+import thito.fancywaystones.recipes.ModernRecipeManager;
+import thito.fancywaystones.scheduler.*;
+import thito.fancywaystones.storage.FileWaystoneStorage;
+import thito.fancywaystones.storage.MySQLWaystoneStorage;
+import thito.fancywaystones.storage.VoidWaystoneStorage;
+import thito.fancywaystones.structure.StructureManager;
+import thito.fancywaystones.structure.StructureWorldData;
+import thito.fancywaystones.structure.WaystoneStructure;
+import thito.fancywaystones.structure.WaystoneStructureListener;
+import thito.fancywaystones.task.PostTeleportTask;
+import thito.fancywaystones.task.WaystoneInactivityCheckTask;
+import thito.fancywaystones.types.ConfigWaystoneType;
+import thito.fancywaystones.ui.MenuListener;
+import thito.fancywaystones.ui.MinecraftItem;
 
 import java.io.*;
-import java.lang.reflect.*;
-import java.sql.*;
+import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.*;
-import java.util.logging.*;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class FancyWaystones extends JavaPlugin {
 
@@ -40,7 +63,7 @@ public class FancyWaystones extends JavaPlugin {
     }
 
     private final long[] storageReadWriteSpeed = new long[5];
-    private Context context;
+//    private Context context;
     private Configuration guiYml;
     private Configuration messagesYml;
     private Configuration recipesYml;
@@ -52,31 +75,87 @@ public class FancyWaystones extends JavaPlugin {
     private RecipeManager recipeManager;
     private DeathBook deathBook;
     private TeleportationBook teleportationBook;
-    private Scriptable root;
-    private ScheduledThreadPoolExecutor service;
-    private ScheduledThreadPoolExecutor IOService;
+//    private Scriptable root;
+    private Scheduler service;
+    private Scheduler IOService;
+    private Scheduler structureService;
 
-    private Thread serviceThread, IOServiceThread;
+//    private Thread serviceThread, IOServiceThread;
 
     private ServerIntroductionTask introductionTask;
     private WaystoneInactivityCheckTask checkTask;
     private ProxyWaystone proxyWaystone;
     private ServerUUID serverUUID;
     private boolean success = false;
+    private boolean informStructureGeneration;
+    private long threadPoolTime;
+    private long oldThreadPoolTime;
+    private long IOThreadPoolTime;
+    private long oldIOThreadPoolTime;
+    private long structureThreadPoolTime;
+    private long oldStructureThreadPoolTime;
+//    private final long[] serviceThreadPoolTime = new long[20];
+//    private final long[] IOServiceThreadPoolTime = new long[20];
 
     public long[] getStorageReadWriteSpeed() {
         return storageReadWriteSpeed;
     }
 
     public void pushSRWSpeed(long speed) {
-        for (int i = storageReadWriteSpeed.length - 1; i > 0; i--) {
-            storageReadWriteSpeed[i] = storageReadWriteSpeed[i - 1];
-        }
+        if (storageReadWriteSpeed.length - 1 >= 0)
+            System.arraycopy(storageReadWriteSpeed, 0, storageReadWriteSpeed, 1, storageReadWriteSpeed.length - 1);
         storageReadWriteSpeed[0] = speed;
     }
 
+    void pushThreadPoolTime() {
+        oldThreadPoolTime = threadPoolTime;
+        threadPoolTime = System.currentTimeMillis();
+    }
+
+    void pushIOThreadPoolTime() {
+        oldIOThreadPoolTime = IOThreadPoolTime;
+        IOThreadPoolTime = System.currentTimeMillis();
+    }
+
+    void pushStructureThreadPoolTime() {
+        oldStructureThreadPoolTime = structureThreadPoolTime;
+        structureThreadPoolTime = System.currentTimeMillis();
+    }
+
+//    void push(long[] array, long time) {
+//        if (array.length - 1 >= 0) System.arraycopy(array, 0, array, 1, array.length - 1);
+//        array[0] = time;
+//    }
+
+    public long getServiceBusyness() {
+        return threadPoolTime - oldThreadPoolTime - 1000;
+    }
+
+    public long getIOServiceBusyness() {
+        return IOThreadPoolTime - oldIOThreadPoolTime - 1000;
+    }
+
+//    long getBusiness(long[] array) {
+//        long business = 0;
+//        long lastTime = -1;
+//        for (int i = array.length - 1; i > 0; i--) {
+//            if (lastTime != -1) {
+//                if (array[i] == 0 || array[i - 1] == 0) continue;
+//                long b = array[i - 1] - array[i];
+//                business += Math.max(business, b);
+//            }
+//            lastTime = array[i];
+//        }
+//        return business;
+//    }
+
     @Override
     public void onLoad() {
+
+        // we have it first! >:(
+//        service = new ScheduledThreadPoolExecutor(1, runnable -> serviceThread = new Thread(runnable, "FW"));
+//        IOService = new ScheduledThreadPoolExecutor(1, runnable -> IOServiceThread = new Thread(runnable, "FWIO"));
+
         try {
             String serverVersion = Bukkit.getVersion();
             String apiVersion = "1.13";
@@ -99,6 +178,47 @@ public class FancyWaystones extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
+        PluginManager pluginManager = getServer().getPluginManager();
+        if (!pluginManager.isPluginEnabled("ProtocolLib")) {
+            getLogger().log(Level.SEVERE, "This plugin requires ProtocolLib to be installed and enabled on your server!");
+            pluginManager.disablePlugin(this);
+            return;
+        }
+
+        if (pluginManager.isPluginEnabled("PlaceholderAPI")) {
+            PlaceholderAPISupport.enableSupport = true;
+            getLogger().log(Level.INFO, "Enabled support for PlaceholderAPI");
+        }
+
+        StructureWorldData structureWorldData = new StructureWorldData();
+        StructureManager.getInstance().setStructureWorldData(structureWorldData);
+        try {
+            getDataFolder().mkdirs();
+            structureWorldData.open(new File(getDataFolder(), "generated_structures.bin"));
+            getLogger().log(Level.INFO, "File channel open for generated_structures.bin");
+        } catch (IOException e) {
+            getLogger().log(Level.SEVERE, "Failed to open file channel for generated_structures.bin", e);
+        }
+
+        try {
+            JavaPlugin providingPlugin = JavaPlugin.getProvidingPlugin(Context.class);
+            getLogger().log(Level.INFO, "RhinoJS Library provided by "+providingPlugin.getName());
+        } catch (Throwable t) {
+            getLogger().log(Level.INFO, "RhinoJS Library provided by "+Context.class.getClassLoader());
+        }
+
+        try {
+            Class<?> aClass = Class.forName(Context.class.getName(), false, getClassLoader());
+            System.out.println(aClass+": "+aClass.getClassLoader());
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+
+        File demoBin = new File(getDataFolder(), "structures/demo.bin");
+        if (!demoBin.exists()) {
+            saveResource("structures/demo.bin", true);
+        }
+
         guiYml = new Configuration("gui.yml", false);
         messagesYml = new Configuration("messages.yml", true);
         recipesYml = new Configuration("recipes.yml", false);
@@ -110,38 +230,40 @@ public class FancyWaystones extends JavaPlugin {
 
         introductionTask = new ServerIntroductionTask();
 
-        PluginManager pluginManager = getServer().getPluginManager();
-        if (!pluginManager.isPluginEnabled("ProtocolLib")) {
-            getLogger().log(Level.SEVERE, "This plugin requires ProtocolLib to be installed and enabled on your server!");
-            pluginManager.disablePlugin(this);
-            return;
-        }
         success = true;
 
         checkTask = new WaystoneInactivityCheckTask();
 
-        service = new ScheduledThreadPoolExecutor(1, runnable -> serviceThread = new Thread(runnable, "FW"));
-        IOService = new ScheduledThreadPoolExecutor(1, runnable -> IOServiceThread = new Thread(runnable, "FWIO"));
-
-        service.submit(() -> {
-            context = Context.enter();
-            root = context.initSafeStandardObjects();
-        });
+        try {
+            Field field = VMBridge.class.getDeclaredField("instance");
+            field.setAccessible(true);
+            Object instance = field.get(null);
+            getLogger().log(Level.INFO, "Uses VMBridge "+instance);
+            if (!(instance instanceof VMBridge_custom)) {
+                getLogger().log(Level.SEVERE, "The server uses outdated RhinoJS");
+            }
+        } catch (Throwable ignored) {
+        }
 
         // also initializes the registries
         try {
             WrappedDataWatcher.Registry.getVectorSerializer();
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
 
         try {
             EnumWrappers.getChatTypeClass();
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
 
         pluginManager.registerEvents(new WaystoneListener(), this);
+        try {
+            pluginManager.registerEvents(new WaystoneModernListener(), this);
+            getLogger().log(Level.INFO, "Using latest version compability listener");
+        } catch (Throwable ignored) {
+        }
         pluginManager.registerEvents(new MenuListener(), this);
-//        pluginManager.registerEvents(new PlayerInput(), this);
+        pluginManager.registerEvents(new WaystoneStructureListener(), this);
         LateHookLoader lateHookLoader = new LateHookLoader();
         lateHookLoader.checkStatus();
         pluginManager.registerEvents(lateHookLoader, this);
@@ -184,7 +306,7 @@ public class FancyWaystones extends JavaPlugin {
         return getServerUUID().getId().toString();
     }
 
-    public ScheduledExecutorService getIOService() {
+    public Scheduler getIOService() {
         return IOService;
     }
 
@@ -198,7 +320,7 @@ public class FancyWaystones extends JavaPlugin {
         });
     }
 
-    public ScheduledExecutorService getService() {
+    public Scheduler getService() {
         return service;
     }
 
@@ -212,17 +334,17 @@ public class FancyWaystones extends JavaPlugin {
         });
     }
 
-    public Script compile(String script) {
-        return context.compileString(script, "effects.yml", 0, null);
-    }
-
-    public Scriptable getRoot() {
-        return root;
-    }
-
-    public Context getContext() {
-        return context;
-    }
+//    public Script compile(String script) {
+//        return context.compileString(script, "effects.yml", 0, null);
+//    }
+//
+//    public Scriptable getRoot() {
+//        return root;
+//    }
+//
+//    public Context getContext() {
+//        return context;
+//    }
 
     private Map<String, List<Effect>> compiledEffects = new HashMap<>();
 
@@ -260,42 +382,40 @@ public class FancyWaystones extends JavaPlugin {
         return Util.parseTime(getConfig().getString("Safe Teleport.No Damage Time"));
     }
 
-    public static void checkIOThread() {
-        if (Thread.currentThread() != getPlugin().IOServiceThread)
-            throw new IllegalStateException("must be on IO thread");
-    }
-
-    public static void checkThread() {
-        if (Thread.currentThread() != getPlugin().serviceThread)
-            throw new IllegalStateException("must be on FW thread");
-    }
-
     @Override
     public void onDisable() {
-        checkTask.stop();
         if (success) {
+            checkTask.stop();
             HandlerList.unregisterAll(this);
+            IOService.lock();
             for (World world : Bukkit.getWorlds()) {
                 getLogger().log(Level.INFO, "Saving chunks for "+world.getName());
                 for (Chunk chunk : world.getLoadedChunks()) {
-                    submitIO(() -> {
-                        try {
-                            WaystoneManager.getManager().unloadChunk(chunk);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                    try {
+                        WaystoneManager.getManager().unloadChunk(chunk);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-            submitIO(() -> {
-                WaystoneManager.getManager().shutdown();
-            });
-            recipeManager.clearCustomRecipes();
+            WaystoneManager.getManager().shutdown();
+            IOService.unlock();
+            if (recipeManager != null) {
+                recipeManager.clearCustomRecipes();
+            }
+            shutdownTasks();
             getServer().getScheduler().cancelTasks(this);
         }
-        getLogger().log(Level.INFO, "Shutting down tasks...");
+
+    }
+
+    private void shutdownTasks() {
+        if (structureService != null) {
+            getLogger().log(Level.INFO, "Shutting down Structure Service tasks...");
+            structureService.shutdown();
+        }
         if (service != null) {
-            getLogger().log(Level.INFO, "Shutting down "+ service.getActiveCount()+" tasks...");
+            getLogger().log(Level.INFO, "Shutting down Service tasks...");
             service.shutdown();
             try {
                 service.awaitTermination(5, TimeUnit.SECONDS);
@@ -303,7 +423,7 @@ public class FancyWaystones extends JavaPlugin {
             }
         }
         if (IOService != null) {
-            getLogger().log(Level.INFO, "Shutting down "+ IOService.getActiveCount()+" IO tasks...");
+            getLogger().log(Level.INFO, "Shutting down IO tasks...");
             IOService.shutdown();
             try {
                 if (!IOService.awaitTermination(30, TimeUnit.SECONDS)) {
@@ -334,23 +454,100 @@ public class FancyWaystones extends JavaPlugin {
         return effectsYml;
     }
 
+    private void checkConfig(String name) {
+        File file = new File(getDataFolder(), name + ".yml");
+        if (file.exists()) {
+            try (InputStreamReader reader = new InputStreamReader(getResource(name + ".yml"))) {
+                Section section = Section.parseToMap(reader);
+                section.getString("Configuration Version").ifPresent(version -> {
+                    try (FileReader fileReader = new FileReader(file)) {
+                        Section section1 = Section.parseToMap(fileReader);
+                        String configuration_version = section1.getString("Configuration Version").orElse(null);
+                        if (configuration_version == null) configuration_version = "Old";
+                        if (configuration_version.equals(version)) {
+                            return;
+                        }
+                        getLogger().log(Level.WARNING, "Old configuration detected \""+name+".yml\", generating a new one...");
+                        fileReader.close();
+                        File dest = new File(getDataFolder(), name + "-" + configuration_version + ".yml");
+                        if (file.renameTo(dest)) {
+                            saveResource(name+".yml", true);
+                        } else {
+                            getLogger().log(Level.SEVERE, "Failed to rename file "+file+" to "+dest);
+                        }
+                    } catch (IOException e) {
+                        getLogger().log(Level.SEVERE, "Failed to validate \""+name+".yml\"!", e);
+                    }
+                });
+            } catch (IOException e) {
+                getLogger().log(Level.SEVERE, "Failed to validate \""+name+".yml\"!", e);
+            }
+        } else {
+            getLogger().log(Level.INFO, "Can't find \""+name+".yml\", generating a new one...");
+            saveResource(name + ".yml", false);
+        }
+    }
+
+    private Scheduler createScheduler(String name, String threadName) {
+        switch (name) {
+            case "BukkitScheduler": return new BukkitScheduler(threadName);
+            case "AsyncBukkitScheduler": return new AsyncBukkitScheduler();
+            case "SyncBukkitScheduler": return new SyncBukkitScheduler();
+            default: return new NativeScheduler(threadName);
+        }
+    }
+
     @Override
     public void reloadConfig() {
+        shutdownTasks();
         if (recipeManager != null) {
             recipeManager.clearCustomRecipes();
         }
-
+        StructureManager.getInstance().setEnable(false);
         proxyWaystone = null;
         getServer().getMessenger().unregisterIncomingPluginChannel(this);
         getServer().getMessenger().unregisterOutgoingPluginChannel(this);
+
+        checkConfig("books");
+        checkConfig("config");
+        checkConfig("effects");
+        checkConfig("gui");
+        checkConfig("messages");
+        checkConfig("models");
+        checkConfig("recipes");
+        checkConfig("structures");
+        checkConfig("waystones");
 
         getDataFolder().mkdirs();
         saveDefaultConfig();
 
 //        WaystoneStorage storage = WaystoneManager.getManager().getStorage();
 //        if (storage != null) storage.close();
-
         super.reloadConfig();
+
+        service = createScheduler(getConfig().getString("Service Scheduler"), "FW");
+        IOService = createScheduler(getConfig().getString("IO Service Scheduler"), "FWIO");
+        structureService = createScheduler(getConfig().getString("Structure Service Scheduler"), "FWS");
+
+        service.submit(() -> {
+            pushThreadPoolTime();
+            Debug.debug("Service Thread is active "+ getServiceBusyness()+"ms");
+        }, 0, 20);
+
+        IOService.submit(() -> {
+            pushIOThreadPoolTime();
+            Debug.debug("IO Service Thread is active "+ getIOServiceBusyness()+"ms");
+        }, 0, 20);
+
+        structureService.submit(() -> {
+            pushStructureThreadPoolTime();
+            Debug.debug("Structure Service Thread is active "+ getIOServiceBusyness()+"ms");
+        }, 0, 20);
+
+//        service.submit(() -> {
+//            context = Context.enter();
+//            root = context.initSafeStandardObjects();
+//        });
 
         messagesYml.reload();
         guiYml.reload();
@@ -379,6 +576,22 @@ public class FancyWaystones extends JavaPlugin {
 
         WaystoneManager.getManager().getModelMap().clear();
 
+        Set<EconomyService> services = WaystoneManager.getManager().getEconomyServices();
+        services.removeIf(x -> x instanceof ItemEconomyService);
+        if (getConfig().getBoolean("Economy.Item.Enable")) {
+            ConfigurationSection section = getConfig().getConfigurationSection("Economy.Item.Items");
+            if (section != null) {
+                for (String key : section.getKeys(false)) {
+                    MinecraftItem minecraftItem = new MinecraftItem();
+                    minecraftItem.load(section.getConfigurationSection(key));
+                    ItemStack itemStack = minecraftItem.getItemStack(new Placeholder());
+                    ItemEconomyService itemEconomyService = new ItemEconomyService(key, itemStack, getConfig().getString("Economy.Item.Currency Format"));
+                    getLogger().log(Level.INFO, "Added Item Economy with id "+key+": "+itemStack);
+                    services.add(itemEconomyService);
+                }
+            }
+        }
+
         for (String key : waystonesYml.getConfig().getConfigurationSection("Waystone Types").getKeys(false)) {
             ConfigurationSection section = waystonesYml.getConfig().getConfigurationSection("Waystone Types."+key);
             if (section != null) {
@@ -386,6 +599,13 @@ public class FancyWaystones extends JavaPlugin {
                 WaystoneManager.getManager().registerWaystoneType(type);
                 getLogger().log(Level.INFO, "Registered waystone type "+type.name());
             }
+        }
+
+        WaystoneManager.getManager().getItemModelSet().clear();
+
+        for (Map<?, ?> map : modelsYml.getConfig().getMapList("item-model")) {
+            ItemModel itemModel = new ItemModel(map);
+            WaystoneManager.getManager().getItemModelSet().add(itemModel);
         }
 
         for (String key : Objects.requireNonNull(modelsYml.getConfig().getConfigurationSection("model")).getKeys(false)) {
@@ -404,24 +624,14 @@ public class FancyWaystones extends JavaPlugin {
 
         WaystoneManager.getManager().loadWaystoneItem(getConfig().getConfigurationSection("Waystone Item"));
 
-        Set<EconomyService> services = WaystoneManager.getManager().getEconomyServices();
-        services.removeIf(x -> x instanceof ItemEconomyService);
-        if (getConfig().getBoolean("Economy.Item.Enable")) {
-            ConfigurationSection section = getConfig().getConfigurationSection("Economy.Item.Items");
-            if (section != null) {
-                for (String key : section.getKeys(false)) {
-                    MinecraftItem minecraftItem = new MinecraftItem();
-                    minecraftItem.load(section.getConfigurationSection(key));
-                    ItemStack itemStack = minecraftItem.getItemStack(new Placeholder());
-                    ItemEconomyService itemEconomyService = new ItemEconomyService(key, itemStack, getConfig().getString("Economy.Item.Currency Format"));
-                    getLogger().log(Level.INFO, "Added Item Economy with id "+key+": "+itemStack);
-                    services.add(itemEconomyService);
-                }
-            }
+        boolean modernRecipe = false;
+        try {
+            Class<?> namespacedKeyClass = Class.forName("org.bukkit.NamespacedKey");
+            ShapedRecipe.class.getConstructor(namespacedKeyClass, ItemStack.class);
+            modernRecipe = true;
+        } catch (Throwable ignored) {
         }
-
-
-        if (XMaterial.isNewVersion()) {
+        if (modernRecipe) {
             getLogger().log(Level.INFO, "Preparing recipe manager: "+ModernRecipeManager.class);
             recipeManager = new ModernRecipeManager(this);
         } else {
@@ -429,6 +639,7 @@ public class FancyWaystones extends JavaPlugin {
             recipeManager = new LegacyRecipeManager(this);
         }
         recipeManager.registerCustomRecipes();
+
         submitIO(() -> {
             String storageLoc = getConfig().getString("Storage.Location");
             if (storageLoc.equals("FILE")) {
@@ -449,7 +660,53 @@ public class FancyWaystones extends JavaPlugin {
                 getLogger().log(Level.SEVERE, "Unknown Waystone Storage: "+storageLoc);
                 WaystoneManager.getManager().setStorage(new VoidWaystoneStorage());
             }
+
+            getServer().getScheduler().runTask(this, () -> {
+                // Structure loading are done in Bukkit's thread as the registry list for the structure are accessed in Bukkit's Thread
+                StructureManager structureManager = StructureManager.getInstance();
+                structureManager.clearWaystoneStructures();
+                structureManager.clearStructures();
+                File[] list = new File(getDataFolder(), getConfig().getString("Storage.Structure Directory")).listFiles();
+                if (list != null) {
+                    for (File f : list) {
+                        String name = f.getName();
+                        if (name.endsWith(".bin")) {
+                            try (FileInputStream fileInputStream = new FileInputStream(f)) {
+                                structureManager.loadFromInputStream(name.substring(0, name.length() - 4), fileInputStream);
+                                getLogger().log(Level.INFO, "Loaded structure: "+name+" ("+f+")");
+                            } catch (Throwable t) {
+                                getLogger().log(Level.SEVERE, "Failed to load structure "+ name, t);
+                            }
+                        }
+                    }
+                }
+                File structureYml = new File(getDataFolder(), "structures.yml");
+                if (!structureYml.exists()) saveResource("structures.yml", true);
+                try (FileReader fileReader = new FileReader(structureYml)) {
+                    Section section = Section.parseToMap(fileReader);
+                    boolean enable_structure_generation = section.getBoolean("Enable Structure Generation").orElse(false);
+                    informStructureGeneration = section.getBoolean("Inform Generation").orElse(true);
+                    structureManager.setEnable(enable_structure_generation);
+                    if (enable_structure_generation) {
+                        section.getList("Structures").ifPresent(structure -> {
+                            structure.stream().filter(x -> x instanceof MapSection).forEach(element -> {
+                                WaystoneStructure waystoneStructure = structureManager.loadWaystoneStructure((MapSection) element);
+                                if (waystoneStructure != null) {
+                                    getLogger().log(Level.INFO, "Added structure: "+waystoneStructure+" ("+structure.indexOf(element)+")");
+                                    structureManager.addWaystoneStructure(waystoneStructure);
+                                }
+                            });
+                        });
+                    }
+                } catch (Throwable t) {
+                    getLogger().log(Level.SEVERE, "Failed to load structures.yml", t);
+                }
+            });
         });
+    }
+
+    public boolean isInformStructureGeneration() {
+        return informStructureGeneration;
     }
 
     public MySQLWaystoneStorage createMySQLStorage() throws SQLException {
@@ -465,7 +722,7 @@ public class FancyWaystones extends JavaPlugin {
         config.setMaximumPoolSize(50);
         config.setConnectionTimeout(10000);
         config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
+        config.setMaxLifetime(config.getConnectionTimeout());
         config.setPassword(getConfig().getString("Storage.MySQL.Password"));
         config.setUsername(getConfig().getString("Storage.MySQL.Username"));
         HikariDataSource dataSource = new HikariDataSource(config);
@@ -485,6 +742,10 @@ public class FancyWaystones extends JavaPlugin {
                 new File(getDataFolder(), getConfig().getString("Storage.File.Player Directory")),
                 new File(getDataFolder(), getConfig().getString("Storage.File.Names Directory"))
         );
+    }
+
+    public Scheduler getStructureService() {
+        return structureService;
     }
 
     public Language getLanguage() {

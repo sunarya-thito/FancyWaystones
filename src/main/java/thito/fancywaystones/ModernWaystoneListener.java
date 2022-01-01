@@ -9,6 +9,8 @@ import java.util.stream.*;
 public class ModernWaystoneListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
-        e.getPlayer().discoverRecipes(FancyWaystones.getPlugin().getRecipeManager().getRecipes().stream().map(r -> ((Keyed) r).getKey()).collect(Collectors.toList()));
+        e.getPlayer().discoverRecipes(FancyWaystones.getPlugin().getRecipeManager().getRecipes().stream().filter(x ->
+                x.getRecipeConfiguration().isGiveOnJoin() && (!x.getRecipeConfiguration().isFirstJoinOnly() || !e.getPlayer().hasPlayedBefore()))
+                .map(r -> ((Keyed) r.getRecipe()).getKey()).collect(Collectors.toList()));
     }
 }

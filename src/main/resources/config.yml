@@ -1,3 +1,6 @@
+# Configuration Version, do not change!
+Configuration Version: "1.0.4"
+
 Default Waystone Name: "My Waystone"
 
 # If you are using BungeeCord server, set this to true
@@ -5,11 +8,22 @@ Default Waystone Name: "My Waystone"
 # properly
 Proxy Mode: false
 
+# This option is to patch the issue with some servers that
+# cannot handle to create more threads due to excessive CPU usage
+# Use NativeScheduler for java scheduler behaviour
+# Use BukkitScheduler for bukkit async scheduler with reentrant lock synchronization
+# Use AsyncBukkitScheduler for bukkit async scheduler with no synchronization
+# Use SyncBukkitScheduler for bukkit sync scheduler
+Service Scheduler: "BukkitScheduler"
+IO Service Scheduler: "BukkitScheduler"
+Structure Service Scheduler: "BukkitScheduler"
+
 Storage:
   # FILE or MYSQL
   Location: FILE
   # Block Storage is saved in local
   Block Directory: blocks
+  Structure Directory: structures
   File:
     Waystone Directory: waystone_data
     Player Directory: player_data
@@ -80,6 +94,9 @@ Waystone Inactivity:
   # The check interval, it will only check loaded data.
   Check Interval: 1m
 
+# Deprecated. See "item-model" in "models.yml"
+# This is the default item for Waystone Item if its not
+# specified inside models.yml
 Waystone Item:
   Type: BREWING_STAND
   Display Name: "&e&lWAYSTONE"
@@ -99,21 +116,6 @@ Waystone Item:
     - "&7   Environment: &d{waystone_environment}"
     - "&7   Model: &d{waystone_model}"
 
-Waystone Protection:
-  server:
-    # Enabling it will make the waystone can only be broken by the waystone placer
-    Enable: false
-    Explosion Protection: true
-  region:
-    Enable: false
-    Explosion Protection: true
-  public:
-    Enable: false
-    Explosion Protection: true
-  private:
-    Enable: false
-    Explosion Protection: true
-
 Safe Teleport:
   Force If Fail: false
   # Add protection to the player when teleporting
@@ -132,6 +134,18 @@ Economy:
     Enable: true
     Currency Format: "{amount}x {type}"
     Items:
+      # To create ItemsAdder/MythicMobs/Oraxen item economy, use "Plugin" field and fill it with plugin name, and
+      # use "Type" field to fill it with the specific item id
+      # Example:
+      # MyItemsAdderEconomy:
+      #   Plugin: ItemsAdder
+      #   Type: my_items_adder_item_id
+      # MyOraxenEconomy:
+      #   Plugin: Oraxen
+      #   Type: oraxen_item_id
+      # MyMythicMobsEconomy:
+      #   Plugin: MythicMobs
+      #   Type: mythic_mobs_id
       EnderPearl:
         Type: ENDER_PEARL
       Emerald:

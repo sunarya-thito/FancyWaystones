@@ -142,6 +142,7 @@ public class FileWaystoneStorage implements WaystoneStorage {
 
     @Override
     public void putName(String contextName, String name) {
+        namesDirectory.mkdirs();
         File file = new File(namesDirectory, Base64.getUrlEncoder().encodeToString((contextName + "/" + name.toUpperCase()).getBytes(StandardCharsets.UTF_8)));
         try {
             file.createNewFile();
@@ -152,7 +153,7 @@ public class FileWaystoneStorage implements WaystoneStorage {
 
     @Override
     public void removeName(String contextName, String name) {
-        File file = new File(name, Base64.getUrlEncoder().encodeToString((contextName + "/" + name.toUpperCase()).getBytes(StandardCharsets.UTF_8)));
+        File file = new File(namesDirectory, Base64.getUrlEncoder().encodeToString((contextName + "/" + name.toUpperCase()).getBytes(StandardCharsets.UTF_8)));
         file.delete();
     }
 }

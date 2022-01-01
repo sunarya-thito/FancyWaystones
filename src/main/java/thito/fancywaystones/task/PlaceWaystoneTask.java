@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.entity.*;
 import thito.fancywaystones.*;
+import thito.fancywaystones.location.LocalLocation;
 import thito.fancywaystones.proxy.*;
 
 import java.util.*;
@@ -84,15 +85,33 @@ public class PlaceWaystoneTask implements Runnable {
         }
     }
 
+    protected void onPlaced() {
+
+    }
     private void confirm() {
         data.getStatistics().setDateCreated(System.currentTimeMillis());
         FancyWaystones.getPlugin().submitIO(() -> {
+//            for (WaystoneData waystoneData : WaystoneManager.getManager().getLoadedData()) {
+//                WaystoneLocation waystoneLocation = waystoneData.getLocation();
+//                if (waystoneLocation instanceof LocalLocation) {
+//                    Location location = ((LocalLocation) waystoneLocation).getLocation();
+//                    if (location.getWorld() == center.getWorld() &&
+//                        location.getBlockX() == center.getBlockX() &&
+//                        location.getBlockY() == center.getBlockY() &&
+//                        location.getBlockZ() == center.getBlockZ()) {
+//                        Util.submitSync(this::cancel);
+//                        return;
+//                    }
+//                }
+//            }
+            Debug.debug("WAYSTONE PLACED");
             WaystoneManager.getManager().placeWaystone(data, center);
             WaystoneManager.getManager().saveWaystone(data);
             ProxyWaystone pw = plugin.getProxyWaystone();
             if (pw != null && data.getType().isAlwaysListed()) {
                 pw.dispatchWaystoneLoad(data.getUUID());
             }
+            onPlaced();
         });
     }
 
@@ -100,13 +119,15 @@ public class PlaceWaystoneTask implements Runnable {
         FancyWaystones.getPlugin().submitIO(() -> {
             WaystoneManager.getManager().directUnloadData(data);
         });
-        Placeholder placeholder = new Placeholder();
-        placeholder.putContent(Placeholder.PLAYER, player);
-        placeholder.putContent(Placeholder.WAYSTONE, data);
-        player.sendMessage(placeholder.replace("{language.not-enough-space-place}"));
-        WaystoneManager.getManager().createWaystoneItem(data, true, result -> {
-            Util.placeInHand(player, result);
-        });
+        if (player != null) {
+            Placeholder placeholder = new Placeholder();
+            placeholder.putContent(Placeholder.PLAYER, player);
+            placeholder.putContent(Placeholder.WAYSTONE, data);
+            player.sendMessage(placeholder.replace("{language.not-enough-space-place}"));
+            WaystoneManager.getManager().createWaystoneItem(data, true, result -> {
+                Util.placeInHand(player, result);
+            });
+        }
     }
 
     private class ChunkLoadRequest {

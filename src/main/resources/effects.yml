@@ -1,3 +1,6 @@
+# Configuration Version, do not change!
+Configuration Version: "1.0"
+
 Warm Up Waystone:
   Enable: true
   Time: 5s

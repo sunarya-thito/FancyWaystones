@@ -11,10 +11,16 @@ public class MetaRecipe {
     private ShapedRecipe recipe;
     private Map<Character, ItemStack> ingredients;
     private String id;
+    private RecipeConfiguration recipeConfiguration;
 
-    public MetaRecipe(String id, ShapedRecipe recipe, Map<Character, ItemStack> ingredients) {
+    public MetaRecipe(String id, ShapedRecipe recipe, Map<Character, ItemStack> ingredients, RecipeConfiguration recipeConfiguration) {
         this.recipe = recipe;
         this.ingredients = ingredients;
+        this.recipeConfiguration = recipeConfiguration;
+    }
+
+    public RecipeConfiguration getRecipeConfiguration() {
+        return recipeConfiguration;
     }
 
     public String getId() {

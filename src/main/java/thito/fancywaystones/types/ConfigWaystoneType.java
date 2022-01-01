@@ -7,7 +7,6 @@ import thito.fancywaystones.condition.*;
 import thito.fancywaystones.condition.handler.*;
 import thito.fancywaystones.config.*;
 import thito.fancywaystones.economy.*;
-import thito.fancywaystones.location.*;
 
 import java.util.*;
 
@@ -15,7 +14,8 @@ public class ConfigWaystoneType implements WaystoneType {
     private final String id;
     private final String name;
     private final boolean alwaysLoaded, alwaysListed, requiresActivation, purge;
-    private final Condition accessCondition, activationCondition, purgeDropsCondition, breakCondition, dropCondition, redirectCompassCondition;
+    private final Condition accessCondition, activationCondition, purgeDropsCondition, breakCondition, dropCondition,
+            redirectCompassCondition, listingCondition, teleportCondition;
     private final String uniqueKey;
 
     private final boolean multiWorldCostEnabled, multiDimensionalCostEnabled, multiServerCostEnabled, distanceCostEnabled, basicFeeEnabled;
@@ -25,6 +25,7 @@ public class ConfigWaystoneType implements WaystoneType {
     multiServerCostMap,
     distanceCostMap,
     basicFeeCostMap;
+    private final List<String> categoryWhitelist, categoryBlacklist;
     private final double distanceCostDivision;
     private final boolean distanceCostFloorDivision;
 
@@ -41,6 +42,10 @@ public class ConfigWaystoneType implements WaystoneType {
         breakCondition = Condition.fromConfig(new ListSection(section.getList("Breakable")));
         dropCondition = Condition.fromConfig(new ListSection(section.getList("Drops")));
         redirectCompassCondition = Condition.fromConfig(new ListSection(section.getList("Compass Redirection")));
+        listingCondition = Condition.fromConfig(new ListSection(section.getList("Should Be Listed")));
+        teleportCondition = Condition.fromConfig(new ListSection(section.getList("Can Be Visited")));
+        categoryBlacklist = section.getStringList("Waystone Category Blacklist");
+        categoryWhitelist = section.getStringList("Waystone Category Whitelist");
         uniqueKey = section.getString("Unique Names");
         multiWorldCostEnabled = section.getBoolean("Price.Multiworld.Enable");
         multiDimensionalCostEnabled = section.getBoolean("Price.Multidimensional.Enable");
@@ -57,8 +62,40 @@ public class ConfigWaystoneType implements WaystoneType {
     }
 
     @Override
-    public boolean canRedirectCompass(Player player, WaystoneData waystoneData) {
-        return redirectCompassCondition.test(new Placeholder().putContent(Placeholder.PLAYER, player).putContent(Placeholder.WAYSTONE, waystoneData));
+    public String toString() {
+        return "ConfigWaystoneType{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean isVisible(WaystoneType type) {
+        if (!categoryWhitelist.isEmpty() && !categoryWhitelist.contains(type.name())) {
+            return false;
+        }
+        return categoryBlacklist.isEmpty() || !categoryBlacklist.contains(type.name());
+    }
+
+    @Override
+    public String[] canBeVisited(Player player, WaystoneData source, WaystoneData waystoneData) {
+        return teleportCondition.getFormattedReason(new Placeholder()
+                .putContent(Placeholder.PLAYER, player)
+                .putContent(Placeholder.WAYSTONE, waystoneData)
+                .putContent(Placeholder.SOURCE_WAYSTONE, source));
+    }
+
+    @Override
+    public boolean canBeListed(Player player, WaystoneData source, WaystoneData waystoneData) {
+        return listingCondition.test(new Placeholder()
+                .putContent(Placeholder.PLAYER, player)
+                .putContent(Placeholder.WAYSTONE, waystoneData)
+                .putContent(Placeholder.SOURCE_WAYSTONE, source)).isEmpty();
+    }
+
+    @Override
+    public String[] canRedirectCompass(Player player, WaystoneData waystoneData) {
+        return redirectCompassCondition.getFormattedReason(new Placeholder().putContent(Placeholder.PLAYER, player).putContent(Placeholder.WAYSTONE, waystoneData));
     }
 
     private static Map<EconomyService, Integer> parseCost(ConfigurationSection section) {
@@ -172,35 +209,35 @@ public class ConfigWaystoneType implements WaystoneType {
     @Override
     public boolean shouldDrop(Player player, WaystoneData waystoneData) {
         return dropCondition.test(new Placeholder().putContent(Placeholder.PLAYER, player)
-        .putContent(Placeholder.WAYSTONE, waystoneData));
+        .putContent(Placeholder.WAYSTONE, waystoneData)).isEmpty();
     }
 
     @Override
     public boolean shouldDropPurge(WaystoneData waystoneData) {
-        return purgeDropsCondition.test(new Placeholder().putContent(Placeholder.WAYSTONE, waystoneData));
+        return purgeDropsCondition.test(new Placeholder().putContent(Placeholder.WAYSTONE, waystoneData)).isEmpty();
     }
 
     @Override
-    public boolean hasAccess(Player player, WaystoneData waystoneData) {
-        return accessCondition.test(new Placeholder().putContent(Placeholder.PLAYER, player)
+    public String[] hasAccess(Player player, WaystoneData waystoneData) {
+        return accessCondition.getFormattedReason(new Placeholder().putContent(Placeholder.PLAYER, player)
                 .putContent(Placeholder.WAYSTONE, waystoneData));
     }
 
     @Override
-    public boolean hasActivationAccess(Player player, WaystoneData waystoneData) {
-        return activationCondition.test(new Placeholder().putContent(Placeholder.PLAYER, player)
+    public String[] hasActivationAccess(Player player, WaystoneData waystoneData) {
+        return activationCondition.getFormattedReason(new Placeholder().putContent(Placeholder.PLAYER, player)
                 .putContent(Placeholder.WAYSTONE, waystoneData));
     }
 
     @Override
-    public boolean isBreakable(Player player, WaystoneData waystoneData) {
-        return breakCondition.test(new Placeholder().putContent(Placeholder.PLAYER, player)
+    public String[] isBreakable(Player player, WaystoneData waystoneData) {
+        return breakCondition.getFormattedReason(new Placeholder().putContent(Placeholder.PLAYER, player)
                 .putContent(Placeholder.WAYSTONE, waystoneData));
     }
 
     @Override
     public boolean isBreakableByExplosion(WaystoneData waystoneData) {
         return breakCondition.test(new Placeholder().putContent(Placeholder.WAYSTONE, waystoneData)
-        .putContent(ExplosionConditionHandler.EXPLOSION_CAUSE, true));
+        .putContent(ExplosionConditionHandler.EXPLOSION_CAUSE, true)).isEmpty();
     }
 }

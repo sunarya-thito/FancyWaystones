@@ -38,6 +38,10 @@
                 <copy />
                 <copy />
                 <copy />
+                <copy />
+                <copy />
+                <copy />
+                <copy />
               </target>
             </configuration>
           </execution>
@@ -46,6 +50,15 @@
     </plugins>
   </build>
   <repositories>
+    <repository>
+      <id>placeholderapi</id>
+      <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+    </repository>
+    <repository>
+      <id>nexus</id>
+      <name>Lumine Releases</name>
+      <url>https://mvn.lumine.io/repository/maven-public/</url>
+    </repository>
     <repository>
       <id>spigot-repo</id>
       <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
@@ -76,6 +89,18 @@
     </repository>
   </repositories>
   <dependencies>
+    <dependency>
+      <groupId>com.ticxo.modelengine</groupId>
+      <artifactId>api</artifactId>
+      <version>R2.2.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>me.clip</groupId>
+      <artifactId>placeholderapi</artifactId>
+      <version>2.11.1</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>com.velocitypowered</groupId>
       <artifactId>velocity-api</artifactId>
@@ -117,6 +142,12 @@
       <groupId>com.github.LoneDev6</groupId>
       <artifactId>API-ItemsAdder</artifactId>
       <version>2.4.7</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.lumine.xikage</groupId>
+      <artifactId>MythicMobs</artifactId>
+      <version>4.9.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

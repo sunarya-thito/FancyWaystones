@@ -3,7 +3,8 @@ package thito.fancywaystones.proxy.message;
 import java.util.*;
 
 public class WaystoneUpdateMessage extends Message {
-    private Set<UUID> load, unload, refresh;
+    private static final long serialVersionUID = 1L;
+    private final Set<UUID> load, unload, refresh;
 
     public WaystoneUpdateMessage(Set<UUID> load, Set<UUID> unload, Set<UUID> refresh) {
         this.load = load;

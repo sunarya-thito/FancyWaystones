@@ -1,12 +1,13 @@
 package thito.fancywaystones.books;
 
-import org.bukkit.inventory.*;
+import org.bukkit.inventory.ItemStack;
 import thito.fancywaystones.*;
-import thito.fancywaystones.ui.*;
+import thito.fancywaystones.condition.Condition;
+import thito.fancywaystones.config.ListSection;
+import thito.fancywaystones.ui.MinecraftItem;
 
-import java.nio.charset.*;
-import java.util.*;
-import java.util.function.*;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class TeleportationBook {
 
@@ -18,10 +19,18 @@ public class TeleportationBook {
         return FancyWaystones.getPlugin().getBooksYml().getConfig().getBoolean("Books.Teleportation Book.Charge Back On Invalid Waystone");
     }
 
+    public Condition getUseCondition() {
+        return Condition.fromConfig(new ListSection(FancyWaystones.getPlugin().getBooksYml().getConfig().getStringList("Books.Can Be Used")));
+    }
+
+    public Condition getActivationCondition() {
+        return Condition.fromConfig(new ListSection(FancyWaystones.getPlugin().getBooksYml().getConfig().getStringList("Books.Can Be Activated")));
+    }
+
     public ItemStack createEmptyItem() {
         MinecraftItem item = new MinecraftItem();
         item.load(FancyWaystones.getPlugin().getBooksYml().getConfig().getConfigurationSection("Books.Teleportation Book.Empty Item"));
-        item.setData("FancyWaystones:EmptyTeleportScroll", new byte[0]);
+        item.setData("FancyWaystones:EmptyTeleportScroll", "true".getBytes(StandardCharsets.UTF_8));
         return item.getItemStack(new Placeholder());
     }
 
@@ -42,8 +51,7 @@ public class TeleportationBook {
     }
 
     public WaystoneData getWaystoneData(ItemStack itemStack) {
-        FancyWaystones.checkIOThread();
-        byte[] data = Util.getData(itemStack, "FW:TS");
+        byte[] data = NBTUtil.getData(itemStack, "FW:TS");
         if (data != null) {
             try {
                 UUID uuid = UUID.fromString(new String(data, StandardCharsets.UTF_8));

@@ -37,6 +37,7 @@ public class Condition {
         HANDLER_FACTORY_MAP.put("IS_OWNER", map -> new OwnerConditionHandler());
         HANDLER_FACTORY_MAP.put("IS_EXPLOSION", map -> new ExplosionConditionHandler());
         HANDLER_FACTORY_MAP.put("WORLD_WHITELIST", map -> new WorldConditionHandler(map.getList("Worlds").orElse(ListSection.empty()).stream().map(String::valueOf).collect(Collectors.toList())));
+        HANDLER_FACTORY_MAP.put("TYPE_WHITELIST", map -> new TypeConditionHandler(map.getList("Types").orElse(ListSection.empty()).stream().map(String::valueOf).collect(Collectors.toList())));
 
         NO_PARAM_HANDLER_FACTORY_MAP.put("IS_EXPLOSION", ExplosionConditionHandler::new);
         NO_PARAM_HANDLER_FACTORY_MAP.put("ALWAYS", AlwaysConditionHandler::new);
@@ -45,6 +46,12 @@ public class Condition {
         NO_PARAM_HANDLER_FACTORY_MAP.put("RANDOM", () -> new RandomConditionHandler(50));
         NO_PARAM_HANDLER_FACTORY_MAP.put("IS_MEMBER", MemberConditionHandler::new);
         NO_PARAM_HANDLER_FACTORY_MAP.put("IS_OWNER", OwnerConditionHandler::new);
+        NO_PARAM_HANDLER_FACTORY_MAP.put("IS_SAME_DIMENSION", SameDimensionConditionHandler::new);
+        NO_PARAM_HANDLER_FACTORY_MAP.put("IS_SAME_SERVER", SameServerConditionHandler::new);
+        NO_PARAM_HANDLER_FACTORY_MAP.put("IS_SAME_WORLD", SameWorldConditionHandler::new);
+        NO_PARAM_HANDLER_FACTORY_MAP.put("IS_SAME_TYPE", SameTypeConditionHandler::new);
+        NO_PARAM_HANDLER_FACTORY_MAP.put("IS_WAYSTONE_ACTIVATED", ActiveWaystoneConditionHandler::new);
+        NO_PARAM_HANDLER_FACTORY_MAP.put("IS_NATURAL", NaturalWaystoneConditionHandler::new);
     }
 
     public static Condition fromConfig(ListSection listSection) {
@@ -65,7 +72,8 @@ public class Condition {
                                 ConditionHandler handler = factory.apply(map);
                                 if (handler != null) {
                                     ConditionRule rule = new ConditionRule(handler);
-                                        map.getList("And").ifPresent(list -> {
+                                    rule.setNegate(map.getBoolean("Negate").orElse(false));
+                                    map.getList("And").ifPresent(list -> {
                                         rule.setSubCondition(fromConfig(list));
                                     });
                                     condition.getRules().add(rule);
@@ -85,10 +93,23 @@ public class Condition {
         return rules;
     }
 
-    public boolean test(Placeholder placeholder) {
-        for (ConditionRule rule : rules) {
-            if (rule.test(placeholder)) return true;
+    public String[] getFormattedReason(Placeholder placeholder) {
+        List<String> test = test(placeholder);
+        if (test.isEmpty()) return null;
+        if (test.size() == 1) {
+            return placeholder.clone().put("reason", ph -> test.get(0)).replaceWithNewLines("{language.condition.format}").toArray(new String[0]);
         }
-        return rules.isEmpty();
+        return placeholder.clone().put("reasons", ph -> String.join("{language.condition.format-plural-delimiter}", test))
+                .replaceWithNewLines("{language.condition.format-plural}").toArray(new String[0]);
+    }
+
+    public List<String> test(Placeholder placeholder) {
+        List<String> reasons = new ArrayList<>();
+        for (ConditionRule rule : rules) {
+            List<String> x = rule.test(placeholder);
+            if (x == null || x.isEmpty()) return Collections.emptyList();
+            reasons.add(x.get(0));
+        }
+        return reasons;
     }
 }

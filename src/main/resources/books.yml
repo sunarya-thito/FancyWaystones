@@ -1,7 +1,19 @@
+# Configuration Version, do not change!
+Configuration Version: "1.0"
+
 Books:
   Teleportation Book:
     Enable: true
     Charge Back On Invalid Waystone: true
+    Can Be Used:
+      - ALWAYS
+    Can Be Activated:
+      - TYPE_WHITELIST:
+          - public
+          - private
+          - region
+        And:
+          - IS_MEMBER
     Empty Item:
       Type: ENCHANTED_BOOK
       Display Name: "&eEmpty Teleportation Book"
@@ -18,6 +30,9 @@ Books:
         - "&7   targeted waystone."
         - "&6 * This does not cost anything."
     Recipe:
+      Auto Give:
+        On Join: true
+        First Join Only: false
       Shape:
         - " Y "
         - "YXY"
@@ -32,6 +47,8 @@ Books:
     Enable Listener: true
     Extra No Damage Time: 20s
     Ignore Unsafe Destination: true
+    Can Be Used:
+      - ALWAYS
     Check Height: 10
     Check Radius: 10
     # Use "-1" or "unlimited" to disable location time out
@@ -49,6 +66,9 @@ Books:
         - "&7   last death location."
         - "&6 * This does not cost anything."
     Recipe:
+      Auto Give:
+        On Join: true
+        First Join Only: false
       Shape:
         - " Y "
         - "YXY"

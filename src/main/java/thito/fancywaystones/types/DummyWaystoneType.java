@@ -14,7 +14,12 @@ public class DummyWaystoneType implements WaystoneType {
     }
 
     @Override
-    public boolean canRedirectCompass(Player player, WaystoneData waystoneData) {
+    public boolean isVisible(WaystoneType type) {
+        return true;
+    }
+
+    @Override
+    public boolean canBeListed(Player player, WaystoneData source, WaystoneData waystoneData) {
         return false;
     }
 
@@ -64,22 +69,32 @@ public class DummyWaystoneType implements WaystoneType {
     }
 
     @Override
-    public boolean hasAccess(Player player, WaystoneData waystoneData) {
-        return false;
-    }
-
-    @Override
-    public boolean hasActivationAccess(Player player, WaystoneData waystoneData) {
-        return false;
-    }
-
-    @Override
-    public boolean isBreakable(Player player, WaystoneData waystoneData) {
-        return false;
-    }
-
-    @Override
     public boolean isBreakableByExplosion(WaystoneData waystoneData) {
         return false;
+    }
+
+    @Override
+    public String[] canBeVisited(Player player, WaystoneData source, WaystoneData waystoneData) {
+        return null;
+    }
+
+    @Override
+    public String[] canRedirectCompass(Player player, WaystoneData waystoneData) {
+        return null;
+    }
+
+    @Override
+    public String[] hasAccess(Player player, WaystoneData waystoneData) {
+        return null;
+    }
+
+    @Override
+    public String[] hasActivationAccess(Player player, WaystoneData waystoneData) {
+        return null;
+    }
+
+    @Override
+    public String[] isBreakable(Player player, WaystoneData waystoneData) {
+        return null;
     }
 }

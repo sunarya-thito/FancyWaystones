@@ -11,7 +11,6 @@ import thito.fancywaystones.proxy.message.*;
 import thito.fancywaystones.task.*;
 
 import java.util.*;
-import java.util.logging.Level;
 
 public class ProxyWaystoneListener implements PluginMessageListener {
     @Override

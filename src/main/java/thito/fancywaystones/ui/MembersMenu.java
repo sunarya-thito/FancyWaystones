@@ -146,8 +146,7 @@ public class MembersMenu implements AttachedMenu {
             } else if (current == addMember.getString("Layout Key").charAt(0)) {
                 item.load(addMember);
                 item.addClickListener((inv, ph) -> {
-                    playerData.getPlayer().closeInventory();
-                    new AnvilGUI.Builder().plugin(FancyWaystones.getPlugin())
+                    AnvilGUI.Builder builder = new AnvilGUI.Builder().plugin(FancyWaystones.getPlugin())
                             .title(new Placeholder().putContent(Placeholder.PLAYER, playerData.getPlayer()).replace("{language.edit-members-gui-title}"))
                             .onComplete((pl, name) -> {
                                 Player player = Bukkit.getPlayerExact(name);
@@ -157,7 +156,7 @@ public class MembersMenu implements AttachedMenu {
                                                 .put("target", px -> name).replace("{language.not-owner}"));
                                     } else {
                                         Set<WaystoneMember> members = category == Category.WHITELIST ?
-                                            waystoneData.getMembers() : waystoneData.getBlacklist();
+                                                waystoneData.getMembers() : waystoneData.getBlacklist();
                                         if (members.contains(new WaystoneMember(pl.getUniqueId()))) {
                                             playerData.getPlayer().sendMessage(new Placeholder().replace("{member-already-added}"));
                                         } else {
@@ -170,7 +169,7 @@ public class MembersMenu implements AttachedMenu {
                                     }
                                 } else {
                                     playerData.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.PLAYER, playerData.getPlayer())
-                                    .put("target", px -> name).replace("{language.player-not-found}"));
+                                            .put("target", px -> name).replace("{language.player-not-found}"));
                                 }
                                 open();
                                 return AnvilGUI.Response.close();
@@ -180,8 +179,11 @@ public class MembersMenu implements AttachedMenu {
                             .itemLeft(Util.material("PLAYER_HEAD").parseItem())
                             .onClose(p -> {
                                 open();
-                            })
-                            .open(playerData.getPlayer());
+                            });
+                    Util.submitSync(() -> {
+                        playerData.getPlayer().closeInventory();
+                        builder.open(playerData.getPlayer());
+                    });
                 });
             } else if (current == previousPageItem.getString("Layout Key").charAt(0)) {
                 if (page > 0) {
@@ -203,7 +205,9 @@ public class MembersMenu implements AttachedMenu {
                 }
             } else if (current == closeItem.getString("Layout Key").charAt(0)) {
                 item.load(closeItem);
-                item.addClickListener((inv, ph) -> inv.getWhoClicked().closeInventory());
+                item.addClickListener((inv, ph) -> {
+                    Util.submitSync(() -> inv.getWhoClicked().closeInventory());
+                });
             } else {
                 boolean found = false;
                 for (Category t : Category.values()) {

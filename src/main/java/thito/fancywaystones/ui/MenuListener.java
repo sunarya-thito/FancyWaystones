@@ -3,6 +3,7 @@ package thito.fancywaystones.ui;
 import org.bukkit.event.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.*;
+import thito.fancywaystones.FancyWaystones;
 
 public class MenuListener implements Listener {
 
@@ -31,7 +32,9 @@ public class MenuListener implements Listener {
                     e.setCancelled(true);
                     int rawSlot = e.getRawSlot();
                     if (rawSlot >= 0 && rawSlot < top.getSize()) {
-                        ((MinecraftMenu.ActiveUI) holder).dispatchClick(e);
+                        FancyWaystones.getPlugin().submit(() -> {
+                            ((MinecraftMenu.ActiveUI) holder).dispatchClick(e);
+                        });
                     }
                 }
             }

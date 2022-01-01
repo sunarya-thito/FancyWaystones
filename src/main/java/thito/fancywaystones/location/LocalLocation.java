@@ -5,10 +5,16 @@ import org.bukkit.entity.*;
 import thito.fancywaystones.*;
 import thito.fancywaystones.task.*;
 
+import java.util.UUID;
 import java.util.function.*;
 
 public class LocalLocation implements WaystoneLocation {
     private Location location;
+
+    @Override
+    public UUID getWorldUUID() {
+        return location.getWorld().getUID();
+    }
 
     public LocalLocation(Location location) {
         this.location = location;
@@ -27,11 +33,6 @@ public class LocalLocation implements WaystoneLocation {
     @Override
     public int getBlockZ() {
         return location.getBlockZ();
-    }
-
-    @Override
-    public String getWorldName() {
-        return location.getWorld().getName();
     }
 
     @Override

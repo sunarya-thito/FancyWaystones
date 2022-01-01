@@ -1,3 +1,6 @@
+# Configuration Version, do not change!
+Configuration Version: "1.0"
+
 Waystone Recipes:
   - Model: 'regular'
     Environment: 'NORMAL'
@@ -7,6 +10,9 @@ Waystone Recipes:
     # {model} - the waystone model id (in models.yml)
     # {type} - the waystone type name (in waystones.yml)
     Permission: 'fancywaystones.waystones.craft.{model}.{environment}.{type}'
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Shape:
       - "XYX"
       - "BAB"
@@ -29,6 +35,9 @@ Waystone Recipes:
       - "XYX"
       - " A "
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: SMOOTH_STONE_SLAB
@@ -45,6 +54,9 @@ Waystone Recipes:
       - "XYX"
       - "BAB"
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: SMOOTH_STONE_SLAB
@@ -63,6 +75,9 @@ Waystone Recipes:
       - "XYX"
       - "BAB"
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: SMOOTH_STONE_SLAB
@@ -81,6 +96,9 @@ Waystone Recipes:
       - "XYX"
       - " Y "
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: NETHER_BRICK_SLAB
@@ -97,6 +115,9 @@ Waystone Recipes:
       - "XYX"
       - "BAB"
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: NETHER_BRICK_SLAB
@@ -115,6 +136,9 @@ Waystone Recipes:
       - "XYX"
       - "BAB"
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: NETHER_BRICK_SLAB
@@ -133,6 +157,9 @@ Waystone Recipes:
       - "XYX"
       - " A "
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: PURPUR_SLAB;SANDSTONE_SLAB
@@ -149,6 +176,9 @@ Waystone Recipes:
       - "XYX"
       - "BAB"
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: PURPUR_SLAB;SANDSTONE_SLAB
@@ -167,6 +197,9 @@ Waystone Recipes:
       - "XYX"
       - "BAB"
       - "AZA"
+    Auto Give:
+      On Join: true
+      First Join Only: false
     Materials:
       X:
         Type: PURPUR_SLAB;SANDSTONE_SLAB

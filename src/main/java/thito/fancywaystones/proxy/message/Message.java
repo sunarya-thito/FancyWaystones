@@ -3,6 +3,7 @@ package thito.fancywaystones.proxy.message;
 import java.io.*;
 
 public abstract class Message implements Serializable {
+    private static final long serialVersionUID = 1L;
     public byte[] write() {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {

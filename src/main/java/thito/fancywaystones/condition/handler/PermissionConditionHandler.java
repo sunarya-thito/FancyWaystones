@@ -1,8 +1,8 @@
 package thito.fancywaystones.condition.handler;
 
-import org.bukkit.entity.*;
-import thito.fancywaystones.*;
-import thito.fancywaystones.condition.*;
+import org.bukkit.entity.Player;
+import thito.fancywaystones.Placeholder;
+import thito.fancywaystones.condition.ConditionHandler;
 
 public class PermissionConditionHandler implements ConditionHandler {
     private String permission;
@@ -12,12 +12,24 @@ public class PermissionConditionHandler implements ConditionHandler {
     }
 
     @Override
-    public boolean test(Placeholder placeholder) {
+    public String test(Placeholder placeholder) {
         Player player = placeholder.get(Placeholder.PLAYER);
+        if (permission == null) return null;
         if (player != null) {
-            if (permission == null) return true;
-            return player.hasPermission(permission);
+            return player.hasPermission(placeholder.replace(permission)) ? null :
+                    placeholder.clone().put("permission", ph -> placeholder.replace(permission)).replace("{language.condition.permission}");
         }
-        return false;
+        return placeholder.clone().put("permission", ph -> placeholder.replace(permission)).replace("{language.condition.permission}");
+    }
+
+    @Override
+    public String testNegate(Placeholder placeholder) {
+        Player player = placeholder.get(Placeholder.PLAYER);
+        if (permission == null) return null;
+        if (player != null) {
+            return player.hasPermission(placeholder.replace(permission)) ?
+                    placeholder.clone().put("permission", ph -> placeholder.replace(permission)).replace("{language.condition.not-permission}") : null;
+        }
+        return null;
     }
 }

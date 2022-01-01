@@ -1,0 +1,79 @@
+# Configuration Version, do not change!
+Configuration Version: "1.0"
+
+Enable Structure Generation: false
+# Inform on console about waystone generation
+Inform Generation: true
+# Warning: In order to keep the balance of the waystone usage
+# It is highly recommended keeping the waystone rare as if
+# making it very easy to obtain will allow players to abuse the
+# waystone system.
+Structures:
+    # The structure name can be seen on the file name
+    # Example: "demo.bin", then the name is "demo"
+  - Structure Name: "demo"
+    # Waystone Type must qualify these requirements:
+    # - must allow all players to activate and use the waystone
+    # - does not load and visible to all players at startup
+    Waystone Type: public
+    Waystone Environment: NORMAL
+    Waystone Model: regular
+    # Rename the generated waystone.
+    # Will pick one of these names randomly.
+    # Make it empty to disable auto renaming.
+    Auto Rename:
+      - Generated Waystone
+      - Naturally Spawned Waystone
+    # If one of these values above are not valid / not found, then this structure will not be generated
+    Condition:
+      # Can the structure spawn on the water?
+      On Water: false
+      # Only spawn on a new generated chunks
+      Only New Chunks: true
+      # Prevents structure to generate on spawn protected areas
+      # as players will never be able to activate and use it anyway (except for Operators)
+      Not At Spawn Protection: true
+      # On what world can the structure spawn?
+      # Set it empty to enable for all world
+      Worlds:
+        - my_example_world
+      # The spawn chance percentage
+      Spawn Chance Percentage: 80
+      # every N of X * 16 coordinate
+      # example, using value "10", will spawn the structure every 160 blocks at X axis
+      # (also depends on Z Chunk distance)
+      X Chunk Distance: 30
+      # every N of Z * 16 coordinate
+      # example, using value "10", will spawn the structure every 160 blocks at Z axis
+      Z Chunk Distance: 30
+      # The offset X coordinate range for the structure to spawn
+      X Offset Range:
+        Min: 5
+        Max: 10
+      # The offset z coordinate range for the structure to spawn
+      Z Offset Range:
+        Min: 5
+        Max: 10
+      # If true, it will find the highest block possible
+      # If false, it will find the lowest block possible
+      Spawn From Above: true
+      # If Spawn From Above is true, and this is also true,
+      # it will find the highest block, ignoring any tree leaves
+      Ignore Trees: true
+      # On what dimension can the structure spawn?
+      Dimensions:
+        - NORMAL
+      # On what biomes can the structure spawn?
+      # Set it to empty to enable for all biomes
+      # Biomes: []
+      Biomes:
+        - PLAINS
+        - SAVANNA
+        - MOUNTAINS
+        - DESERT
+      # Prevents the structure to spawn on void
+      Not On Void: true
+      # Prevents floating structure by placing the structure on the lowest ground level
+      # This is the most case for non-flat surface.
+      Place On The Lowest Block Possible: false
+  # You can use the template above to create more structures, remember that, there can only be 1 structure on a chunk.

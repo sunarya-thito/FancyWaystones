@@ -7,7 +7,6 @@ import thito.fancywaystones.location.DeathLocation;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.*;
 import java.util.logging.*;
 import java.util.stream.*;
 
@@ -159,9 +158,9 @@ public class PlayerData {
             ConfigurationSection death = section.getConfigurationSection("deathLocation");
             if (death != null) {
                 String server = death.getString("server");
-                String world = death.getString("world");
+                String world = death.getString("worldUID");
                 if (server != null && world != null) {
-                    deathLocation = new DeathLocation(server, world,
+                    deathLocation = new DeathLocation(server, UUID.fromString(world),
                             death.getDouble("x"), death.getDouble("y"), death.getDouble("z"));
                 }
             }
@@ -184,7 +183,7 @@ public class PlayerData {
             }
             if (deathLocation != null) {
                 section.set("deathLocation.server", deathLocation.getServerName());
-                section.set("deathLocation.world", deathLocation.getWorldName());
+                section.set("deathLocation.worldUID", deathLocation.getWorldUID().toString());
                 section.set("deathLocation.x", deathLocation.getX());
                 section.set("deathLocation.y", deathLocation.getY());
                 section.set("deathLocation.z", deathLocation.getZ());

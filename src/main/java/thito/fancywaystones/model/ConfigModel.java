@@ -64,8 +64,8 @@ public class ConfigModel extends WaystoneModel {
         public Handler(WaystoneModel model, WaystoneData data) {
             super(model);
             this.data = data;
-            WaystoneModel.ACTIVE_HANDLERS.add(this);
             components = Arrays.stream(componentConfigs).map(x -> x.createComponent(data)).toArray(Component[]::new);
+            WaystoneModel.ACTIVE_HANDLERS.add(this);
         }
 
         @Override
@@ -76,6 +76,7 @@ public class ConfigModel extends WaystoneModel {
         @Override
         public void destroyImmediately() {
             WaystoneModel.ACTIVE_HANDLERS.remove(this);
+            if (components == null) return;
             for (Component c : components) {
                 c.destroyImmediately();
             }
@@ -89,6 +90,7 @@ public class ConfigModel extends WaystoneModel {
 
         @Override
         public boolean isPart(Location loc) {
+            if (components == null) return false;
             for (Component c : components) {
                 if (!c.getHandler().hasBlockHitBox()) continue;
                 Location o = c.getLocation();
@@ -104,6 +106,7 @@ public class ConfigModel extends WaystoneModel {
 
         @Override
         public void update(Player player) {
+            if (components == null) return;
             supplyIsActive(player, isActive -> {
                 for (Component c : components) {
                     c.update(data, isActive ? WaystoneState.ACTIVE : WaystoneState.INACTIVE, player);
@@ -135,6 +138,7 @@ public class ConfigModel extends WaystoneModel {
 
         @Override
         public void sendNoAccess(Player player) {
+            if (components == null) return;
             for (Component c : components) {
                 ComponentHandler handler = c.getHandler();
                 if (handler instanceof HologramComponent.Handler) {

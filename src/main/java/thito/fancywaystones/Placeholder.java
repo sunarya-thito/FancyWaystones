@@ -10,15 +10,41 @@ import java.util.*;
 import java.util.stream.*;
 
 public class Placeholder {
+
     public static final VariableContent<WaystoneMember> MEMBER = new VariableContent<>(WaystoneMember.class);
     public static final VariableContent<Player> VIEWER = new VariableContent<>(Player.class);
     public static final VariableContent<Player> PLAYER = new VariableContent<>(Player.class);
     public static final VariableContent<WaystoneData> WAYSTONE = new VariableContent<>(WaystoneData.class);
+    public static final VariableContent<WaystoneData> SOURCE_WAYSTONE = new VariableContent<>(WaystoneData.class);
     public static final VariableContent<ItemSort> SORT = new VariableContent<>(ItemSort.class);
 
     public static final Map<String, Variable> DEFAULT_VARIABLES = new HashMap<>();
 
+    public static final Placeholder EMPTY = REPLACE_NOTHING();
+    private static Placeholder REPLACE_NOTHING() {
+        return new Placeholder() {
+
+            @Override
+            public List<String> replace(List<String> list) {
+                return list;
+            }
+
+            @Override
+            public List<String> replaceWithBreakableLines(List<String> list) {
+                return list;
+            }
+
+            @Override
+            public String replace(String s) {
+                return s;
+            }
+        };
+    }
+
     static {
+        DEFAULT_VARIABLES.put("type", placeholder -> placeholder.get(WAYSTONE).getType().name());
+        DEFAULT_VARIABLES.put("environment", placeholder -> placeholder.get(WAYSTONE).getEnvironment().name());
+        DEFAULT_VARIABLES.put("model", placeholder -> placeholder.get(WAYSTONE).getModel().getName());
         DEFAULT_VARIABLES.put("player_name", placeholder -> placeholder.get(PLAYER).getName());
         DEFAULT_VARIABLES.put("player_name_uppercase", placeholder -> placeholder.get(PLAYER).getName().toUpperCase());
         DEFAULT_VARIABLES.put("player_display_name", placeholder -> {
@@ -37,13 +63,25 @@ public class Placeholder {
         DEFAULT_VARIABLES.put("waystone_member_uuid", p -> p.get(MEMBER).getUUID());
 
         DEFAULT_VARIABLES.put("waystone_name", placeholder -> placeholder.get(WAYSTONE).getName());
-        DEFAULT_VARIABLES.put("waystone_world_name", placeholder -> placeholder.get(WAYSTONE).getLocation().getWorldName());
+//        DEFAULT_VARIABLES.put("waystone_world_name", placeholder -> {
+//            WaystoneLocation location = placeholder.get(WAYSTONE).getLocation();
+//            if (location instanceof LocalLocation) {
+//                return ((LocalLocation) location).getLocation().getWorld().getName();
+//            }
+//            if (location instanceof ProxyLocation) {
+//                return location.getWorldUUID().toString();
+//            }
+//            return "?";
+//        });
         DEFAULT_VARIABLES.put("waystone_x", p -> p.get(WAYSTONE).getLocation().getBlockX());
         DEFAULT_VARIABLES.put("waystone_y", p -> p.get(WAYSTONE).getLocation().getBlockY());
         DEFAULT_VARIABLES.put("waystone_z", p -> p.get(WAYSTONE).getLocation().getBlockZ());
         DEFAULT_VARIABLES.put("waystone_name_uppercase", p -> p.get(WAYSTONE).getName().toUpperCase());
         DEFAULT_VARIABLES.put("waystone_owner_name", p -> p.get(WAYSTONE).getOwnerName());
-        DEFAULT_VARIABLES.put("waystone_owner_name_uppercase", p -> p.get(WAYSTONE).getOwnerName().toUpperCase());
+        DEFAULT_VARIABLES.put("waystone_owner_name_uppercase", p -> {
+            String ownerName = p.get(WAYSTONE).getOwnerName();
+            return ownerName == null ? null : ownerName.toUpperCase();
+        });
         DEFAULT_VARIABLES.put("waystone_owner_uuid",  p -> p.get(WAYSTONE).getOwnerUUID());
         DEFAULT_VARIABLES.put("waystone_type_display_name", p -> p.get(WAYSTONE).getType().getDisplayName(p));
         DEFAULT_VARIABLES.put("waystone_type_name", p -> p.get(WAYSTONE).getType().name());
@@ -131,6 +169,10 @@ public class Placeholder {
     private Map<VariableContent, Object> contents = new HashMap<>();
     private Map<String, Variable> variables = new HashMap<>(DEFAULT_VARIABLES);
 
+    public Placeholder clone() {
+        return new Placeholder().putAll(variables).putAllContent(contents);
+    }
+
     public <T> Placeholder putContent(VariableContent<T> content, T value) {
         if (value != null) {
             contents.put(content, value);
@@ -143,7 +185,10 @@ public class Placeholder {
     public boolean hasContent(VariableContent<?> content) {
         return contents.containsKey(content);
     }
-
+    public Placeholder putAllContent(Map<VariableContent, Object> variables) {
+        contents.putAll(variables);
+        return this;
+    }
     public Placeholder putAll(Map<String, Variable> variables) {
         this.variables.putAll(variables);
         return this;
@@ -168,6 +213,15 @@ public class Placeholder {
         if (list == null) return null;
         List<String> newList = new ArrayList<>();
         for (String s : list) {
+            newList.add(replace(s));
+        }
+        return newList;
+    }
+
+    public List<String> replaceWithBreakableLines(List<String> list) {
+        if (list == null) return null;
+        List<String> newList = new ArrayList<>();
+        for (String s : list) {
             newList.addAll(replaceWithNewLines(s));
         }
         return newList;
@@ -183,10 +237,15 @@ public class Placeholder {
     }
 
     public String replace(String s) {
-        return replace(s, 0);
+        //replace(s, 0)
+        s = replace(s, 0);
+        if (PlaceholderAPISupport.enableSupport && s != null) {
+            s = PlaceholderAPISupport.attemptReplace(this, s);
+        }
+        return s;
     }
 
-    public String replace(String s, int iterations) {
+    private String replace(String s, int iterations) {
         if (s == null) return null;
         s = ChatColor.translateAlternateColorCodes('&', s);
         StringBuilder builder = new StringBuilder(s.length());
@@ -202,7 +261,7 @@ public class Placeholder {
                 if (lang != null) {
                     builder.append(ChatColor.translateAlternateColorCodes('&', lang));
                 } else {
-                    builder.append("{"+key+"}");
+                    builder.append("{").append(key).append("}");
                 }
             } else {
                 Variable var = variables.get(key);
@@ -210,7 +269,7 @@ public class Placeholder {
                     try {
                         builder.append(var.get(this));
                     } catch (Throwable t) {
-                        builder.append("{"+key+"}");
+                        builder.append("{").append(key).append("}");
                     }
                 } else {
                     builder.append("{"+key+"}");

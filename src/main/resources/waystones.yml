@@ -1,3 +1,6 @@
+# Configuration Version, do not change!
+Configuration Version: "1.0"
+
 Waystone Types:
   # careful when changing waystone type ids
   # it might occurs some data lost if you did not
@@ -24,14 +27,24 @@ Waystone Types:
     # Should the waystone drop the waystone item when purged?
     Purge Drops:
       - NEVER
+    # Can the waystone be visited by the player? (Book teleportation ignores this, please see "Can Be Used" in books.yml)
+    Can Be Visited:
+      - ALWAYS
     # Should players be able to right-click with compass to set the compass direction to the waystone location?
     Compass Redirection:
+      - ALWAYS
+    # Should the activated waystone be listed on the menu?
+    Should Be Listed:
       - ALWAYS
     # The criteria of who can access the waystone
     Access:
       - ALWAYS
     Activation:
       - ALWAYS
+    # A list of category that can be listed when using this waystone
+    Waystone Category Whitelist: []
+    # A list of category that should not be listed when using this waystone
+    Waystone Category Blacklist: []
     # The criteria of who can break the waystone
     Breakable:
       - HAS_PERMISSION:
@@ -91,17 +104,20 @@ Waystone Types:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       # Charge players for multidimensional teleportation (teleport into other dimension i.e overworld to nether, nether to the end, the end to nether, etc)?
       # Works with bungeecord
       Multidimensional:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       # Charge players for multiserver teleportation (teleport to the other bungeecord server instance)
       Multiserver:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       # Charge players depends on how long the distance between 2 waystones (will not be charged for multidimensional/multiworld/multiserver teleportation)
       Distance:
         Enable: false
@@ -109,11 +125,13 @@ Waystone Types:
         Floor Divide: true
         Cost:
           Level: 3
+          EnderPearl: 3
       # Fee that added to the cost for any condition
       Basic Fee:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
   public:
     Name: Public
     Always Loaded: false
@@ -128,6 +146,8 @@ Waystone Types:
       - ALWAYS
     Activation:
       - ALWAYS
+    Waystone Category Whitelist: []
+    Waystone Category Blacklist: []
     Breakable:
       - HAS_PERMISSION:
           Permission: 'fancywaystones.admin'
@@ -137,46 +157,57 @@ Waystone Types:
             - IS_OWNER
     Drops:
       - ALWAYS
+    Should Be Listed:
+      - ALWAYS
     Unique Names: "PUBLIC NAMES"
     Price:
       Multiworld:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Multidimensional:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Multiserver:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Distance:
         Enable: false
         Divide: 100
         Floor Divide: true
         Cost:
           Level: 3
+          EnderPearl: 3
       Basic Fee:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
   region:
     Name: Region
     Always Loaded: false
     Always Listed: false
     Requires Activation: true
     Purge Inactive: true
+    Should Be Listed:
+      - ALWAYS
     Compass Redirection:
       - ALWAYS
     Purge Drops:
       - ALWAYS
     Access:
       - LAND_ACCESS
-      - MEMBERS_ONLY
+      - IS_MEMBER
     Activation:
       - LAND_ACCESS
-      - MEMBERS_ONLY
+      - IS_MEMBER
+    Waystone Category Whitelist: []
+    Waystone Category Blacklist: []
     Breakable:
       - HAS_PERMISSION:
           Permission: 'fancywaystones.admin'
@@ -192,42 +223,53 @@ Waystone Types:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Multidimensional:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Multiserver:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Distance:
         Enable: false
         Divide: 100
         Floor Divide: true
         Cost:
           Level: 3
+          EnderPearl: 3
       Basic Fee:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
   private:
     Name: Private
     Always Loaded: false
     Always Listed: false
     Requires Activation: true
     Purge Inactive: true
+    Should Be Listed:
+      - ALWAYS
     Compass Redirection:
       - ALWAYS
     Purge Drops:
       - ALWAYS
     Access:
       - IS_OWNER
+      - IS_MEMBER
       - HAS_PERMISSION:
           Permission: 'fancywaystones.admin'
     Activation:
       - IS_OWNER
+      - IS_MEMBER
       - HAS_PERMISSION:
           Permission: 'fancywaystones.admin'
+    Waystone Category Whitelist: []
+    Waystone Category Blacklist: []
     Breakable:
       - HAS_PERMISSION:
           Permission: 'fancywaystones.admin'
@@ -243,21 +285,26 @@ Waystone Types:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Multidimensional:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Multiserver:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1
       Distance:
         Enable: false
         Divide: 100
         Floor Divide: true
         Cost:
           Level: 3
+          EnderPearl: 3
       Basic Fee:
         Enable: false
         Cost:
           Level: 1
+          EnderPearl: 1

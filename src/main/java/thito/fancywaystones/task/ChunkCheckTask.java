@@ -1,14 +1,19 @@
 package thito.fancywaystones.task;
 
 import org.bukkit.*;
+import thito.fancywaystones.Util;
+
+import java.util.Map;
 
 public abstract class ChunkCheckTask implements Runnable {
     private Chunk chunk;
 
     private World world;
     private int x, z;
+    private Map<Long, Chunk> cached;
 
-    public ChunkCheckTask(World world, int x, int z) {
+    public ChunkCheckTask(Map<Long, Chunk> cached, World world, int x, int z) {
+        this.cached = cached;
         this.world = world;
         this.x = x;
         this.z = z;
@@ -16,7 +21,7 @@ public abstract class ChunkCheckTask implements Runnable {
 
     @Override
     public void run() {
-        chunk = world.getChunkAt(x, z);
+        chunk = cached.computeIfAbsent(Util.getXY(x, z), xy -> world.getChunkAt(x, z));
         done();
     }
 

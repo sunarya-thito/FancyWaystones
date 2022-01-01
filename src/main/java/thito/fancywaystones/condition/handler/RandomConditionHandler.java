@@ -14,7 +14,12 @@ public class RandomConditionHandler implements ConditionHandler {
     }
 
     @Override
-    public boolean test(Placeholder placeholder) {
-        return random.nextInt(100) <= chance;
+    public String test(Placeholder placeholder) {
+        return random.nextInt(100) <= chance ? null : placeholder.replace("{language.condition.random}");
+    }
+
+    @Override
+    public String testNegate(Placeholder placeholder) {
+        return random.nextInt(100) > chance ? null : placeholder.replace("{language.condition.not-random}");
     }
 }

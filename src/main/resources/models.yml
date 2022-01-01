@@ -1,3 +1,52 @@
+# Configuration Version, do not change!
+Configuration Version: "1.0.1"
+
+item-model:
+#  - model: regular
+#    type: public
+#    environment: NORMAL
+#    item:
+#      class: "Oraxen"
+#      item-id: "yourOraxenItemId"
+#  - model: regular
+#    type: public
+#    environment: NORMAL
+#    item:
+#      class: "ItemsAdder"
+#      namespace-id: "yourItemsAdderNamespaceId"
+  - model: regular
+    type:
+      - public
+      - private
+      - server
+      - region
+    environment:
+      - NORMAL
+      - NETHER
+      - THE_END
+    item:
+      type: BREWING_STAND
+      amount: 1
+      meta:
+        ==: ItemMeta
+        meta-type: UNSPECIFIC
+        display-name: "&e&lWAYSTONE"
+        ItemFlags:
+          - HIDE_ATTRIBUTES
+          - HIDE_POTION_EFFECTS
+          - HIDE_ENCHANTS
+          - HIDE_PLACED_ON
+          - HIDE_DESTROYS
+          - HIDE_UNBREAKABLE
+        lore:
+          - "&7Place down the waystone              &7"
+          - "&7to create a teleportation"
+          - "&7point."
+          - "&7"
+          - "&7   Type: &d{waystone_type}"
+          - "&7   Environment: &d{waystone_environment}"
+          - "&7   Model: &d{waystone_model}"
+
 model:
   regular:
     name: "Regular"
@@ -27,6 +76,7 @@ model:
       # > custom-block (the custom block name)
       #
       # format for itemstack can be seen at https://www.spigotmc.org/wiki/itemstack-serialization/ (replace "==" with "class")
+      # (Note: You don't need to specify "v: <data version>")
       # you can use this format for specific plugins:
       #
       # FOR ORAXEN

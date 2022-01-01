@@ -13,6 +13,7 @@ import java.util.logging.Level;
 
 public class LateHookLoader implements Listener {
 
+    private boolean hookedWithCustomStructures;
     public void checkStatus() {
         if (Bukkit.getPluginManager().isPluginEnabled("ItemsAdder")) {
             hookItemsAdder();
@@ -37,8 +38,8 @@ public class LateHookLoader implements Listener {
         try {
             WaystoneManager.getManager().getComponentTypeMap().put("items-adder", new ItemsAdderCustomBlockComponent());
             FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Hooked with ItemsAdder");
-        } catch (Throwable ignored) {
-            FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Not hooked with ItemsAdder", ignored);
+        } catch (Throwable t) {
+            FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Not hooked with ItemsAdder", t);
         }
     }
 
@@ -47,8 +48,8 @@ public class LateHookLoader implements Listener {
         try {
             WaystoneManager.getManager().getComponentTypeMap().put("oraxen", new OraxenCustomBlockComponent());
             FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Hooked with Oraxen");
-        } catch (Throwable ignored) {
-            FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Not hooked with Oraxen", ignored);
+        } catch (Throwable t) {
+            FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Not hooked with Oraxen", t);
         }
     }
 

@@ -18,6 +18,10 @@ public abstract class TeleportTask implements Runnable {
         this.force = force;
     }
 
+    public Location getLocation() {
+        return location;
+    }
+
     public Player getPlayer() {
         return player;
     }

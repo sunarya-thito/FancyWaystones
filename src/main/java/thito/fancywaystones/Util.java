@@ -3,11 +3,16 @@ package thito.fancywaystones;
 import com.comphenix.protocol.*;
 import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.wrappers.*;
+import dev.lone.itemsadder.api.CustomStack;
+import io.th0rgal.oraxen.items.OraxenItems;
 import org.bukkit.*;
 import org.bukkit.block.*;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.entity.*;
 import org.bukkit.event.block.*;
 import org.bukkit.inventory.*;
+import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 import java.lang.reflect.*;
@@ -17,39 +22,11 @@ import java.util.function.Consumer;
 public class Util {
     private static double[] cached_cos = new double[360];
     private static double[] cached_sin = new double[360];
-    private static Field nbtTagCompoundMap, nbtByteArrayData;
-    private static Class<?> nbtTagByteArray;
+
     static {
         for (int i = 0; i < 360; i++) {
-            cached_cos[i] = Math.cos(Math.toRadians(i));
             cached_sin[i] = Math.sin(Math.toRadians(i));
-        }
-        Class<?> nbtTagCompound = null;
-        try {
-            nbtTagCompound = getNMSClass("NBTTagCompound");
-            nbtTagByteArray = getNMSClass("NBTTagByteArray");
-        } catch (Throwable t) {
-            try {
-                nbtTagCompound = Class.forName("net.minecraft.nbt.NBTTagCompound");
-                nbtTagByteArray = Class.forName("net.minecraft.nbt.NBTTagByteArray");
-            } catch (Throwable t2) {
-            }
-        }
-        if (nbtTagCompound != null) {
-            for (Field field : nbtTagCompound.getDeclaredFields()) {
-                if (Map.class.isAssignableFrom(field.getType())) {
-                    nbtTagCompoundMap = field;
-                    field.setAccessible(true);
-                    break;
-                }
-            }
-            for (Field field : nbtTagByteArray.getDeclaredFields()) {
-                if (byte[].class.isAssignableFrom(field.getType())) {
-                    nbtByteArrayData = field;
-                    field.setAccessible(true);
-                    break;
-                }
-            }
+            cached_cos[i] = Math.cos(Math.toRadians(i));
         }
     }
 
@@ -263,26 +240,6 @@ public class Util {
         final String name = getVersion().substring(3);
         return Integer.valueOf(name.substring(0, name.length() - 4));
     }
-    public static void removeData(ItemStack item, String key) {
-        try {
-            if (item == null) {
-                return;
-            }
-            final Object ItemNMS = Util.getCraftClass("inventory.CraftItemStack")
-                    .getMethod("asNMSCopy", ItemStack.class).invoke(null, item);
-            final boolean hasTag = (boolean) ItemNMS.getClass().getMethod("hasTag").invoke(ItemNMS);
-            if (!hasTag) {
-                return;
-            }
-            // NBTTagCompound
-            final Object tagCompound = ItemNMS.getClass().getMethod("getTag").invoke(ItemNMS);
-            final Field mapField = tagCompound.getClass().getDeclaredField("map");
-            mapField.setAccessible(true);
-            ((Map<?, ?>) mapField.get(tagCompound)).remove(key);
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
-    }
 
     public static int getX(long xy) {
         return (int)(xy >> 32);
@@ -292,78 +249,6 @@ public class Util {
     }
     public static long getXY(int x, int y) {
         return (((long)x) << 32) | (y & 0xffffffffL);
-    }
-
-    static boolean newCompose;
-
-    public static Map<String, byte[]> getDataMap(ItemStack item) {
-        Map<String, byte[]> map = new HashMap<>();
-        try {
-            if (item == null) {
-                return null;
-            }
-            final Object ItemNMS = Util.getCraftClass("inventory.CraftItemStack")
-                    .getMethod("asNMSCopy", ItemStack.class).invoke(null, item);
-            final boolean hasTag = (boolean) ItemNMS.getClass().getMethod("hasTag").invoke(ItemNMS);
-            if (!hasTag) {
-                return null;
-            }
-            final Object tagCompound = ItemNMS.getClass().getMethod("getTag").invoke(ItemNMS);
-            Map<String, Object> m = (Map) nbtTagCompoundMap.get(tagCompound);
-            for (Map.Entry<String, Object> entry : m.entrySet()) {
-                if (entry.getKey() != null && nbtTagByteArray != null && nbtTagByteArray.isInstance(entry.getValue())) {
-                    map.put(entry.getKey(), (byte[]) nbtByteArrayData.get(entry.getValue()));
-                }
-            }
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
-        return map;
-    }
-
-    public static void setData(ItemStack item, String key, byte[] value) {
-        if (item == null) {
-            return;
-        }
-        if (!newCompose) {
-            try {
-                final Class<?> tag = Util.getNMSClass("NBTTagCompound");
-                final Object ItemNMS = Util.getCraftClass("inventory.CraftItemStack")
-                        .getMethod("asNMSCopy", ItemStack.class).invoke(null, item);
-                final boolean hasTag = (boolean) ItemNMS.getClass().getMethod("hasTag").invoke(ItemNMS);
-                final Object tagCompound = hasTag ? ItemNMS.getClass().getMethod("getTag").invoke(ItemNMS)
-                        : tag.newInstance();
-                tagCompound.getClass().getMethod("setByteArray", String.class, byte[].class).invoke(tagCompound, new Object[]{key, value});
-                ItemNMS.getClass().getMethod("setTag", tag).invoke(ItemNMS, tagCompound);
-                final ItemStack result = (ItemStack) Util.getCraftClass("inventory.CraftItemStack")
-                        .getMethod("asBukkitCopy", ItemNMS.getClass()).invoke(null, ItemNMS);
-                item.setItemMeta(result.getItemMeta());
-                return;
-            } catch (ClassNotFoundException e) {
-                newCompose = true;
-            } catch (final Throwable t) {
-                t.printStackTrace();
-                return;
-            }
-        }
-        if (newCompose) {
-            try {
-                Class<?> tag = Class.forName("net.minecraft.nbt.NBTTagCompound");
-                final Object ItemNMS = Util.getCraftClass("inventory.CraftItemStack")
-                        .getMethod("asNMSCopy", ItemStack.class).invoke(null, item);
-                Object tagCompound = ItemNMS.getClass().getMethod("getTag").invoke(ItemNMS);
-                if (tagCompound == null) {
-                    tagCompound = tag.newInstance();
-                }
-                tagCompound.getClass().getMethod("setByteArray", String.class, byte[].class).invoke(tagCompound, key, value);
-                ItemNMS.getClass().getMethod("setTag", tag).invoke(ItemNMS, tagCompound);
-                final ItemStack result = (ItemStack) Util.getCraftClass("inventory.CraftItemStack")
-                        .getMethod("asBukkitCopy", ItemNMS.getClass()).invoke(null, ItemNMS);
-                item.setItemMeta(result.getItemMeta());
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-        }
     }
 
     static LinkedList<BlockBreakEvent> dummy = new LinkedList<>();
@@ -408,93 +293,166 @@ public class Util {
         }
         return XMaterial.AIR;
     }
-    public static byte[] getData(ItemStack item, String key) {
-        try {
-            if (item == null) {
-                return null;
-            }
-            final Object ItemNMS = Util.getCraftClass("inventory.CraftItemStack")
-                    .getMethod("asNMSCopy", ItemStack.class).invoke(null, item);
-            final Object tagCompound = ItemNMS.getClass().getMethod("getTag").invoke(ItemNMS);
-            if (tagCompound == null) return null;
-            final Object result = tagCompound.getClass().getMethod("getByteArray", String.class).invoke(tagCompound, key);
-            return (byte[]) result;
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
-        return null;
-    }
     public static boolean hasData(ItemStack item, String key) {
-        try {
-            if (item == null) {
-                return false;
-            }
-            final Object ItemNMS = Util.getCraftClass("inventory.CraftItemStack")
-                    .getMethod("asNMSCopy", ItemStack.class).invoke(null, item);
-            final Object tagCompound = ItemNMS.getClass().getMethod("getTag").invoke(ItemNMS);
-            if (tagCompound == null) return false;
-            final Object result = tagCompound.getClass().getMethod("hasKey", String.class).invoke(tagCompound, key);
-            return (boolean) result;
-        } catch (final Throwable t) {
-            final byte[] data = getData(item, key);
-            return data != null;
-        }
+        final byte[] data = NBTUtil.getData(item, key);
+        return data != null;
     }
     public static String toRoman(int value) {
         if (value < 1 || value > 3999) return "?";
-        String s = "";
+        StringBuilder s = new StringBuilder();
         while (value >= 1000) {
-            s+="M";
+            s.append("M");
             value-=1000;
         }
         while (value >= 900) {
-            s+="CM";
+            s.append("CM");
             value-=900;
         }
         while (value >= 500) {
-            s+="D";
+            s.append("D");
             value-=500;
         }
         while (value >= 400) {
-            s+="CD";
+            s.append("CD");
             value-=400;
         }
         while (value >= 100) {
-            s+="C";
+            s.append("C");
             value-=100;
         }
         while (value >= 90) {
-            s+="XC";
+            s.append("XC");
             value-=90;
         }
         while (value >= 50) {
-            s+="L";
+            s.append("L");
             value-=50;
         }
         while (value >= 40) {
-            s+="XL";
+            s.append("XL");
             value-=40;
         }
         while (value >= 10) {
-            s+="X";
+            s.append("X");
             value-=10;
         }
         while (value >= 9) {
-            s+="IX";
+            s.append("IX");
             value-=9;
         }
         while (value >= 5) {
-            s+="V";
+            s.append("V");
             value-=5;
         }
         while (value >= 4) {
-            s+="IV";
+            s.append("IV");
             value-=4;
         }
         while (value >= 1) {
-            s+="I";
+            s.append("I");
             value--;
         }
-        return s;
+        return s.toString();
+    }
+
+    public static ItemStack deserializeItemStack(Map<String, Object> map, Placeholder placeholder) {
+        Object className = map.getOrDefault("class", "org.bukkit.inventory.ItemStack");
+        if ("Oraxen".equals(className)) {
+            try {
+                return OraxenItems.getItemById(placeholder.replace(String.valueOf(map.get("item-id")))).build();
+            } catch (Throwable ignored) {
+            }
+        }
+        if ("ItemsAdder".equals(className)) {
+            try {
+                return CustomStack.getInstance(placeholder.replace(String.valueOf(map.get("namespace-id")))).getItemStack();
+            } catch (Throwable ignored) {
+            }
+        }
+        return (ItemStack) ConfigurationSerialization.deserializeObject(validateItemStack(map, placeholder));
+    }
+
+    private static void validateItemMeta(Map<String, Object> map, Placeholder placeholder) {
+        if (!map.containsKey("meta-type")) map.put("meta-type", "UNSPECIFIED");
+        replaceString(map, "display-name", placeholder);
+        replaceList(map, "lore", true, placeholder);
+        replaceString(map, "title", placeholder);
+        replaceString(map, "author", placeholder);
+        replaceList(map, "pages", false, placeholder);
+    }
+
+    private static void validateItemMeta(ItemMeta itemMeta, Placeholder placeholder) {
+        itemMeta.setDisplayName(placeholder.replace(itemMeta.getDisplayName()));
+        itemMeta.setLore(placeholder.replaceWithBreakableLines(itemMeta.getLore()));
+        if (itemMeta instanceof BookMeta) {
+            ((BookMeta) itemMeta).setAuthor(placeholder.replace(((BookMeta) itemMeta).getAuthor()));
+            ((BookMeta) itemMeta).setPages(placeholder.replace(((BookMeta) itemMeta).getPages()));
+            ((BookMeta) itemMeta).setTitle(placeholder.replace(((BookMeta) itemMeta).getTitle()));
+        }
+    }
+
+    private static void replaceString(Map<String, Object> map, String key, Placeholder placeholder) {
+        Object displayName = map.get("display-name");
+        if (displayName != null) {
+            map.put(key, placeholder.replace(String.valueOf(displayName)));
+        }
+    }
+
+    private static void replaceList(Map<String, Object> map, String key, boolean splitNewLines, Placeholder placeholder) {
+        Object lore = map.get(key);
+        if (lore != null) {
+            if (!(lore instanceof List)) {
+                if (splitNewLines) {
+                    lore = Arrays.asList(String.valueOf(lore).split("\n"));
+                } else {
+                    lore = Collections.singletonList(String.valueOf(lore));
+                }
+            }
+            ArrayList<String> copy = new ArrayList<>();
+            for (Object o : (List) lore) {
+                if (splitNewLines) {
+                    copy.addAll(placeholder.replaceWithNewLines(String.valueOf(o)));
+                } else {
+                    copy.add(placeholder.replace(String.valueOf(o)));
+                }
+            }
+            map.put(key, copy);
+        }
+    }
+
+    private static Map<String, Object> validateItemStack(Map<String, Object> map, Placeholder placeholder) {
+        map = new HashMap<>(map);
+        map.putIfAbsent("==", map.getOrDefault("class", "org.bukkit.inventory.ItemStack"));
+        try {
+            map.put("v", Bukkit.getUnsafe().getDataVersion());
+        } catch (Throwable ignored) {
+        }
+        boolean found = false;
+        Object type = map.get("type");
+        if (type instanceof String) {
+            String[] split = placeholder.replace((String) type).split(";");
+            for (String s : split) {
+                try {
+                    map.put("type", XMaterial.valueOf(s).parseMaterial().name());
+                    found = true;
+                    break;
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+        Object meta = map.get("meta");
+        if (meta instanceof ItemMeta) {
+            meta = ((ItemMeta) meta).clone();
+            validateItemMeta((ItemMeta) meta, placeholder);
+            map.put("meta", meta);
+        } else if (meta instanceof Map) {
+            HashMap metaMap = new HashMap<>((Map) meta);
+            validateItemMeta(metaMap, placeholder);
+            map.put("meta", metaMap);
+        }
+        if (!found) {
+            map.put("type", "AIR");
+        }
+        return map;
     }
 }

@@ -16,24 +16,61 @@ public class EnchantedConditionHandler implements ConditionHandler {
     }
 
     @Override
-    public boolean test(Placeholder placeholder) {
+    public String test(Placeholder placeholder) {
         Player player = placeholder.get(Placeholder.PLAYER);
         if (player != null) {
             try {
                 ItemStack inMainHand = player.getEquipment().getItemInMainHand();
                 if (inMainHand.getEnchantmentLevel(enchantment) >= level) {
-                    return true;
+                    return null;
                 }
                 ItemStack inOffHand = player.getEquipment().getItemInOffHand();
                 if (inOffHand.getEnchantmentLevel(enchantment) >= level) {
-                    return true;
+                    return null;
                 }
-                return false;
-            } catch (Throwable t) {
+                return placeholder.clone()
+                        .put("enchantment", ph -> enchantment.getName())
+                        .put("enchantment-level", ph -> level).replace("{language.condition.enchantment}");
+            } catch (Throwable ignored) {
             }
             ItemStack inHand = player.getItemInHand();
-            return inHand.getEnchantmentLevel(enchantment) >= level;
+            return inHand.getEnchantmentLevel(enchantment) >= level ? null :
+                    placeholder.clone()
+                            .put("enchantment", ph -> enchantment.getName())
+                            .put("enchantment-level", ph -> level).replace("{language.condition.enchantment}");
         }
-        return false;
+        return placeholder.clone()
+                .put("enchantment", ph -> enchantment.getName())
+                .put("enchantment-level", ph -> level).replace("{language.condition.enchantment}");
+    }
+
+    @Override
+    public String testNegate(Placeholder placeholder) {
+        Player player = placeholder.get(Placeholder.PLAYER);
+        if (player != null) {
+            try {
+                ItemStack inMainHand = player.getEquipment().getItemInMainHand();
+                if (inMainHand.getEnchantmentLevel(enchantment) >= level) {
+                    return placeholder.clone()
+                            .put("enchantment", ph -> enchantment.getName())
+                            .put("enchantment-level", ph -> level).replace("{language.condition.not-enchantment}");
+                }
+                ItemStack inOffHand = player.getEquipment().getItemInOffHand();
+                if (inOffHand.getEnchantmentLevel(enchantment) >= level) {
+                    return placeholder.clone()
+                            .put("enchantment", ph -> enchantment.getName())
+                            .put("enchantment-level", ph -> level).replace("{language.condition.not-enchantment}");
+                }
+                return null;
+            } catch (Throwable ignored) {
+            }
+            ItemStack inHand = player.getItemInHand();
+            return inHand.getEnchantmentLevel(enchantment) >= level ? placeholder.clone()
+                    .put("enchantment", ph -> enchantment.getName())
+                    .put("enchantment-level", ph -> level).replace("{language.condition.not-enchantment}") :
+                    null
+                    ;
+        }
+        return null;
     }
 }

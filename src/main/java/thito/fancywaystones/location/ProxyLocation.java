@@ -8,20 +8,26 @@ import thito.fancywaystones.proxy.*;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.logging.Level;
 
 public class ProxyLocation implements WaystoneLocation {
     private String serverName;
-    private String worldName;
+    private UUID worldUUID;
     private int x, y, z;
     private World.Environment environment;
 
-    public ProxyLocation(String serverName, String worldName, int x, int y, int z, World.Environment environment) {
+    public ProxyLocation(String serverName, UUID worldUUID, int x, int y, int z, World.Environment environment) {
         this.serverName = serverName;
-        this.worldName = worldName;
+        this.worldUUID = worldUUID;
         this.x = x;
         this.y = y;
         this.z = z;
         this.environment = environment;
+    }
+
+    @Override
+    public UUID getWorldUUID() {
+        return worldUUID;
     }
 
     @Override
@@ -48,10 +54,6 @@ public class ProxyLocation implements WaystoneLocation {
         return serverName;
     }
 
-    public String getWorldName() {
-        return worldName;
-    }
-
     public int getX() {
         return x;
     }
@@ -70,6 +72,8 @@ public class ProxyLocation implements WaystoneLocation {
         if (proxyWaystone != null) {
             proxyWaystone.transportPlayer(player, this, source == null ? null : source.getUUID(), target == null ? null : target.getUUID());
             stateConsumer.accept(TeleportState.SUCCESS);
+        } else {
+            FancyWaystones.getPlugin().getLogger().log(Level.WARNING, "Attempting to teleport to other server with Proxy Mode off");
         }
     }
 
@@ -77,7 +81,7 @@ public class ProxyLocation implements WaystoneLocation {
     public double distance(WaystoneLocation location) {
         if (location instanceof ProxyLocation) {
             if (Objects.equal(serverName, ((ProxyLocation) location).serverName)) {
-                if (Objects.equal(worldName, ((ProxyLocation) location).worldName)) {
+                if (Objects.equal(worldUUID, ((ProxyLocation) location).worldUUID)) {
                     return Math.sqrt(Math.pow(x - ((ProxyLocation) location).getX(), 2) +
                             Math.pow(y - ((ProxyLocation) location).getY(), 2) +
                             Math.pow(z - ((ProxyLocation) location).getZ(), 2));

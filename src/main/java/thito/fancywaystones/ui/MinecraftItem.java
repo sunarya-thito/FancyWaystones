@@ -1,5 +1,8 @@
 package thito.fancywaystones.ui;
 
+import dev.lone.itemsadder.api.CustomStack;
+import io.lumine.xikage.mythicmobs.MythicMobs;
+import io.th0rgal.oraxen.items.OraxenItems;
 import org.bukkit.*;
 import org.bukkit.configuration.*;
 import org.bukkit.enchantments.*;
@@ -22,6 +25,7 @@ public class MinecraftItem {
         return activeItems;
     }
 
+    private String plugin = null;
     private String type = "AIR";
     private String amount = "1";
     private String damage;
@@ -40,6 +44,7 @@ public class MinecraftItem {
 
     public MinecraftItem clone() {
         MinecraftItem item = new MinecraftItem();
+        item.plugin = plugin;
         item.type = type;
         item.amount = amount;
         item.damage = damage;
@@ -61,6 +66,7 @@ public class MinecraftItem {
     }
 
     public void clear() {
+        plugin = null;
         placeholder = new Placeholder();
         clickListener.clear();
         extraData.clear();
@@ -139,6 +145,11 @@ public class MinecraftItem {
         update();
     }
 
+    public void setPlugin(Object plugin) {
+        this.plugin = plugin == null ? null : String.valueOf(plugin);
+        update();
+    }
+
     public MinecraftItem setType(Object type) {
         if (type == null) type = "AIR";
         if (type instanceof XMaterial) type = ((XMaterial) type).name();
@@ -159,6 +170,10 @@ public class MinecraftItem {
         update();
     }
 
+    public List<String> getLore() {
+        return lore;
+    }
+
     public void setLore(List<?> lore) {
         if (lore == null) lore = Collections.emptyList();
         this.lore = lore.stream().map(String::valueOf).collect(Collectors.toList());
@@ -173,6 +188,7 @@ public class MinecraftItem {
 
     public MinecraftItem load(Section section) {
         if (section == null) return this;
+        plugin = section.getString("Plugin").orElse(null);
         type = section.getString("Type").orElse("AIR");
         amount = section.getString("Amount").orElse("1");
         damage = section.getString("Damage").orElse(null);
@@ -190,12 +206,17 @@ public class MinecraftItem {
         type = section.getString("Type", "AIR");
         amount = section.getString("Amount", "1");
         damage = section.getString("Damage");
-        displayName = section.getString("Display Name");
-        lore = section.getStringList("Lore");
         flags = section.getStringList("Flags");
         enchantments = enchantmentMap(section.getConfigurationSection("Enchantments"));
         storedEnchantments = enchantmentMap(section.getConfigurationSection("Stored Enchantments"));
         customModelData = section.getString("Custom Model Data");
+        loadDisplay(section);
+        return this;
+    }
+
+    public MinecraftItem loadDisplay(ConfigurationSection section) {
+        displayName = section.getString("Display Name");
+        lore = section.getStringList("Lore");
         return this;
     }
 
@@ -232,7 +253,7 @@ public class MinecraftItem {
                 storedEnchantments.put(ench.getName(), lvl.toString());
             });
         }
-        Map<String, byte[]> dataMap = Util.getDataMap(itemStack);
+        Map<String, byte[]> dataMap = NBTUtil.getDataMap(itemStack);
         extraData.clear();
         if (dataMap != null) {
             extraData.putAll(dataMap);
@@ -282,7 +303,18 @@ public class MinecraftItem {
         combined.combine(placeholder);
         combined.combine(getPlaceholder());
         placeholder = combined;
-        ItemStack item = Util.material(placeholder.replace(type)).parseItem();
+        ItemStack item;
+        String plugin = this.plugin;
+        if (plugin != null) plugin = placeholder.replace(plugin);
+        if ("Oraxen".equals(plugin)) {
+            item = OraxenItems.getItemById(placeholder.replace(type)).build();
+        } else if ("ItemsAdder".equals(plugin)) {
+            item = CustomStack.getInstance(placeholder.replace(type)).getItemStack();
+        } else if ("MythicMobs".equals(plugin)) {
+            item = MythicMobs.inst().getItemManager().getItemStack(type);
+        } else {
+            item = Util.material(placeholder.replace(type)).parseItem();
+        }
         if (item == null) {
             FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Cannot find "+placeholder.replace(type)+" type!");
             item = XMaterial.AIR.parseItem();
@@ -333,7 +365,7 @@ public class MinecraftItem {
                 meta.setDisplayName(placeholder.replace(displayName));
             }
             if (lore != null) {
-                meta.setLore(placeholder.replace(lore));
+                meta.setLore(placeholder.replaceWithBreakableLines(lore));
             }
             if (flags != null) {
                 meta.addItemFlags(flags.stream().map(ItemFlag::valueOf).toArray(ItemFlag[]::new));
@@ -353,7 +385,7 @@ public class MinecraftItem {
         }
         ItemStack finalItem = item;
         extraData.forEach((key, data) -> {
-            Util.setData(finalItem, key, data);
+            NBTUtil.setData(finalItem, key, data);
         });
         return item;
     }

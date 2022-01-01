@@ -15,6 +15,10 @@ public class ItemEconomyService implements EconomyService {
         this.format = format;
     }
 
+    public ItemStack getItemStack() {
+        return itemStack;
+    }
+
     @Override
     public boolean isEnabled() {
         return true;
@@ -59,11 +63,15 @@ public class ItemEconomyService implements EconomyService {
 
     @Override
     public void withdraw(Player player, int amount) {
+        ItemStack itemStack = this.itemStack.clone();
+        itemStack.setAmount(amount);
         player.getInventory().removeItem(itemStack);
     }
 
     @Override
     public void deposit(Player player, int amount) {
+        ItemStack itemStack = this.itemStack.clone();
+        itemStack.setAmount(amount);
         player.getInventory().addItem(itemStack);
     }
 

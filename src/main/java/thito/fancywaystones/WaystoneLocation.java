@@ -4,6 +4,7 @@ import org.bukkit.*;
 import org.bukkit.entity.*;
 import thito.fancywaystones.location.*;
 
+import java.util.UUID;
 import java.util.function.*;
 
 public interface WaystoneLocation {
@@ -18,6 +19,6 @@ public interface WaystoneLocation {
     int getBlockX();
     int getBlockY();
     int getBlockZ();
-    String getWorldName();
+    UUID getWorldUUID();
     World.Environment getEnvironment();
 }

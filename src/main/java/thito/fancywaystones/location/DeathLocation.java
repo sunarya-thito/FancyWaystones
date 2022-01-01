@@ -10,12 +10,14 @@ import thito.fancywaystones.proxy.SerializableLocation;
 import thito.fancywaystones.proxy.message.TeleportMessage;
 import thito.fancywaystones.task.DeathBookTeleportTask;
 
+import java.util.UUID;
+
 public class DeathLocation {
     private String serverName;
-    private String worldName;
+    private UUID worldName;
     private double x, y, z;
 
-    public DeathLocation(String serverName, String worldName, double x, double y, double z) {
+    public DeathLocation(String serverName, UUID worldName, double x, double y, double z) {
         this.serverName = serverName;
         this.worldName = worldName;
         this.x = x;
@@ -24,7 +26,7 @@ public class DeathLocation {
     }
 
     public DeathLocation(Location location) {
-        this(FancyWaystones.getPlugin().getServerName(), location.getWorld().getName(), location.getX(), location.getY(), location.getZ());
+        this(FancyWaystones.getPlugin().getServerName(), location.getWorld().getUID(), location.getX(), location.getY(), location.getZ());
     }
 
     public Location toLocation() {
@@ -49,7 +51,7 @@ public class DeathLocation {
             if (ws != null) {
                 Location location = player.getLocation();
                 ws.sendMessage(player, new TeleportMessage(player.getUniqueId(), true,
-                        new SerializableLocation(null, FancyWaystones.getPlugin().getServerName(), location.getWorld().getName(), location.getX(), location.getY(), location.getZ()),
+                        new SerializableLocation(null, FancyWaystones.getPlugin().getServerName(), location.getWorld().getUID(), location.getX(), location.getY(), location.getZ()),
                         new SerializableLocation(null, serverName, worldName, x, y, z)));
             }
         }
@@ -59,7 +61,7 @@ public class DeathLocation {
         return serverName;
     }
 
-    public String getWorldName() {
+    public UUID getWorldUID() {
         return worldName;
     }
 

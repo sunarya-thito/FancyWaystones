@@ -5,7 +5,12 @@ import thito.fancywaystones.condition.*;
 
 public class AlwaysConditionHandler implements ConditionHandler {
     @Override
-    public boolean test(Placeholder placeholder) {
-        return true;
+    public String test(Placeholder placeholder) {
+        return null;
+    }
+
+    @Override
+    public String testNegate(Placeholder placeholder) {
+        return placeholder.replace("{language.condition.never}");
     }
 }

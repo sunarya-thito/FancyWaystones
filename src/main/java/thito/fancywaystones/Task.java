@@ -1,17 +1,26 @@
 package thito.fancywaystones;
 
+import thito.fancywaystones.scheduler.Scheduled;
+import thito.fancywaystones.scheduler.Scheduler;
+
 import java.util.concurrent.*;
 
 public abstract class Task implements Runnable {
-    private ScheduledFuture<?> scheduledFuture;
-    public void schedule(ScheduledExecutorService service, long delay, long interval) {
+    private Scheduled scheduledFuture;
+    public void schedule(Scheduler service, long delay, long interval) {
         cancel();
-        scheduledFuture = service.scheduleAtFixedRate(this, delay * 50, interval * 50, TimeUnit.MILLISECONDS);
+        scheduledFuture = service.submit(() -> {
+            try {
+                run();
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }, delay, interval);
     }
 
     public void cancel() {
         if (scheduledFuture != null) {
-            scheduledFuture.cancel(false);
+            scheduledFuture.cancel();
             scheduledFuture = null;
         }
     }

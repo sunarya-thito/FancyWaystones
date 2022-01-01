@@ -41,7 +41,8 @@ public class SphereParticle implements Effect {
         verticalGap = Math.max(1, section.getInt("Vertical Gap"));
         horizontalGap = Math.max(1, section.getInt("Horizontal Gap"));
         try {
-            script = FancyWaystones.getPlugin().compile(section.getString("Script"));
+            script = Context.enter().compileString(section.getString("Script"), "effects.yml", 0, null);
+//            script = FancyWaystones.getPlugin().compile(section.getString("Script"));
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -68,7 +69,7 @@ public class SphereParticle implements Effect {
         public int tick;
         public boolean visible = true;
         private Script script;
-        private Scriptable scriptable;
+//        private Scriptable scriptable;
 
         public SphereHandler(Script script, ParticleEffect particleEffect, double deltaX, double deltaY, double deltaZ, double offsetX, double offsetY, double offsetZ, float speed, double radius, int count, int horizontalGap, int verticalGap, Player player, WaystoneData waystoneData, WaystoneData target, boolean global) {
             this.particleEffect = particleEffect;
@@ -88,7 +89,7 @@ public class SphereParticle implements Effect {
             this.waystoneData = waystoneData;
             this.target = target;
             this.script = script;
-            scriptable = JavaAdapter.createAdapterWrapper(FancyWaystones.getPlugin().getRoot(), this);
+//            scriptable = JavaAdapter.createAdapterWrapper(FancyWaystones.getPlugin().getRoot(), this);
         }
 
         @Override
@@ -114,7 +115,11 @@ public class SphereParticle implements Effect {
                     }
                 }
             }
-            script.exec(FancyWaystones.getPlugin().getContext(), scriptable);
+            Context context = Context.enter();
+            Scriptable scriptable = JavaAdapter.createAdapterWrapper(context.initSafeStandardObjects(), this);
+            if (script != null) {
+                script.exec(context, scriptable);
+            }
         }
     }
 }

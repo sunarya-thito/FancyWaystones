@@ -36,6 +36,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -55,7 +57,7 @@ import java.util.concurrent.CompletableFuture;
  * play command: https://minecraft.gamepedia.com/Commands/play
  *
  * @author Crypto Morin
- * @version 6.0.0
+ * @version 7.0.1
  * @see Sound
  */
 public enum XSound {
@@ -276,6 +278,7 @@ public enum XSound {
     BLOCK_GRAVEL_PLACE,
     BLOCK_GRAVEL_STEP("STEP_GRAVEL"),
     BLOCK_GRINDSTONE_USE,
+    BLOCK_GROWING_PLANT_CROP,
     BLOCK_HANGING_ROOTS_BREAK,
     BLOCK_HANGING_ROOTS_FALL,
     BLOCK_HANGING_ROOTS_HIT,
@@ -1189,6 +1192,9 @@ public enum XSound {
     ITEM_BUCKET_FILL_FISH,
     ITEM_BUCKET_FILL_LAVA,
     ITEM_BUCKET_FILL_POWDER_SNOW,
+    ITEM_BUNDLE_DROP_CONTENTS,
+    ITEM_BUNDLE_INSERT,
+    ITEM_BUNDLE_REMOVE_ONE,
     ITEM_CHORUS_FRUIT_TELEPORT,
     ITEM_CROP_PLANT,
     ITEM_CROSSBOW_HIT,
@@ -1234,6 +1240,7 @@ public enum XSound {
     MUSIC_DISC_FAR("RECORD_FAR"),
     MUSIC_DISC_MALL("RECORD_MALL"),
     MUSIC_DISC_MELLOHI("RECORD_MELLOHI"),
+    MUSIC_DISC_OTHERSIDE,
     MUSIC_DISC_PIGSTEP,
     MUSIC_DISC_STAL("RECORD_STAL"),
     MUSIC_DISC_STRAD("RECORD_STRAD"),
@@ -1248,6 +1255,14 @@ public enum XSound {
     MUSIC_NETHER_NETHER_WASTES,
     MUSIC_NETHER_SOUL_SAND_VALLEY,
     MUSIC_NETHER_WARPED_FOREST,
+    MUSIC_OVERWORLD_DRIPSTONE_CAVES,
+    MUSIC_OVERWORLD_FROZEN_PEAKS,
+    MUSIC_OVERWORLD_GROVE,
+    MUSIC_OVERWORLD_JAGGED_PEAKS,
+    MUSIC_OVERWORLD_LUSH_CAVES,
+    MUSIC_OVERWORLD_MEADOW,
+    MUSIC_OVERWORLD_SNOWY_SLOPES,
+    MUSIC_OVERWORLD_STONY_PEAKS,
     MUSIC_UNDER_WATER,
     PARTICLE_SOUL_ESCAPE,
     UI_BUTTON_CLICK("CLICK"),
@@ -1272,10 +1287,10 @@ public enum XSound {
 
     public static final float DEFAULT_VOLUME = 1.0f, DEFAULT_PITCH = 1.0f;
 
-    
+    @Nullable
     private final Sound sound;
 
-    XSound( String... legacies) {
+    XSound(@Nonnull String... legacies) {
         Sound bukkitSound = Data.BUKKIT_NAMES.get(this.name());
         if (bukkitSound == null) {
             for (String legacy : legacies) {
@@ -1302,8 +1317,8 @@ public enum XSound {
      * @return an enum name.
      * @since 1.0.0
      */
-    
-    private static String format( String name) {
+    @Nonnull
+    private static String format(@Nonnull String name) {
         int len = name.length();
         char[] chs = new char[len];
         int count = 0;
@@ -1339,8 +1354,8 @@ public enum XSound {
      * @return a matched XSound.
      * @since 1.0.0
      */
-    
-    public static Optional<XSound> matchXSound( String sound) {
+    @Nonnull
+    public static Optional<XSound> matchXSound(@Nonnull String sound) {
         Validate.notEmpty(sound, "Cannot match XSound of a null or empty sound name");
         return Optional.ofNullable(Data.NAMES.get(format(sound)));
     }
@@ -1354,32 +1369,53 @@ public enum XSound {
      * @throws IllegalArgumentException may be thrown as an unexpected exception.
      * @since 2.0.0
      */
-    
-    public static XSound matchXSound( Sound sound) {
+    @Nonnull
+    public static XSound matchXSound(@Nonnull Sound sound) {
         Objects.requireNonNull(sound, "Cannot match XSound of a null sound");
         return Objects.requireNonNull(Data.NAMES.get(sound.name()), () -> "Unsupported sound: " + sound.name());
     }
 
     /**
+     * A quick async way to play a sound from the config.
+     *
      * @param player the player to play the sound to.
      * @param sound  the sound to play to the player.
      *
      * @see #play(Location, String)
      * @since 1.0.0
      */
-    
-    public static CompletableFuture<Record> play( Player player,  String sound) {
+    @Nonnull
+    public static CompletableFuture<Record> play(@Nonnull Player player, @Nullable String sound) {
         Objects.requireNonNull(player, "Cannot play sound to null player");
-        return parse(player, player.getLocation(), sound, true);
+        return CompletableFuture.supplyAsync(() -> {
+            Record record = parse(sound);
+            if (record == null) return null;
+            record.forPlayer(player).play();
+            return record;
+        }).exceptionally(x -> {
+            x.printStackTrace();
+            return null;
+        });
     }
 
     /**
+     * A quick async way to play a sound from the config.
+     *
      * @see #play(Location, String)
      * @since 3.0.0
      */
-    
-    public static CompletableFuture<Record> play( Location location,  String sound) {
-        return parse(null, location, sound, true);
+    @Nonnull
+    public static CompletableFuture<Record> play(@Nonnull Location location, @Nullable String sound) {
+        Objects.requireNonNull(location, "Cannot play sound to null location");
+        return CompletableFuture.supplyAsync(() -> {
+            Record record = parse(sound);
+            if (record == null) return null;
+            record.atLocation(location).play();
+            return record;
+        }).exceptionally(x -> {
+            x.printStackTrace();
+            return null;
+        });
     }
 
     /**
@@ -1411,55 +1447,41 @@ public enum XSound {
      *     MUSIC_END, 10f
      *     ~MUSIC_END, 10
      *     none (case-insensitive)
-     *     null (~)
+     *     null (~ in yml)
      * </pre>
      * <p>
      *
-     * @param player   the only player to play the sound to if requested to do so.
-     * @param location the location to play the sound to.
-     * @param sound    the string of the sound with volume and pitch (if needed).
-     * @param play     if the sound should be played right away.
+     * @param sound the string of the sound with volume and pitch (if needed).
      *
-     * @since 3.0.0
+     * @since 7.0.0
      */
-    
-    public static CompletableFuture<Record> parse( Player player,  Location location,  String sound, boolean play) {
-        Objects.requireNonNull(location, "Cannot play sound to null location");
+    @Nullable
+    public static Record parse(@Nullable String sound) {
         if (Strings.isNullOrEmpty(sound) || sound.equalsIgnoreCase("none")) return null;
+        String[] split = StringUtils.split(StringUtils.deleteWhitespace(sound), ',');
 
-        return CompletableFuture.supplyAsync(() -> {
-            String[] split = StringUtils.split(StringUtils.deleteWhitespace(sound), ',');
+        String name = split[0];
+        boolean playAtLocation;
+        if (name.charAt(0) == '~') {
+            name = name.substring(1);
+            playAtLocation = true;
+        } else playAtLocation = false;
 
-            String name = split[0];
-            boolean playAtLocation = player == null;
-            if (!playAtLocation && name.charAt(0) == '~') {
-                name = name.substring(1);
-                playAtLocation = true;
+        Optional<XSound> soundType = matchXSound(name);
+        if (!soundType.isPresent()) return null;
+
+        float volume = DEFAULT_VOLUME;
+        float pitch = DEFAULT_PITCH;
+
+        try {
+            if (split.length > 1) {
+                volume = Float.parseFloat(split[1]);
+                if (split.length > 2) pitch = Float.parseFloat(split[2]);
             }
-            Optional<XSound> typeOpt = matchXSound(name);
-            if (!typeOpt.isPresent()) return null;
-            Sound type = typeOpt.get().parseSound();
-            if (type == null) return null;
+        } catch (NumberFormatException ignored) {
+        }
 
-            float volume = DEFAULT_VOLUME;
-            float pitch = DEFAULT_PITCH;
-
-            try {
-                if (split.length > 1) {
-                    volume = Float.parseFloat(split[1]);
-                    if (split.length > 2) pitch = Float.parseFloat(split[2]);
-                }
-            } catch (NumberFormatException ignored) {
-            }
-
-            Record record = new Record(type, player, location, volume, pitch, playAtLocation);
-            if (play) record.play();
-            return record;
-        }).exceptionally((ex) -> {
-            System.err.println("Could not play sound for string: " + sound);
-            ex.printStackTrace();
-            return null;
-        });
+        return new Record(soundType.get(), null, null, volume, pitch, playAtLocation);
     }
 
     /**
@@ -1472,28 +1494,26 @@ public enum XSound {
      *
      * @param player the player to stop all the sounds from.
      *
-     * @return the async task handling the operation.
      * @see #stopSound(Player)
      * @since 2.0.0
      */
-    
-    public static CompletableFuture<Void> stopMusic( Player player) {
+    public static void stopMusic(@Nonnull Player player) {
         Objects.requireNonNull(player, "Cannot stop playing musics from null player");
 
-        return CompletableFuture.runAsync(() -> {
-            // We don't need to cache because it's rarely used.
-            XSound[] musics = {MUSIC_CREATIVE, MUSIC_CREDITS,
-                    MUSIC_DISC_11, MUSIC_DISC_13, MUSIC_DISC_BLOCKS, MUSIC_DISC_CAT, MUSIC_DISC_CHIRP,
-                    MUSIC_DISC_FAR, MUSIC_DISC_MALL, MUSIC_DISC_MELLOHI, MUSIC_DISC_STAL,
-                    MUSIC_DISC_STRAD, MUSIC_DISC_WAIT, MUSIC_DISC_WARD,
-                    MUSIC_DRAGON, MUSIC_END, MUSIC_GAME, MUSIC_MENU, MUSIC_NETHER_BASALT_DELTAS, MUSIC_UNDER_WATER,
-                    MUSIC_NETHER_CRIMSON_FOREST, MUSIC_NETHER_WARPED_FOREST};
+        // We don't need to cache because it's rarely used.
+        XSound[] musics = {
+                MUSIC_CREATIVE, MUSIC_CREDITS,
+                MUSIC_DISC_11, MUSIC_DISC_13, MUSIC_DISC_BLOCKS, MUSIC_DISC_CAT, MUSIC_DISC_CHIRP,
+                MUSIC_DISC_FAR, MUSIC_DISC_MALL, MUSIC_DISC_MELLOHI, MUSIC_DISC_STAL,
+                MUSIC_DISC_STRAD, MUSIC_DISC_WAIT, MUSIC_DISC_WARD,
+                MUSIC_DRAGON, MUSIC_END, MUSIC_GAME, MUSIC_MENU, MUSIC_NETHER_BASALT_DELTAS, MUSIC_UNDER_WATER,
+                MUSIC_NETHER_CRIMSON_FOREST, MUSIC_NETHER_WARPED_FOREST
+        };
 
-            for (XSound music : musics) {
-                Sound sound = music.parseSound();
-                if (sound != null) player.stopSound(sound);
-            }
-        });
+        for (XSound music : musics) {
+            Sound sound = music.parseSound();
+            if (sound != null) player.stopSound(sound);
+        }
     }
 
     /**
@@ -1510,8 +1530,8 @@ public enum XSound {
      * @return the async task handling the operation.
      * @since 2.0.0
      */
-    
-    public static BukkitTask playAscendingNote( JavaPlugin plugin,  Player player,  Entity playTo,  Instrument instrument,
+    @Nonnull
+    public static BukkitTask playAscendingNote(@Nonnull JavaPlugin plugin, @Nonnull Player player, @Nonnull Entity playTo, @Nonnull Instrument instrument,
                                                int ascendLevel, int delay) {
         Objects.requireNonNull(player, "Cannot play note from null player");
         Objects.requireNonNull(playTo, "Cannot play note to null entity");
@@ -1547,7 +1567,7 @@ public enum XSound {
      * @return the vanilla sound.
      * @since 1.0.0
      */
-    
+    @Nullable
     public Sound parseSound() {
         return this.sound;
     }
@@ -1582,8 +1602,8 @@ public enum XSound {
      * @see #play(Location, float, float)
      * @since 2.0.0
      */
-    
-    public BukkitTask playRepeatedly( JavaPlugin plugin,  Entity entity, float volume, float pitch, int repeat, int delay) {
+    @Nonnull
+    public BukkitTask playRepeatedly(@Nonnull JavaPlugin plugin, @Nonnull Entity entity, float volume, float pitch, int repeat, int delay) {
         Objects.requireNonNull(plugin, "Cannot play repeating sound from null plugin");
         Objects.requireNonNull(entity, "Cannot play repeating sound at null location");
 
@@ -1609,9 +1629,8 @@ public enum XSound {
      * @see #stopMusic(Player)
      * @since 2.0.0
      */
-    public void stopSound( Player player) {
+    public void stopSound(@Nonnull Player player) {
         Objects.requireNonNull(player, "Cannot stop playing sound from null player");
-
         Sound sound = this.parseSound();
         if (sound != null) player.stopSound(sound);
     }
@@ -1623,7 +1642,7 @@ public enum XSound {
      *
      * @since 1.0.0
      */
-    public void play( Entity entity) {
+    public void play(@Nonnull Entity entity) {
         play(entity, DEFAULT_VOLUME, DEFAULT_PITCH);
     }
 
@@ -1636,7 +1655,7 @@ public enum XSound {
      *
      * @since 1.0.0
      */
-    public void play( Entity entity, float volume, float pitch) {
+    public void play(@Nonnull Entity entity, float volume, float pitch) {
         Objects.requireNonNull(entity, "Cannot play sound to a null entity");
         if (entity instanceof Player) {
             Sound sound = this.parseSound();
@@ -1653,7 +1672,7 @@ public enum XSound {
      *
      * @since 2.0.0
      */
-    public void play( Location location) {
+    public void play(@Nonnull Location location) {
         play(location, DEFAULT_VOLUME, DEFAULT_PITCH);
     }
 
@@ -1666,14 +1685,14 @@ public enum XSound {
      *
      * @since 2.0.0
      */
-    public void play( Location location, float volume, float pitch) {
+    public void play(@Nonnull Location location, float volume, float pitch) {
         Objects.requireNonNull(location, "Cannot play sound to null location");
         Sound sound = this.parseSound();
         if (sound != null) location.getWorld().playSound(location, sound, volume, pitch);
     }
 
     /**
-     * Used for datas that need to be accessed during enum initilization.
+     * Used for data that need to be accessed during enum initialization.
      *
      * @since 5.0.0
      */
@@ -1702,15 +1721,15 @@ public enum XSound {
      * @since 3.0.0
      */
     public static class Record {
-        public final Sound sound;
-        public final Player player;
-        public final Location location;
+        @Nonnull public final XSound sound;
         public final float volume;
         public final float pitch;
-        public final boolean playAtLocation;
+        public boolean playAtLocation;
+        @Nullable public Player player;
+        @Nullable public Location location;
 
-        public Record( Sound sound,  Player player,  Location location, float volume, float pitch, boolean playAtLocation) {
-            this.sound = sound;
+        public Record(@Nonnull XSound sound, @Nullable Player player, @Nullable Location location, float volume, float pitch, boolean playAtLocation) {
+            this.sound = Objects.requireNonNull(sound, "Sound cannot be null");
             this.player = player;
             this.location = location;
             this.volume = volume;
@@ -1718,25 +1737,43 @@ public enum XSound {
             this.playAtLocation = playAtLocation;
         }
 
+        public Record forPlayer(@Nullable Player player) {
+            this.player = player;
+            return this;
+        }
+
+        public Record atLocation(@Nullable Location location) {
+            this.location = location;
+            return this;
+        }
+
+        public Record forPlayerAtLocation(@Nullable Player player, @Nullable Location location) {
+            this.player = player;
+            this.location = location;
+            return this;
+        }
+
         /**
-         * Plays the sound with the given options and updating the players location.
+         * Plays the sound with the given options and updating the player's location.
          *
          * @since 3.0.0
          */
         public void play() {
+            if (player == null && location == null) throw new IllegalStateException("Cannot play sound when there is no location available");
             play(player == null ? location : player.getLocation());
         }
 
         /**
          * Plays the sound with the updated location.
          *
-         * @param updatedLocation the upated location.
+         * @param updatedLocation the updated location.
          *
          * @since 3.0.0
          */
-        public void play( Location updatedLocation) {
-            if (playAtLocation) location.getWorld().playSound(updatedLocation, sound, volume, pitch);
-            else if (player.isOnline()) player.playSound(updatedLocation, sound, volume, pitch);
+        public void play(@Nonnull Location updatedLocation) {
+            Objects.requireNonNull(updatedLocation, "Cannot play sound at null location");
+            if (playAtLocation || player == null) location.getWorld().playSound(updatedLocation, sound.parseSound(), volume, pitch);
+            else player.playSound(updatedLocation, sound.parseSound(), volume, pitch);
         }
     }
 }

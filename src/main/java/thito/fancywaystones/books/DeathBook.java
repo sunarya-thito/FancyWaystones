@@ -2,10 +2,18 @@ package thito.fancywaystones.books;
 
 import org.bukkit.inventory.*;
 import thito.fancywaystones.*;
+import thito.fancywaystones.condition.Condition;
+import thito.fancywaystones.config.ListSection;
 import thito.fancywaystones.task.*;
 import thito.fancywaystones.ui.*;
 
+import java.nio.charset.StandardCharsets;
+
 public class DeathBook {
+
+    public Condition getUseCondition() {
+        return Condition.fromConfig(new ListSection(FancyWaystones.getPlugin().getBooksYml().getConfig().getStringList("Books.Can Be Used")));
+    }
 
     public boolean isEnable() {
         return FancyWaystones.getPlugin().getBooksYml().getConfig().getBoolean("Books.Death Book.Enable");
@@ -38,7 +46,7 @@ public class DeathBook {
     public ItemStack createItem() {
         MinecraftItem item = new MinecraftItem();
         item.load(FancyWaystones.getPlugin().getBooksYml().getConfig().getConfigurationSection("Books.Death Book.Item"));
-        item.setData("FancyWaystones:DeathBook", new byte[0]);
+        item.setData("FancyWaystones:DeathBook", "true".getBytes(StandardCharsets.UTF_8));
         return item.getItemStack(new Placeholder());
     }
 

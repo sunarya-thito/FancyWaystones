@@ -8,6 +8,9 @@ import org.bukkit.inventory.*;
 import org.bukkit.metadata.*;
 import thito.fancywaystones.*;
 import thito.fancywaystones.economy.*;
+import thito.fancywaystones.event.FWEvent;
+import thito.fancywaystones.event.WaystonePreTeleportEvent;
+import thito.fancywaystones.event.WaystoneTeleportEvent;
 import thito.fancywaystones.task.*;
 
 import java.util.*;
@@ -116,12 +119,19 @@ public class WaystoneMenu implements AttachedMenu {
         menu.setAlwaysUpdate(true);
         menu.setRows(stringList.size());
         for (WaystoneType type : WaystoneManager.getManager().getTypes()) {
+            if (type != waystoneData.getType() && !waystoneData.getType().isVisible(type)) {
+                continue;
+            }
             List<WaystoneData> waystones = new ArrayList<>();
             if (type.isAlwaysListed()) {
-                WaystoneManager.getManager().getLoadedData().stream().filter(x -> x.getType() == type).forEach(waystones::add);
+                WaystoneManager.getManager().getLoadedData().stream().filter(x -> x.getType() == type).forEach(x -> {
+                    if (x.getType().canBeListed(playerData.getPlayer(), waystoneData, x)) {
+                        waystones.add(x);
+                    }
+                });
             } else {
                 for (WaystoneData known : playerData.getKnownWaystones()) {
-                    if (known.getType() == type) {
+                    if (known.getType() == type && type.canBeListed(playerData.getPlayer(), waystoneData, known)) {
                         waystones.add(known);
                     }
                 }
@@ -201,10 +211,18 @@ public class WaystoneMenu implements AttachedMenu {
                     WaystoneData next = iterator.next();
                     if (next == null) continue;
                     if (playerData.knowWaystone(next)) {
-                        ConfigurationSection itemSection = itemDisplay.getConfigurationSection(next.getEnvironment().name());
+                        ConfigurationSection itemSection = itemDisplay.getConfigurationSection("ACTIVE." + next.getEnvironment().name() + "." + next.getType().name());
+                        if (itemSection == null) {
+                            itemSection = itemDisplay.getConfigurationSection("ACTIVE." + next.getEnvironment().name() + ".UNSPECIFIED");
+                            if (itemSection == null) continue;
+                        }
                         createWaystoneIcon(item, next, itemSection);
                     } else {
-                        ConfigurationSection itemSection = itemDisplay.getConfigurationSection("INACTIVE");
+                        ConfigurationSection itemSection = itemDisplay.getConfigurationSection("INACTIVE." + next.getEnvironment().name() + "." + next.getType().name());
+                        if (itemSection == null) {
+                            itemSection = itemDisplay.getConfigurationSection("INACTIVE." + next.getEnvironment().name() + ".UNSPECIFIED");
+                            if (itemSection == null) continue;
+                        }
                         createWaystoneIcon(item, next, itemSection);
                     }
                 }
@@ -226,7 +244,7 @@ public class WaystoneMenu implements AttachedMenu {
                     if (inv.isRightClick()) {
                         switchPage(category, page, sort, order, null);
                     } else {
-                        new AnvilGUI.Builder().plugin(FancyWaystones.getPlugin())
+                        AnvilGUI.Builder builder = new AnvilGUI.Builder().plugin(FancyWaystones.getPlugin())
                                 .title(new Placeholder().putContent(Placeholder.PLAYER, playerData.getPlayer()).replace("{language.search-filter-title}"))
                                 .onComplete((pl, name) -> {
                                     switchPage(category, page, sort, order, name.trim());
@@ -235,12 +253,14 @@ public class WaystoneMenu implements AttachedMenu {
                                 .text(searchFilter == null || searchFilter.trim().isEmpty() ? WaystoneManager.getManager().getDefaultWaystoneName() : searchFilter.trim())
                                 .plugin(FancyWaystones.getPlugin())
                                 .itemLeft(Util.material(Objects.requireNonNull(searchItem.getString("Active.Type"))).parseItem())
-                                .onClose(p -> open())
-                                .open(playerData.getPlayer());
+                                .onClose(p -> open());
+                        Util.submitSync(() -> {
+                            builder.open(playerData.getPlayer());
+                        });
                     }
                 });
             } else if (current == Objects.requireNonNull(editMembers.getString("Layout Key")).charAt(0)) {
-                if (waystoneData.getOwnerUUID().equals(playerData.getUUID()) || playerData.getPlayer().hasPermission("fancywaystones.admin")) {
+                if ((waystoneData.getOwnerUUID() != null && waystoneData.getOwnerUUID().equals(playerData.getUUID())) || playerData.getPlayer().hasPermission("fancywaystones.admin")) {
                     item.load(editMembers.getConfigurationSection("Enable"));
                     item.addClickListener((inv, ph) -> {
                         MembersMenu membersMenu = new MembersMenu(playerData, waystoneData);
@@ -278,14 +298,14 @@ public class WaystoneMenu implements AttachedMenu {
                     item.load(renameItem.getConfigurationSection("Enable"));
                     item.addClickListener((inv, ph) -> {
                         Player player = (Player) inv.getWhoClicked();
-                        new AnvilGUI.Builder().plugin(FancyWaystones.getPlugin())
+                        AnvilGUI.Builder builder = new AnvilGUI.Builder().plugin(FancyWaystones.getPlugin())
                                 .title(new Placeholder().putContent(Placeholder.PLAYER, player).replace("{language.rename-gui-title}"))
                                 .onComplete((pl, name) -> {
                                     if (WaystoneManager.getManager().containsIllegalWord(name)) {
                                         pl.sendMessage(
                                                 new Placeholder().putContent(Placeholder.PLAYER, pl)
-                                                .putContent(Placeholder.WAYSTONE, waystoneData)
-                                                .replace("{language.illegal-waystone-name}")
+                                                        .putContent(Placeholder.WAYSTONE, waystoneData)
+                                                        .replace("{language.illegal-waystone-name}")
                                         );
                                         return AnvilGUI.Response.close();
                                     }
@@ -326,21 +346,26 @@ public class WaystoneMenu implements AttachedMenu {
                                 .text(waystoneData.getName())
                                 .plugin(FancyWaystones.getPlugin())
                                 .itemLeft(Util.material(Objects.requireNonNull(FancyWaystones.getPlugin().getConfig().getString("Waystone Item.Type"))).parseItem())
-                                .onClose(p -> open())
-                                .open(player);
+                                .onClose(p -> open());
+                        Util.submitSync(() -> {
+                            player.closeInventory();
+                            builder.open(player);
+                        });
                     });
                 } else {
                     item.load(renameItem.getConfigurationSection("Disable"));
                 }
             } else if (current == Objects.requireNonNull(closeItem.getString("Layout Key")).charAt(0)) {
                 item.load(closeItem);
-                item.addClickListener((inv, ph) -> inv.getWhoClicked().closeInventory());
+                item.addClickListener((inv, ph) -> Util.submitSync(() -> inv.getWhoClicked().closeInventory()));
             } else {
                 boolean found = false;
                 for (WaystoneType t : WaystoneManager.getManager().getTypes()) {
                     if (categoryItem.isString(t.name()+".Layout Key") && Objects.requireNonNull(categoryItem.getString(t.name() + ".Layout Key")).charAt(0) == current) {
                         List<WaystoneData> waystones = categorized.get(t);
-                        if (waystones == null || waystones.isEmpty()) {
+                        if (!waystoneData.getType().isVisible(t)) {
+                            item.load(categoryItem.getConfigurationSection(t.name()+".Disabled"));
+                        } else if (waystones == null || waystones.isEmpty()) {
                             item.load(categoryItem.getConfigurationSection(t.name()+".Empty"));
                         } else {
                             item.load(categoryItem.getConfigurationSection(t.name()+".Not Empty"));
@@ -373,59 +398,86 @@ public class WaystoneMenu implements AttachedMenu {
         }
         item.load(itemSection);
         item.addClickListener((inv, ph) -> {
-            inv.getWhoClicked().closeInventory();
-            FancyWaystones.getPlugin().submitIO(() -> {
-                WaystoneData waystoneData = WaystoneManager.getManager().getData(next.getUUID());
-                if (waystoneData != null) {
-                    proceedTeleport(waystoneData);
-                }
+            Util.submitSync(() -> {
+                inv.getWhoClicked().closeInventory();
+                FancyWaystones.getPlugin().submitIO(() -> {
+                    WaystoneData waystoneData = WaystoneManager.getManager().getData(next.getUUID());
+                    if (waystoneData != null) {
+                        proceedTeleport(waystoneData);
+                    }
+                });
             });
         });
     }
 
     private void proceedTeleport(WaystoneData data) {
         if (data == null) return;
-        FancyWaystones.getPlugin().submit(() -> {
-            List<Cost> costs = data.getType().calculateCost(waystoneData.getLocation(), data);
-            for (Cost cost : costs) {
-                if (!cost.getService().has(playerData.getPlayer(), cost.getAmount())) {
-                    playerData.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.PLAYER, playerData.getPlayer())
-                            .putContent(Placeholder.WAYSTONE, data).put("cost",
-                                    px -> costs.stream().map(x -> x.getService().getDisplayName(px)).collect(Collectors.joining(" {language.and} "))).replace(
-                                    "{language.cost-not-enough}"
-                            ));
-                    return;
-                }
+        Util.submitSync(() -> {
+            String[] strings = data.getType().canBeVisited(playerData.getPlayer(), waystoneData, data);
+            if (strings != null) {
+                playerData.getPlayer().sendMessage(strings);
+                return;
             }
+            List<Cost> costs = data.getType().calculateCost(waystoneData.getLocation(), data);
+            if (FWEvent.call(new WaystonePreTeleportEvent(waystoneData, playerData, data, costs)).isCancelled()) return;
+            if (costs.isEmpty()) {
+                proceedEconomyTeleport(data, null);
+//            }
+//            if (costs.size() == 1) {
+//                proceedEconomyTeleport(data, costs.get(0));
+            } else {
+                PaywallMenu paywallMenu = new PaywallMenu(playerData, costs, waystoneData, data);
+                paywallMenu.open();
+            }
+        });
+    }
+
+    private void proceedEconomyTeleport(WaystoneData data, Cost cost) {
+        if (cost != null) {
+            if (checkEconomy(data, cost, playerData)) return;
+        }
+        scheduleTeleport(data, cost, playerData, waystoneData);
+    }
+
+    static void scheduleTeleport(WaystoneData data, Cost cost, PlayerData playerData, WaystoneData waystoneData) {
+        FancyWaystones.getPlugin().submit(() -> {
             WaystoneWarmUpTask waystoneWarmUpTask = new WaystoneWarmUpTask(playerData.getPlayer(), waystoneData, data) {
                 @Override
                 public void onDone() {
+                    WaystoneTeleportEvent event = new WaystoneTeleportEvent(waystoneData, playerData, data, cost);
+                    if (FWEvent.call(event).isCancelled()) return;
+                    Cost costNow = event.getCost();
                     if (FancyWaystones.getPlugin().isEnabled()) {
                         Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
-                            for (Cost cost : costs) {
-                                if (!cost.getService().has(playerData.getPlayer(), cost.getAmount())) {
-                                    playerData.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.PLAYER, playerData.getPlayer())
-                                            .putContent(Placeholder.WAYSTONE, data).put("cost",
-                                                    px -> costs.stream().map(x -> x.getService().getDisplayName(px)).collect(Collectors.joining(" {language.and} "))).replace(
-                                                    "{language.cost-not-enough}"
-                                            ));
-                                    return;
-                                }
-                            }
-                            for (Cost cost : costs) {
-                                cost.getService().withdraw(playerData.getPlayer(), cost.getAmount());
+                            if (costNow != null) {
+                                if (!costNow.getService().has(playerData.getPlayer(), costNow.getAmount())) return;
+                                costNow.getService().withdraw(playerData.getPlayer(), costNow.getAmount());
                             }
                             data.teleport(waystoneData, playerData.getPlayer());
                         });
                     };
                 }
-
                 @Override
                 public void onCancelled() {
                 }
             };
             waystoneWarmUpTask.schedule(FancyWaystones.getPlugin().getService(), 1, 1);
         });
+    }
+
+    static boolean checkEconomy(WaystoneData data, Cost cost, PlayerData playerData) {
+        if (!cost.getService().has(playerData.getPlayer(), cost.getAmount())) {
+            playerData.getPlayer().sendMessage(new Placeholder().putContent(Placeholder.PLAYER, playerData.getPlayer())
+                    .putContent(Placeholder.WAYSTONE, data).put("cost",
+                            px -> cost.getService().getDisplayName(px)).replace(
+                            "{language.cost-not-enough}"
+                    ));
+            Util.submitSync(() -> {
+                playerData.getPlayer().closeInventory();
+            });
+            return true;
+        }
+        return false;
     }
 
 }

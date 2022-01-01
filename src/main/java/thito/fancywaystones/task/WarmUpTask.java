@@ -5,9 +5,9 @@ import org.bukkit.entity.*;
 import thito.fancywaystones.*;
 import thito.fancywaystones.effect.*;
 import thito.fancywaystones.effect.Effect;
+import thito.fancywaystones.scheduler.Scheduler;
 
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.stream.*;
 
 public abstract class WarmUpTask extends Task {
@@ -29,7 +29,7 @@ public abstract class WarmUpTask extends Task {
     }
 
     @Override
-    public void schedule(ScheduledExecutorService service, long delay, long interval) {
+    public void schedule(Scheduler service, long delay, long interval) {
         super.schedule(service, delay, interval);
         TASKS.put(player, this);
     }

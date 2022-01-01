@@ -1,29 +1,38 @@
 package thito.fancywaystones;
 
-import dev.lone.itemsadder.api.ItemsAdder;
 import org.bukkit.*;
-import org.bukkit.configuration.*;
-import org.bukkit.configuration.file.*;
-import org.bukkit.entity.*;
-import org.bukkit.inventory.*;
-import thito.fancywaystones.economy.*;
-import thito.fancywaystones.location.*;
-import thito.fancywaystones.model.*;
-import thito.fancywaystones.model.config.*;
-import thito.fancywaystones.model.config.component.*;
-import thito.fancywaystones.model.config.rule.*;
-import thito.fancywaystones.proxy.message.*;
-import thito.fancywaystones.types.*;
-import thito.fancywaystones.ui.*;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import thito.fancywaystones.economy.EconomyService;
+import thito.fancywaystones.economy.LevelEconomyService;
+import thito.fancywaystones.economy.VaultEconomyService;
+import thito.fancywaystones.location.LocalLocation;
+import thito.fancywaystones.location.ProxyLocation;
+import thito.fancywaystones.model.ClientSideStandardModel;
+import thito.fancywaystones.model.ItemModel;
+import thito.fancywaystones.model.config.ComponentType;
+import thito.fancywaystones.model.config.StyleRule;
+import thito.fancywaystones.model.config.component.ArmorStandComponent;
+import thito.fancywaystones.model.config.component.BlockComponent;
+import thito.fancywaystones.model.config.component.HologramComponent;
+import thito.fancywaystones.model.config.rule.EnvironmentRule;
+import thito.fancywaystones.model.config.rule.WaystoneStateRule;
+import thito.fancywaystones.model.config.rule.WaystoneTypeRule;
+import thito.fancywaystones.types.DummyWaystoneType;
+import thito.fancywaystones.ui.MinecraftItem;
+import thito.fancywaystones.ui.WaystoneMenu;
 
-import java.io.*;
-import java.nio.charset.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.*;
-import java.util.logging.*;
-import java.util.stream.*;
-
-import static thito.fancywaystones.FancyWaystones.checkIOThread;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class WaystoneManager {
     private static WaystoneManager manager;
@@ -41,6 +50,7 @@ public class WaystoneManager {
     private Map<String, ComponentType> componentTypeMap = new HashMap<>();
     private Map<String, StyleRule> styleRuleMap = new HashMap<>();
     private Map<String, WaystoneModel> modelMap = new HashMap<>();
+    private Set<ItemModel> itemModelSet = new HashSet<>();
     private WaystoneModel model = new ClientSideStandardModel();
     private Map<String, WaystoneType> typeMap = new HashMap<>();
     private Map<World, Map<Long, List<UUID>>> blockDataMap = new HashMap<>();
@@ -71,6 +81,10 @@ public class WaystoneManager {
         componentTypeMap.put("block", new BlockComponent());
         componentTypeMap.put("armorstand", new ArmorStandComponent());
 
+    }
+
+    public Set<ItemModel> getItemModelSet() {
+        return itemModelSet;
     }
 
     protected void putBlockData(Location location, UUID id) {
@@ -128,9 +142,12 @@ public class WaystoneManager {
             String mode = section.getString("Mode");
             if ("ONLINE_TIME_OWNER".equals(mode)) {
                 try {
-                    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(waystoneData.getOwnerUUID());
-                    long time = System.currentTimeMillis() - offlinePlayer.getLastPlayed();
-                    return (time > duration) && !offlinePlayer.isOnline();
+                    UUID ownerUUID = waystoneData.getOwnerUUID();
+                    if (ownerUUID != null) {
+                        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(ownerUUID);
+                        long time = System.currentTimeMillis() - offlinePlayer.getLastPlayed();
+                        return (time > duration) && !offlinePlayer.isOnline();
+                    }
                 } catch (Throwable ignored) {
                 }
             } else if ("LAST_USED".equals(mode)) {
@@ -152,13 +169,11 @@ public class WaystoneManager {
     }
 
     public void unloadData(UUID id) {
-        checkIOThread();
         WaystoneData data = getLoadedData().stream().filter(x -> x.getUUID().equals(id)).findAny().orElse(null);
         unloadData(data);
     }
 
     public void unloadData(WaystoneData data) {
-        checkIOThread();
         if (data != null) {
             directUnloadData(data);
             for (PlayerData playerData : data.getAttached()) {
@@ -168,7 +183,6 @@ public class WaystoneManager {
     }
 
     public void directUnloadData(WaystoneData data) {
-        checkIOThread();
         loadedData.remove(data);
     }
 
@@ -185,7 +199,6 @@ public class WaystoneManager {
     }
 
     public void shutdown() {
-        checkIOThread();
         loadedData.forEach(snapshot -> {
             if (snapshot != null) {
                 saveWaystone(snapshot);
@@ -217,14 +230,26 @@ public class WaystoneManager {
     }
 
     public void openWaystoneMenu(PlayerData player, WaystoneData data) {
-        WaystoneMenu waystoneMenu = new WaystoneMenu(player, data);
-        waystoneMenu.open();
-        data.getOpenedMenus().add(waystoneMenu);
+        FancyWaystones.getPlugin().submitIO(() -> {
+            WaystoneMenu waystoneMenu = new WaystoneMenu(player, data);
+            waystoneMenu.open();
+            data.getOpenedMenus().add(waystoneMenu);
+        });
     }
 
     public void createWaystoneItem(WaystoneData data, boolean storeID, Consumer<ItemStack> result) {
         Placeholder placeholder = new Placeholder();
         placeholder.putContent(Placeholder.WAYSTONE, data);
+        for (ItemModel model : itemModelSet) {
+            if (model.accept(data)) {
+                saveToStringWaystoneData(data, storeID, string -> {
+                    ItemStack item = model.getItemStack(placeholder);
+                    NBTUtil.setData(item, "fancywaystones:waystoneData", string.getBytes(StandardCharsets.UTF_8));
+                    result.accept(item);
+                });
+                return;
+            }
+        }
         MinecraftItem item = new MinecraftItem();
         item.load(waystoneItem);
         saveToStringWaystoneData(data, storeID, string -> {
@@ -234,7 +259,6 @@ public class WaystoneManager {
     }
 
     public void setStorage(WaystoneStorage storage) {
-        checkIOThread();
         Logger logger = FancyWaystones.getPlugin().getLogger();
         int countA = 0, countB = 0;
         for (WaystoneData snapshot : loadedData) {
@@ -247,8 +271,10 @@ public class WaystoneManager {
             }
             saveWaystone(snapshot);
         }
-        logger.log(Level.INFO, "Unloaded "+countA+" physical waystones");
-        logger.log(Level.INFO, "Unloaded "+countB+" virtual waystones");
+        if (this.storage != null) {
+            logger.log(Level.INFO, "Unloaded "+countA+" physical waystones");
+            logger.log(Level.INFO, "Unloaded "+countB+" virtual waystones");
+        }
         for (World world : Bukkit.getWorlds()) {
             int count = 0;
             for (Chunk c : world.getLoadedChunks()) {
@@ -259,7 +285,9 @@ public class WaystoneManager {
                     e.printStackTrace();
                 }
             }
-            logger.log(Level.INFO, "Unloaded "+count+" chunk data from "+world.getName());
+            if (this.storage != null) {
+                logger.log(Level.INFO, "Unloaded "+count+" chunk data from "+world.getName());
+            }
         }
         int countP = 0;
         for (PlayerData playerData : playerDataList) {
@@ -270,8 +298,8 @@ public class WaystoneManager {
                 e.printStackTrace();
             }
         }
-        logger.log(Level.INFO, "Unloaded "+countP+" player datas");
         if (this.storage != null) {
+            logger.log(Level.INFO, "Unloaded "+countP+" player datas");
             this.storage.close();
             logger.log(Level.INFO, "Closed old storage connection");
         }
@@ -281,7 +309,7 @@ public class WaystoneManager {
         if (FancyWaystones.getPlugin().isEnabled()) {
             Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
                 FancyWaystones.getPlugin().submitIO(() -> {
-                    // PAPER FORKS TENDS TO HAVE THE WORLD LAZY LOADED
+                    // PAPER FORKS TEND TO HAVE THE WORLD LAZY LOADED
                     for (WaystoneType type : getTypes()) {
                         if (type.isAlwaysLoaded()) {
                             int count = 0;
@@ -348,7 +376,7 @@ public class WaystoneManager {
     }
 
     public WaystoneData getWaystoneFromItem(ItemStack item) {
-        byte[] data = Util.getData(item, "fancywaystones:waystoneData");
+        byte[] data = NBTUtil.getData(item, "fancywaystones:waystoneData");
         if (data != null) {
             try {
                 WaystoneData d = loadWaystoneDataFromString(new String(data, StandardCharsets.UTF_8));
@@ -376,7 +404,6 @@ public class WaystoneManager {
     }
 
     public WaystoneBlock placeWaystone(WaystoneData data, Location location) {
-        checkIOThread();
         data.setLocation(new LocalLocation(location));
         WaystoneBlock block = new WaystoneBlock(data);
         block.spawn();
@@ -385,7 +412,6 @@ public class WaystoneManager {
     }
 
     public void refresh(UUID id) {
-        checkIOThread();
         for (WaystoneData wd : loadedData) {
             if (wd.getUUID().equals(id)) {
                 WaystoneLocation location = wd.getLocation();
@@ -402,7 +428,6 @@ public class WaystoneManager {
     }
 
     public void refresh(WaystoneData data) throws IOException, InvalidConfigurationException {
-        checkIOThread();
         if (!(data.getLocation() instanceof LocalLocation)) return;
         YamlConfiguration config = new YamlConfiguration();
         config.loadFromString(new String(getStorage().readWaystoneData(data.getUUID()), StandardCharsets.UTF_8));
@@ -436,8 +461,7 @@ public class WaystoneManager {
     }
 
     public void loadChunk(World world, int x, int z) {
-        checkIOThread();
-        long time = System.currentTimeMillis();
+                long time = System.currentTimeMillis();
         File target = new File(FancyWaystones.getPlugin().getDataFolder(), getWorldPath()+"/"+world.getName()+"/"+x+"."+z+".yml");
         if (target.exists()) {
             YamlConfiguration configuration = new YamlConfiguration();
@@ -456,13 +480,12 @@ public class WaystoneManager {
         FancyWaystones.getPlugin().pushSRWSpeed(elapsed);
     }
 
-    private String getWorldPath() {
+    public String getWorldPath() {
         return FancyWaystones.getPlugin().getConfig().getString("Storage.Block Directory");
     }
 
     public void unloadChunk(Chunk chunk) throws IOException {
-        checkIOThread();
-        for (int i = loadedData.size() - 1; i >= 0; i--) {
+                for (int i = loadedData.size() - 1; i >= 0; i--) {
             WaystoneData data = loadedData.get(i);
             WaystoneBlock waystoneBlock = data.getWaystoneBlock();
             WaystoneLocation loc = data.getLocation();
@@ -493,8 +516,7 @@ public class WaystoneManager {
     }
 
     private WaystoneData getLoadedData(UUID id) {
-        checkIOThread();
-        for (WaystoneData n : loadedData) {
+                for (WaystoneData n : loadedData) {
             if (n.getUUID().equals(id)) {
                 return n;
             }
@@ -503,8 +525,7 @@ public class WaystoneManager {
     }
 
     public WaystoneData getData(UUID id) {
-        checkIOThread();
-        WaystoneData data = getLoadedData(id);
+                WaystoneData data = getLoadedData(id);
         if (data == null) {
             data = loadWaystoneDataPrintError(id);
         }
@@ -512,8 +533,7 @@ public class WaystoneManager {
     }
 
     public boolean prepare(UUID id) {
-        checkIOThread();
-        WaystoneData data = getLoadedData(id);
+                WaystoneData data = getLoadedData(id);
         if (data == null) {
             loadWaystoneDataPrintError(id);
             return true;
@@ -522,8 +542,7 @@ public class WaystoneManager {
     }
 
     public void unloadPlayerData(UUID id) {
-        checkIOThread();
-        playerDataList.removeIf(x -> {
+                playerDataList.removeIf(x -> {
             if (x.getUUID().equals(id)) {
                 for (WaystoneData data : x.getKnownWaystones()) {
                     data.removeAttached(x);
@@ -538,9 +557,17 @@ public class WaystoneManager {
         return getPlayerData(player, player.getUniqueId());
     }
 
-    public PlayerData getPlayerData(Player player, UUID uuid) {
-        checkIOThread();
+    public PlayerData getLoadedPlayerData(UUID uuid) {
         for (PlayerData data : playerDataList) {
+            if (data.getUUID().equals(uuid)) {
+                return data;
+            }
+        }
+        return null;
+    }
+
+    public PlayerData getPlayerData(Player player, UUID uuid) {
+                for (PlayerData data : playerDataList) {
             if (data.getUUID().equals(uuid)) {
                 return data;
             }
@@ -572,8 +599,7 @@ public class WaystoneManager {
     }
 
     public void savePlayerData(PlayerData data) throws IOException {
-        checkIOThread();
-        long time = System.currentTimeMillis();
+                long time = System.currentTimeMillis();
         YamlConfiguration configuration = new YamlConfiguration();
         data.save(configuration);
         getStorage().writePlayerData(data.getUUID(), configuration.saveToString().getBytes(StandardCharsets.UTF_8));
@@ -582,7 +608,7 @@ public class WaystoneManager {
     }
 
     public void saveWaystone(WaystoneData data) {
-        checkIOThread();
+                if (data.getLocation().getWorldUUID() == null) return;
         long time = System.currentTimeMillis();
         YamlConfiguration configuration = new YamlConfiguration();
         try {
@@ -592,16 +618,22 @@ public class WaystoneManager {
             configuration.set("ownerUUID", ownerUUID == null ? null : ownerUUID.toString());
             configuration.set("ownerName", data.getOwnerName());
             configuration.set("type", data.getType().name());
+            ItemStack customIcon = data.getCustomIcon();
+            if (customIcon != null) {
+                configuration.set("customIcon", customIcon);
+            }
             WaystoneLocation waystoneLocation = data.getLocation();
             if (waystoneLocation instanceof LocalLocation) {
                 Location location = ((LocalLocation) waystoneLocation).getLocation();
-                configuration.set("world", location.getWorld().getName());
+                configuration.set("worldUID", location.getWorld().getUID().toString());
+//                configuration.set("world", location.getWorld().getName());
                 configuration.set("x", location.getBlockX());
                 configuration.set("y", location.getBlockY());
                 configuration.set("z", location.getBlockZ());
                 configuration.set("serverName", FancyWaystones.getPlugin().getServerName());
             } else if (waystoneLocation instanceof ProxyLocation) {
-                configuration.set("world", waystoneLocation.getWorldName());
+                configuration.set("worldUID", waystoneLocation.getWorldUUID().toString());
+//                configuration.set("world", waystoneLocation.getWorldName());
                 configuration.set("x", ((ProxyLocation) waystoneLocation).getX());
                 configuration.set("y", ((ProxyLocation) waystoneLocation).getY());
                 configuration.set("z", ((ProxyLocation) waystoneLocation).getZ());
@@ -673,16 +705,43 @@ public class WaystoneManager {
         data.setOwnerUUID(config.isString("ownerUUID") ? UUID.fromString(config.getString("ownerUUID")) : null);
         data.setOwnerName(config.getString("ownerName"));
         String serverName = config.getString("serverName");
-        if (FancyWaystones.getPlugin().getServerName().equals(serverName)) {
-            World world = Bukkit.getWorld(config.getString("world"));
-            if (world == null) {
-                return null;
+        if (config.isSet("customIcon")) {
+            ItemStack itemStack = config.getItemStack("customIcon");
+            if (itemStack != null) {
+                data.setCustomIcon(itemStack);
             }
-            data.setLocation(new LocalLocation(new Location(world, config.getInt("x"), config.getInt("y"), config.getInt("z"))));
-        } else {
-            data.setLocation(new ProxyLocation(serverName == null ? FancyWaystones.getPlugin().getServerName() : serverName, config.getString("world"),
-                    config.getInt("x"), config.getInt("y"), config.getInt("z"), data.getEnvironment()));
         }
+        String uid = config.getString("worldUID");
+        if (uid != null) {
+            World world = Bukkit.getWorld(UUID.fromString(uid));
+            if (world != null) {
+                data.setLocation(new LocalLocation(new Location(world, config.getInt("x"), config.getInt("y"), config.getInt("z"))));
+            } else {
+                if (FancyWaystones.getPlugin().getServerName().equals(serverName)) {
+                    String name = config.getString("world");
+                    world = name == null ? null : Bukkit.getWorld(name);
+                    if (world == null) {
+                        return null;
+                    }
+                    data.setLocation(new LocalLocation(new Location(world, config.getInt("x"), config.getInt("y"), config.getInt("z"))));
+                } else {
+                    data.setLocation(new ProxyLocation(serverName == null ? FancyWaystones.getPlugin().getServerName() : serverName, uid == null ? null : UUID.fromString(uid),
+                            config.getInt("x"), config.getInt("y"), config.getInt("z"), data.getEnvironment()));
+                }
+            }
+        } else {
+            if (FancyWaystones.getPlugin().getServerName().equals(serverName)) {
+                World world = Bukkit.getWorld(config.getString("world"));
+                if (world == null) {
+                    return null;
+                }
+                data.setLocation(new LocalLocation(new Location(world, config.getInt("x"), config.getInt("y"), config.getInt("z"))));
+            } else {
+                data.setLocation(new ProxyLocation(serverName == null ? FancyWaystones.getPlugin().getServerName() : serverName, uid == null ? null : UUID.fromString(uid),
+                        config.getInt("x"), config.getInt("y"), config.getInt("z"), data.getEnvironment()));
+            }
+        }
+
         loadMembers(config, data);
         loadedData.add(data);
         data.validateBlock();
@@ -711,8 +770,7 @@ public class WaystoneManager {
     }
 
     protected WaystoneData _loadWaystoneData(UUID target) throws IOException {
-        checkIOThread();
-        long time = System.currentTimeMillis();
+                long time = System.currentTimeMillis();
         byte[] bytes = storage.readWaystoneData(target);
         if (bytes != null) {
             try {

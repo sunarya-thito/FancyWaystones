@@ -52,7 +52,8 @@ public class CircleParticle implements Effect {
             }
         }
         try {
-            script = FancyWaystones.getPlugin().compile(section.getString("Script"));
+            script = Context.enter().compileString(section.getString("Script"), "effects.yml", 0, null);
+//            script = FancyWaystones.getPlugin().compile(section.getString("Script"));
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -64,7 +65,7 @@ public class CircleParticle implements Effect {
     }
 
     public static class CircleHandler implements EffectHandler {
-        private Scriptable scriptable;
+//        private Scriptable scriptable;
         public ParticleEffect particleEffect;
         public double deltaX, deltaY, deltaZ;
         public double offsetX, offsetY, offsetZ;
@@ -82,7 +83,7 @@ public class CircleParticle implements Effect {
         public int location;
 
         public CircleHandler(Script script, ParticleEffect particleEffect, double deltaX, double deltaY, double deltaZ, double offsetX, double offsetY, double offsetZ, float speed, double radius, int count, int gap, Player player, WaystoneData waystoneData, WaystoneData target, boolean global, int location) {
-            scriptable = JavaAdapter.createAdapterWrapper(FancyWaystones.getPlugin().getRoot(), this);
+//            scriptable = JavaAdapter.createAdapterWrapper(FancyWaystones.getPlugin().getRoot(), this);
             this.particleEffect = particleEffect;
             this.deltaX = deltaX;
             this.deltaY = deltaY;
@@ -140,8 +141,10 @@ public class CircleParticle implements Effect {
                     }
                 }
             }
-            if (script != null && scriptable != null) {
-                script.exec(FancyWaystones.getPlugin().getContext(), scriptable);
+            Context context = Context.enter();
+            Scriptable scriptable = JavaAdapter.createAdapterWrapper(context.initSafeStandardObjects(), this);
+            if (script != null) {
+                script.exec(context, scriptable);
             }
         }
     }

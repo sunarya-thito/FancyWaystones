@@ -1,9 +1,9 @@
 package thito.fancywaystones;
 
-import org.bukkit.entity.*;
-import thito.fancywaystones.economy.*;
+import org.bukkit.entity.Player;
+import thito.fancywaystones.economy.Cost;
 
-import java.util.*;
+import java.util.List;
 
 public interface WaystoneType {
     String name();
@@ -22,11 +22,14 @@ public interface WaystoneType {
 
     List<Cost> calculateCost(WaystoneLocation source, WaystoneData target);
 
-    boolean canRedirectCompass(Player player, WaystoneData waystoneData);
+    boolean isVisible(WaystoneType type);
+    String[] canBeVisited(Player player, WaystoneData source, WaystoneData waystoneData);
+    boolean canBeListed(Player player, WaystoneData source, WaystoneData waystoneData);
+    String[] canRedirectCompass(Player player, WaystoneData waystoneData);
     boolean shouldDrop(Player player, WaystoneData waystoneData);
     boolean shouldDropPurge(WaystoneData waystoneData);
-    boolean hasAccess(Player player, WaystoneData waystoneData);
-    boolean hasActivationAccess(Player player, WaystoneData waystoneData);
-    boolean isBreakable(Player player, WaystoneData waystoneData);
+    String[] hasAccess(Player player, WaystoneData waystoneData);
+    String[] hasActivationAccess(Player player, WaystoneData waystoneData);
+    String[] isBreakable(Player player, WaystoneData waystoneData);
     boolean isBreakableByExplosion(WaystoneData waystoneData);
 }

@@ -18,10 +18,10 @@ import java.util.function.*;
 import java.util.function.Consumer;
 
 public class FakeArmorStand {
-    private static int dataWatcherIndex;
-    private static int availableIds = Integer.MAX_VALUE / 2;
-    private static int customNameMode;
-    private static boolean customNameOptional;
+    public static int dataWatcherIndex;
+    public static int availableIds = Integer.MAX_VALUE / 2;
+    public static int customNameMode;
+    public static boolean customNameOptional;
     private static int requestId() {
         return availableIds--;
     }
@@ -85,6 +85,8 @@ public class FakeArmorStand {
                                 if (handleType instanceof Class) {
                                     if (handleType == MinecraftReflection.getIChatBaseComponentClass()) {
                                         customNameMode = 1;
+                                    } else {
+                                        customNameMode = 2;
                                     }
                                 }
                                 break;
@@ -280,8 +282,8 @@ public class FakeArmorStand {
         String customName = meta.getCustomName();
         if (customNameMode == 0) {
             if (customNameOptional) {
-                WrappedDataWatcher.WrappedDataWatcherObject customNameWatcher = new WrappedDataWatcher.WrappedDataWatcherObject(2, WrappedDataWatcher.Registry.get(String.class, true));
-                watcher.setObject(customNameWatcher, Optional.ofNullable(customName));
+//                WrappedDataWatcher.WrappedDataWatcherObject customNameWatcher = new WrappedDataWatcher.WrappedDataWatcherObject(2, WrappedDataWatcher.Registry.get(String.class, true));
+                watcher.setObject(2, Optional.ofNullable(customName));
             } else {
                 watcher.setObject(2, customName == null ? "" : customName);
             }
@@ -292,6 +294,14 @@ public class FakeArmorStand {
             } else {
                 WrappedDataWatcher.WrappedDataWatcherObject customNameWatcher = new WrappedDataWatcher.WrappedDataWatcherObject(2, WrappedDataWatcher.Registry.getChatComponentSerializer());
                 watcher.setObject(customNameWatcher, customName == null ? null : WrappedChatComponent.fromChatMessage(customName)[0].getHandle());
+            }
+        } else if (customNameMode == 2) {
+            if (customNameOptional) {
+                WrappedDataWatcher.WrappedDataWatcherObject customNameWatcher = new WrappedDataWatcher.WrappedDataWatcherObject(2, WrappedDataWatcher.Registry.get(String.class, true));
+                watcher.setObject(customNameWatcher, Optional.ofNullable(customName));
+            } else {
+                WrappedDataWatcher.WrappedDataWatcherObject customNameWatcher = new WrappedDataWatcher.WrappedDataWatcherObject(2, WrappedDataWatcher.Registry.get(String.class));
+                watcher.setObject(customNameWatcher, customName == null ? "" : customName);
             }
         }
 

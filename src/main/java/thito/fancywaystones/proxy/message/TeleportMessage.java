@@ -5,6 +5,7 @@ import thito.fancywaystones.proxy.SerializableLocation;
 import java.util.*;
 
 public class TeleportMessage extends Message {
+    private static final long serialVersionUID = 1L;
     private boolean sendFeedback;
     private SerializableLocation source, target;
     private UUID playerUUID;

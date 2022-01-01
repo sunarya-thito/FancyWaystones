@@ -6,6 +6,7 @@ import thito.fancywaystones.proxy.SerializableLocation;
 import java.util.UUID;
 
 public class RefundTeleportationMessage extends Message {
+    private static final long serialVersionUID = 1L;
     private SerializableLocation source, target;
     private UUID playerUUID;
     private TeleportState state;

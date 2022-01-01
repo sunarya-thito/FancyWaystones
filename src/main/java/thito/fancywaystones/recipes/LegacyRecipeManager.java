@@ -54,7 +54,8 @@ public class LegacyRecipeManager implements RecipeManager, Listener {
                     add(new MetaRecipe(
                             environment.name() + "." +
                             type.name() + "." +
-                            model.getId(), shapedRecipe, materials));
+                            model.getId(), shapedRecipe, materials, RecipeConfiguration.fromConfig(section)
+                            ));
                 } catch (Throwable t) {
                     FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Failed to register recipe: "+environment.name()+":"+type.name()+" due to an error", t);
                 }
@@ -81,7 +82,7 @@ public class LegacyRecipeManager implements RecipeManager, Listener {
                 FancyWaystones.getPlugin().getLogger()
                         .log(Level.INFO, "Registered recipe for Death Book");
                 Bukkit.addRecipe(shapedRecipe);
-                add(new MetaRecipe("deathbook", shapedRecipe, materials));
+                add(new MetaRecipe("deathbook", shapedRecipe, materials, RecipeConfiguration.fromConfig(deathBookRecipe)));
             } catch (Throwable t) {
                 FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Failed to register Death Book due to an error", t);
             }
@@ -105,7 +106,7 @@ public class LegacyRecipeManager implements RecipeManager, Listener {
                 FancyWaystones.getPlugin().getLogger()
                         .log(Level.INFO, "Registered recipe for Teleportation Book");
                 Bukkit.addRecipe(shapedRecipe);
-                add(new MetaRecipe("teleportationbook", shapedRecipe, materials));
+                add(new MetaRecipe("teleportationbook", shapedRecipe, materials, RecipeConfiguration.fromConfig(teleportationBookRecipe)));
             } catch (Throwable t) {
                 FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Failed to register Teleportation Book due to an error", t);
             }
@@ -139,19 +140,33 @@ public class LegacyRecipeManager implements RecipeManager, Listener {
     }
 
     @Override
-    public List<Recipe> getRecipes() {
-        return recipes.stream().map(MetaRecipe::getRecipe).collect(Collectors.toList());
+    public List<MetaRecipe> getRecipes() {
+        return recipes;
     }
 
     @Override
     public void clearCustomRecipes() {
-        Iterator<Recipe> recipeIterator = Bukkit.recipeIterator();
-        while (recipeIterator.hasNext()) {
-            Recipe recipe = recipeIterator.next();
-            if (recipes.stream().filter(x -> x.getRecipe().getResult().equals(recipe.getResult())).count() > 0) {
-                recipeIterator.remove();
+        try {
+            Iterator<Recipe> recipeIterator = Bukkit.recipeIterator();
+            while (recipeIterator.hasNext()) {
+                Recipe recipe = recipeIterator.next();
+                if (recipes.stream().filter(x -> x.getRecipe().getResult().equals(recipe.getResult())).count() > 0) {
+                    recipeIterator.remove();
+                }
             }
+            recipes.clear();
+        } catch (Throwable t) {
+            FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Uses legacy method to remove recipe. Might take a while.");
+            List<Recipe> backup = new ArrayList<>();
+            Iterator<Recipe> recipeIterator = Bukkit.recipeIterator();
+            while (recipeIterator.hasNext()) {
+                Recipe recipe = recipeIterator.next();
+                if (recipes.stream().filter(x -> x.getRecipe().getResult().equals(recipe.getResult())).count() <= 0) {
+                    backup.add(recipe);
+                }
+            }
+            Bukkit.clearRecipes();
+            backup.forEach(Bukkit::addRecipe);
         }
-        recipes.clear();
     }
 }

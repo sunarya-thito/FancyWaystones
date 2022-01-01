@@ -1,13 +1,16 @@
 name: "FancyWaystones"
 main: thito.fancywaystones.FancyWaystones
 api-version: 1.13
-version: 1.0.27
+version: 1.0.44
 author: Septogeddon
-#load: STARTUP
 softdepend:
   - ProtocolLib
   - Oraxen
   - ItemsAdder
+  - MythicMobs
+  - Vault
+  - PlaceholderAPI
+  - ModelEngine
 commands:
   fancywaystones:
     description: Waystone command

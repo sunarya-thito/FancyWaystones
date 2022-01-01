@@ -15,12 +15,28 @@ public class EffectConditionHandler implements ConditionHandler {
     }
 
     @Override
-    public boolean test(Placeholder placeholder) {
+    public String test(Placeholder placeholder) {
         Player player = placeholder.get(Placeholder.PLAYER);
         if (player != null) {
             PotionEffect effect = player.getPotionEffect(potionEffectType);
-            return effect != null && effect.getAmplifier() >= level;
+            return effect != null && effect.getAmplifier() >= level ? null : placeholder.clone()
+                    .put("potion-type", ph -> potionEffectType.getName())
+                    .put("amplifier", ph -> level).replace("{language.condition.effect}");
         }
-        return false;
+        return placeholder.clone()
+                .put("potion-type", ph -> potionEffectType.getName())
+                .put("amplifier", ph -> level).replace("{language.condition.effect}");
+    }
+
+    @Override
+    public String testNegate(Placeholder placeholder) {
+        Player player = placeholder.get(Placeholder.PLAYER);
+        if (player != null) {
+            PotionEffect effect = player.getPotionEffect(potionEffectType);
+            return effect != null && effect.getAmplifier() >= level ? placeholder.clone()
+                    .put("potion-type", ph -> potionEffectType.getName())
+                    .put("amplifier", ph -> level).replace("{language.condition.not-effect}") : null;
+        }
+        return null;
     }
 }

@@ -1,11 +1,11 @@
 package thito.fancywaystones;
 
-import org.bukkit.inventory.*;
+import thito.fancywaystones.recipes.MetaRecipe;
 
-import java.util.*;
+import java.util.List;
 
 public interface RecipeManager {
     void registerCustomRecipes();
     void clearCustomRecipes();
-    List<? extends Recipe> getRecipes();
+    List<MetaRecipe> getRecipes();
 }

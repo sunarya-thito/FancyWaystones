@@ -1,12 +1,10 @@
 package thito.fancywaystones.task;
 
 import org.bukkit.*;
-import org.bukkit.block.*;
 import org.bukkit.entity.*;
 import thito.fancywaystones.*;
-
-import java.util.Comparator;
-import java.util.*;
+import thito.fancywaystones.event.DeathBookPostTeleportEvent;
+import thito.fancywaystones.event.FWEvent;
 
 public class DeathBookTeleportTask extends TeleportTask {
 
@@ -38,6 +36,7 @@ public class DeathBookTeleportTask extends TeleportTask {
                 .putContent(Placeholder.PLAYER, player)
                 .replace("{language.teleported-death}"));
         FancyWaystones.getPlugin().postTeleport("Death Book", player, null, null);
+        FWEvent.call(new DeathBookPostTeleportEvent(getLocation(), getPlayer()));
     }
 
 }

@@ -220,12 +220,11 @@ public class MySQLWaystoneStorage implements WaystoneStorage {
 
     @Override
     public void removeName(String contextName, String name) {
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM `"+namesTable+"` WHERE `name` = ? AND `context` = ?")) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("DELETE FROM `"+namesTable+"` WHERE `name` = ? AND `context` = ?")) {
                 statement.setString(1, name.toUpperCase());
                 statement.setString(2, contextName);
                 statement.executeUpdate();
-            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
