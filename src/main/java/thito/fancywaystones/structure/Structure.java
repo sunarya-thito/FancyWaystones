@@ -75,7 +75,7 @@ public class Structure implements Serializable {
         });
     }
 
-    private boolean canContinue(Block block) {
+    public static boolean canContinue(Block block) {
         if (block.isEmpty()) return true;
         Material type = block.getType();
         if (type.name().contains("WATER") || type.name().contains("LAVA") || type.name().contains("GRASS")) return true;

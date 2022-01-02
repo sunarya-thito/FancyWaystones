@@ -1,22 +1,16 @@
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class TaskTest {
     public static void main(String[] args) throws Throwable {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        ReentrantLock reentrantLock = new ReentrantLock();
-        executorService.submit(() -> {
-            reentrantLock.lock();
-            sleep(1000);
-            System.out.println("Test");
-            reentrantLock.unlock();
-        });
-        executorService.submit(() -> {
-            reentrantLock.lock();
-            System.out.println("Test2");
-            reentrantLock.unlock();
-        });
+        YamlConfiguration configuration = new YamlConfiguration();
+        configuration.set("TEST", "自然生成的传送锚点");
+        configuration.loadFromString(configuration.saveToString());
+        System.out.println(new String(configuration.saveToString().getBytes(StandardCharsets.UTF_8)));
     }
 
     static void sleep(long time) {

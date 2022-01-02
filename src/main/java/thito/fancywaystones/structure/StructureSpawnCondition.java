@@ -165,6 +165,7 @@ public class StructureSpawnCondition {
         this.worldList = worldList;
     }
 
+    private boolean noMinY;
     public Location canSpawn(Structure structure, Chunk chunk) {
         World world = chunk.getWorld();
         if (worldList != null && !worldList.isEmpty() && !worldList.contains(world.getName())) return null;
@@ -173,6 +174,14 @@ public class StructureSpawnCondition {
         int structureHeight = structure.getHeight();
         int structureWidth = structure.getWidth();
         int structureLength = structure.getLength();
+        int worldMinY = 0;
+        if (!noMinY) {
+            try {
+                worldMinY = world.getMinHeight();
+            } catch (Throwable t) {
+                noMinY = true;
+            }
+        }
         if (notAtSpawnProtection) {
             Location spawnLocation = world.getSpawnLocation();
             int spawnProtectionDistance = Bukkit.getSpawnRadius();
@@ -200,10 +209,13 @@ public class StructureSpawnCondition {
         }
         Location picked = null;
         try {
+            Random random = new Random();
+            int startX = random.nextInt(maxXOffset -minXOffset) + minXOffset;
+            int startZ = random.nextInt(maxZOffset - minZOffset) + minZOffset;
             if (spawnFromAbove) {
-                for (int a = minXOffset; a < Math.max(minXOffset + 1, maxXOffset - structureWidth); a++) {
-                    for (int b = minZOffset; b < Math.max(minZOffset + 1, maxZOffset - structureLength); b++) {
-                        for (int c = world.getMaxHeight() - structureHeight - 1; c >= 0; c--) {
+                for (int a = startX; a < startZ + structureWidth; a++) {
+                    for (int b = startZ; b < startZ + structureLength; b++) {
+                        for (int c = world.getMaxHeight() - structureHeight - 1; c >= worldMinY; c--) {
                             Location check = checkLocation(chunk, picked, a, b, c);
                             if (check != null) {
                                 picked = check.clone().add(0, 1, 0);
@@ -213,9 +225,9 @@ public class StructureSpawnCondition {
                     }
                 }
             } else {
-                for (int a = minXOffset; a < Math.max(minXOffset + 1, maxXOffset - structureWidth); a++) {
-                    for (int b = minZOffset; b < Math.max(minZOffset + 1, maxZOffset - structureLength); b++) {
-                        for (int c = 0; c < world.getMaxHeight() - structureHeight; c++) {
+                for (int a = startX; a < startZ + structureWidth; a++) {
+                    for (int b = startZ; b < startZ + structureLength; b++) {
+                        for (int c = worldMinY + 1; c < world.getMaxHeight() - structureHeight; c++) {
                             Location check = checkLocation(chunk, picked, a, b, c);
                             if (check != null) {
                                 picked = check;
@@ -248,9 +260,15 @@ public class StructureSpawnCondition {
             }
         }
         Location location = block.getLocation();
-        if (picked == null || (placeOnLowestBlockPossible && location.getBlockY() < picked.getBlockY())) {
+        if (picked == null || (
+                spawnFromAbove ?
+                        placeOnLowestBlockPossible && location.getBlockY() < picked.getBlockY()
+                        :
+                        !placeOnLowestBlockPossible && location.getBlockY() > picked.getBlockY()
+                )) {
             return location;
         }
         return null;
+//        return block.getLocation();
     }
 }

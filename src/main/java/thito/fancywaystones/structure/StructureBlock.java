@@ -46,6 +46,7 @@ public class StructureBlock implements Serializable {
     }
 
     public void placeOn(Block block) {
+        if (!Structure.canContinue(block)) return;
         try {
             if (bakedData == null) {
                 bakedData = Bukkit.createBlockData(data);

@@ -131,6 +131,10 @@ public class FancyWaystones extends JavaPlugin {
         return threadPoolTime - oldThreadPoolTime - 1000;
     }
 
+    public long getStructureServiceBusyness() {
+        return structureThreadPoolTime - oldStructureThreadPoolTime - 1000;
+    }
+
     public long getIOServiceBusyness() {
         return IOThreadPoolTime - oldIOThreadPoolTime - 1000;
     }
@@ -192,26 +196,12 @@ public class FancyWaystones extends JavaPlugin {
 
         StructureWorldData structureWorldData = new StructureWorldData();
         StructureManager.getInstance().setStructureWorldData(structureWorldData);
-        try {
-            getDataFolder().mkdirs();
-            structureWorldData.open(new File(getDataFolder(), "generated_structures.bin"));
-            getLogger().log(Level.INFO, "File channel open for generated_structures.bin");
-        } catch (IOException e) {
-            getLogger().log(Level.SEVERE, "Failed to open file channel for generated_structures.bin", e);
-        }
 
         try {
             JavaPlugin providingPlugin = JavaPlugin.getProvidingPlugin(Context.class);
             getLogger().log(Level.INFO, "RhinoJS Library provided by "+providingPlugin.getName());
         } catch (Throwable t) {
             getLogger().log(Level.INFO, "RhinoJS Library provided by "+Context.class.getClassLoader());
-        }
-
-        try {
-            Class<?> aClass = Class.forName(Context.class.getName(), false, getClassLoader());
-            System.out.println(aClass+": "+aClass.getClassLoader());
-        } catch (Throwable t) {
-            t.printStackTrace();
         }
 
         File demoBin = new File(getDataFolder(), "structures/demo.bin");
@@ -386,6 +376,13 @@ public class FancyWaystones extends JavaPlugin {
     public void onDisable() {
         if (success) {
             checkTask.stop();
+            structureService.lock();
+            try {
+                StructureManager.getInstance().getStructureWorldData().close();
+            } catch (IOException e) {
+                getLogger().log(Level.SEVERE, "Failed to save generated_structures.bin", e);
+            }
+            structureService.unlock();
             HandlerList.unregisterAll(this);
             IOService.lock();
             for (World world : Bukkit.getWorlds()) {
@@ -499,6 +496,15 @@ public class FancyWaystones extends JavaPlugin {
 
     @Override
     public void reloadConfig() {
+        if (structureService != null) {
+            structureService.submit(() -> {
+                try {
+                    StructureManager.getInstance().getStructureWorldData().close();
+                } catch (IOException e) {
+                    getLogger().log(Level.SEVERE, "Failed to save generated_structures.bin", e);
+                }
+            });
+        }
         shutdownTasks();
         if (recipeManager != null) {
             recipeManager.clearCustomRecipes();
@@ -541,8 +547,18 @@ public class FancyWaystones extends JavaPlugin {
 
         structureService.submit(() -> {
             pushStructureThreadPoolTime();
-            Debug.debug("Structure Service Thread is active "+ getIOServiceBusyness()+"ms");
+            Debug.debug("Structure Service Thread is active "+ getStructureServiceBusyness()+"ms");
         }, 0, 20);
+
+        structureService.submit(() -> {
+            try {
+                getDataFolder().mkdirs();
+                StructureManager.getInstance().getStructureWorldData().open(new File(getDataFolder(), "generated_structures.bin"));
+                getLogger().log(Level.INFO, "File channel open for generated_structures.bin");
+            } catch (IOException e) {
+                getLogger().log(Level.SEVERE, "Failed to open file channel for generated_structures.bin", e);
+            }
+        });
 
 //        service.submit(() -> {
 //            context = Context.enter();
