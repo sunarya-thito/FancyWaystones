@@ -52,6 +52,9 @@ public class Condition {
         NO_PARAM_HANDLER_FACTORY_MAP.put("IS_SAME_TYPE", SameTypeConditionHandler::new);
         NO_PARAM_HANDLER_FACTORY_MAP.put("IS_WAYSTONE_ACTIVATED", ActiveWaystoneConditionHandler::new);
         NO_PARAM_HANDLER_FACTORY_MAP.put("IS_NATURAL", NaturalWaystoneConditionHandler::new);
+
+        new HashMap<>(HANDLER_FACTORY_MAP).forEach((key, value) -> HANDLER_FACTORY_MAP.put("NEGATE_" + key, map -> new NegatedConditionHandler(value.apply(map))));
+        new HashMap<>(NO_PARAM_HANDLER_FACTORY_MAP).forEach((key, value) -> NO_PARAM_HANDLER_FACTORY_MAP.put("NEGATE_" + key, () -> new NegatedConditionHandler(value.get())));
     }
 
     public static Condition fromConfig(ListSection listSection) {

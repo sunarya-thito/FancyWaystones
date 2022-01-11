@@ -2,6 +2,7 @@ package thito.fancywaystones;
 
 import org.bukkit.entity.Player;
 import thito.fancywaystones.economy.Cost;
+import thito.fancywaystones.loot.LootTable;
 
 import java.util.List;
 
@@ -32,4 +33,6 @@ public interface WaystoneType {
     String[] hasActivationAccess(Player player, WaystoneData waystoneData);
     String[] isBreakable(Player player, WaystoneData waystoneData);
     boolean isBreakableByExplosion(WaystoneData waystoneData);
+    LootTable getLootTable();
+    boolean canCarry(AttachedEntities attachedEntities);
 }

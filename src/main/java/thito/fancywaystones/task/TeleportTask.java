@@ -1,21 +1,25 @@
 package thito.fancywaystones.task;
 
-import org.bukkit.*;
-import org.bukkit.entity.*;
-import thito.fancywaystones.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import thito.fancywaystones.FancyWaystones;
+import thito.fancywaystones.IAttachedEntities;
 
 public abstract class TeleportTask implements Runnable {
     private Player player;
     private Location location;
+    private IAttachedEntities attachedEntities;
     private int checkRadius, checkHeight;
     private boolean force;
 
-    public TeleportTask(Player player, Location location, int checkRadius, int checkHeight, boolean force) {
+    public TeleportTask(Player player, Location location, int checkRadius, int checkHeight, boolean force, IAttachedEntities attachedEntities) {
         this.player = player;
         this.location = location;
         this.checkRadius = checkRadius;
         this.checkHeight = checkHeight;
         this.force = force;
+        this.attachedEntities = attachedEntities;
     }
 
     public Location getLocation() {
@@ -51,8 +55,11 @@ public abstract class TeleportTask implements Runnable {
     }
 
 
-    private void confirmTeleport(Location safePlace) {
+    protected void confirmTeleport(Location safePlace) {
         player.teleport(safePlace);
+        if (attachedEntities != null) {
+            attachedEntities.teleportAndRestore(safePlace);
+        }
         success = true;
         done();
     }

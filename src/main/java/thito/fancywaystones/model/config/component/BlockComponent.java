@@ -1,5 +1,6 @@
 package thito.fancywaystones.model.config.component;
 
+import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.entity.*;

@@ -4,8 +4,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import thito.fancywaystones.AttachedEntities;
 import thito.fancywaystones.FancyWaystones;
 import thito.fancywaystones.proxy.ProxyWaystone;
+import thito.fancywaystones.proxy.SerializableAttachedEntities;
 import thito.fancywaystones.proxy.SerializableLocation;
 import thito.fancywaystones.proxy.message.TeleportMessage;
 import thito.fancywaystones.task.DeathBookTeleportTask;
@@ -50,9 +52,12 @@ public class DeathLocation {
             ProxyWaystone ws = FancyWaystones.getPlugin().getProxyWaystone();
             if (ws != null) {
                 Location location = player.getLocation();
+                AttachedEntities attachedEntities = new AttachedEntities();
+                attachedEntities.collect(player);
+                SerializableAttachedEntities serializableAttachedEntities = new SerializableAttachedEntities(attachedEntities);
                 ws.sendMessage(player, new TeleportMessage(player.getUniqueId(), true,
                         new SerializableLocation(null, FancyWaystones.getPlugin().getServerName(), location.getWorld().getUID(), location.getX(), location.getY(), location.getZ()),
-                        new SerializableLocation(null, serverName, worldName, x, y, z)));
+                        new SerializableLocation(null, serverName, worldName, x, y, z), serializableAttachedEntities));
             }
         }
     }

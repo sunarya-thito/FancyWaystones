@@ -129,8 +129,7 @@ public class MembersMenu implements AttachedMenu {
                     if (itemSection == null) {
                         continue;
                     }
-                    item.setSkullOwner(next.getName());
-                    item.setSkullOwnerUUID(next.getUUID());
+                    item.setSkull(next.getUUID().toString());
                     item.load(itemSection);
                     item.addClickListener((inv, ph) -> {
                         if (inv.isShiftClick() && inv.isRightClick()) {

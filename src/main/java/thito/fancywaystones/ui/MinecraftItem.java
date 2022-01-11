@@ -1,22 +1,32 @@
 package thito.fancywaystones.ui;
 
+import com.cryptomorin.xseries.SkullUtils;
+import com.cryptomorin.xseries.XMaterial;
 import dev.lone.itemsadder.api.CustomStack;
 import io.lumine.xikage.mythicmobs.MythicMobs;
 import io.th0rgal.oraxen.items.OraxenItems;
-import org.bukkit.*;
-import org.bukkit.configuration.*;
-import org.bukkit.enchantments.*;
-import org.bukkit.event.inventory.*;
-import org.bukkit.inventory.*;
-import org.bukkit.inventory.meta.*;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import thito.fancywaystones.*;
-import thito.fancywaystones.config.*;
+import thito.fancywaystones.config.ListSection;
+import thito.fancywaystones.config.MapSection;
+import thito.fancywaystones.config.Section;
 
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.*;
-import java.util.logging.*;
-import java.util.stream.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class MinecraftItem {
     private static Set<MinecraftItem> activeItems = ConcurrentHashMap.newKeySet();
@@ -31,8 +41,7 @@ public class MinecraftItem {
     private String damage;
     private String displayName;
     private String customModelData;
-    private String skullOwner;
-    private UUID skullOwnerUUID;
+    private String skull;
     private List<String> lore;
     private List<String> flags;
     private Map<String, String> enchantments = new HashMap<>();
@@ -41,6 +50,7 @@ public class MinecraftItem {
     private Map<Consumer<Function<Placeholder, ItemStack>>, Boolean> updateListener = new WeakHashMap<>();
     private Map<BiConsumer<InventoryClickEvent, Placeholder>, Boolean> clickListener = new HashMap<>();
     private Placeholder placeholder = new Placeholder();
+    private String environment, model; // for FancyWaystones
 
     public MinecraftItem clone() {
         MinecraftItem item = new MinecraftItem();
@@ -54,15 +64,12 @@ public class MinecraftItem {
         item.enchantments.putAll(enchantments);
         item.storedEnchantments.putAll(storedEnchantments);
         item.customModelData = customModelData;
+        item.skull = skull;
         return item;
     }
 
-    public void setSkullOwner(String skullOwner) {
-        this.skullOwner = skullOwner;
-    }
-
-    public void setSkullOwnerUUID(UUID skullOwnerUUID) {
-        this.skullOwnerUUID = skullOwnerUUID;
+    public void setSkull(String skull) {
+        this.skull = skull;
     }
 
     public void clear() {
@@ -79,6 +86,9 @@ public class MinecraftItem {
         damage = null;
         amount = "1";
         type = "AIR";
+        skull = null;
+        environment = null;
+        model = null;
     }
 
     public Placeholder getPlaceholder() {
@@ -198,18 +208,27 @@ public class MinecraftItem {
         enchantments = enchantmentMap(section.getMap("Enchantments").orElse(MapSection.empty()));
         storedEnchantments = enchantmentMap(section.getMap("Stored Enchantments").orElse(MapSection.empty()));
         customModelData = section.getString("Custom Model Data").orElse(null);
+        skull = section.getString("Skull").orElse(null);
+        environment = section.getString("Environment").orElse(null);
+        model = section.getString("Model").orElse(null);
         return this;
     }
 
     public MinecraftItem load(ConfigurationSection section) {
         if (section == null) return this;
+        plugin = section.getString("Plugin");
         type = section.getString("Type", "AIR");
         amount = section.getString("Amount", "1");
         damage = section.getString("Damage");
         flags = section.getStringList("Flags");
+        displayName = section.getString("Display Name");
+        lore = section.getStringList("Lore");
         enchantments = enchantmentMap(section.getConfigurationSection("Enchantments"));
         storedEnchantments = enchantmentMap(section.getConfigurationSection("Stored Enchantments"));
         customModelData = section.getString("Custom Model Data");
+        skull = section.getString("Skull");
+        environment = section.getString("Environment");
+        model = section.getString("Model");
         loadDisplay(section);
         return this;
     }
@@ -231,22 +250,24 @@ public class MinecraftItem {
         } catch (Throwable t) {
             try {
                 damage = String.valueOf(itemStack.getDurability());
-            } catch (Throwable t2) {
+            } catch (Throwable ignored) {
             }
         }
-        displayName = meta.getDisplayName();
-        lore = meta.getLore();
-        if (lore == null) lore = new ArrayList<>();
-        enchantments = new HashMap<>();
-        try {
-            if (meta.hasCustomModelData()) {
-                customModelData = meta.getCustomModelData() + "";
+        if (meta != null) {
+            displayName = meta.getDisplayName();
+            lore = meta.getLore();
+            if (lore == null) lore = new ArrayList<>();
+            enchantments = new HashMap<>();
+            try {
+                if (meta.hasCustomModelData()) {
+                    customModelData = meta.getCustomModelData() + "";
+                }
+            } catch (Throwable ignored) {
             }
-        } catch (Throwable t) {
+            meta.getEnchants().forEach((ench, lvl) -> {
+                enchantments.put(ench.getName(), String.valueOf(lvl));
+            });
         }
-        meta.getEnchants().forEach((ench, lvl) -> {
-            enchantments.put(ench.getName(), String.valueOf(lvl));
-        });
         storedEnchantments = new HashMap<>();
         if (meta instanceof EnchantmentStorageMeta) {
             ((EnchantmentStorageMeta) meta).getStoredEnchants().forEach((ench, lvl) -> {
@@ -312,32 +333,41 @@ public class MinecraftItem {
             item = CustomStack.getInstance(placeholder.replace(type)).getItemStack();
         } else if ("MythicMobs".equals(plugin)) {
             item = MythicMobs.inst().getItemManager().getItemStack(type);
+        } else if ("FancyWaystones".equals(plugin)) {
+            WaystoneData waystoneData = WaystoneManager.getManager().createData(
+                    WaystoneManager.getManager().getType(type),
+                    World.Environment.valueOf(environment),
+                    WaystoneManager.getManager().getModelMap().get(model));
+            item = WaystoneManager.getManager().createWaystoneItem(waystoneData, true);
         } else {
             item = Util.material(placeholder.replace(type)).parseItem();
         }
         if (item == null) {
             FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Cannot find "+placeholder.replace(type)+" type!");
             item = XMaterial.AIR.parseItem();
+            return item;
         }
         item.setAmount(Integer.parseInt(placeholder.replace(amount)));
         ItemMeta meta = item.getItemMeta();
         Placeholder finalPlaceholder = placeholder;
-        enchantments.forEach((ench, level) -> {
-            Enchantment enchantment = Enchantment.getByName(finalPlaceholder.replace(ench));
-            if (enchantment != null) {
-                try {
-                    meta.addEnchant(enchantment, Integer.parseInt(finalPlaceholder.replace(level)), true);
-                } catch (Throwable t) {
+        if (meta != null) {
+            enchantments.forEach((ench, level) -> {
+                Enchantment enchantment = Enchantment.getByName(finalPlaceholder.replace(ench));
+                if (enchantment != null) {
+                    try {
+                        meta.addEnchant(enchantment, Integer.parseInt(finalPlaceholder.replace(level)), true);
+                    } catch (Throwable ignored) {
+                    }
                 }
-            }
-        });
+            });
+        }
         if (meta instanceof EnchantmentStorageMeta) {
             storedEnchantments.forEach((ench, level) -> {
                 Enchantment enchantment = Enchantment.getByName(finalPlaceholder.replace(ench));
                 if (enchantment != null) {
                     try {
                         ((EnchantmentStorageMeta) meta).addStoredEnchant(enchantment, Integer.parseInt(finalPlaceholder.replace(level)), true);
-                    } catch (Throwable t) {
+                    } catch (Throwable ignored) {
                     }
                 }
             });
@@ -364,22 +394,14 @@ public class MinecraftItem {
             if (displayName != null) {
                 meta.setDisplayName(placeholder.replace(displayName));
             }
-            if (lore != null) {
+            if (lore != null && !lore.isEmpty()) {
                 meta.setLore(placeholder.replaceWithBreakableLines(lore));
             }
             if (flags != null) {
                 meta.addItemFlags(flags.stream().map(ItemFlag::valueOf).toArray(ItemFlag[]::new));
             }
-            if (meta instanceof SkullMeta) {
-                try {
-                    if (skullOwnerUUID != null) {
-                        ((SkullMeta) meta).setOwningPlayer(Bukkit.getOfflinePlayer(skullOwnerUUID));
-                    }
-                } catch (Throwable t) {
-                    if (skullOwner != null) {
-                        ((SkullMeta) meta).setOwner(skullOwner);
-                    }
-                }
+            if (meta instanceof SkullMeta && skull != null) {
+                SkullUtils.applySkin(meta, skull);
             }
             item.setItemMeta(meta);
         }

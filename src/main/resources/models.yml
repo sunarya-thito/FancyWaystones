@@ -54,6 +54,7 @@ model:
       # Component Types
       # block
       # > type (the type of the block for the specific style rule)
+      #
       # hologram
       #
       # armorstand
@@ -72,8 +73,17 @@ model:
       # > left-arm-pose
       # > right-leg-pose
       # > left-leg-pose
-      # items-adder (Specialized for ItemsAdder plugin)
+      #
+      # items-adder (Specialized for ItemsAdder plugin, for custom block)
       # > custom-block (the custom block name)
+      #
+      # oraxen (Specialized for Oraxen plugin, for custom block)
+      # > item-id (the custom block id name)
+      #
+      # model-engine (Specialized for ModelEngine plugin, for spawning custom entities)
+      # > entity-type (the entity type, default to ARMOR_STAND if left empty)
+      # > disable-interaction (disable any interaction, also disables AI of the entity, default to true if left empty)
+      # > active-model-id (the model engine active model id, required*)
       #
       # format for itemstack can be seen at https://www.spigotmc.org/wiki/itemstack-serialization/ (replace "==" with "class")
       # (Note: You don't need to specify "v: <data version>")

@@ -500,18 +500,16 @@ public class FancyWaystonesCommand implements CommandExecutor, TabCompleter {
                         Player finalTarget = target;
                         int finalAmount = amount;
                         WaystoneModel waystoneModel = WaystoneManager.getManager().getModelMap().getOrDefault(model, WaystoneManager.getManager().getDefaultModel());
-                        WaystoneManager.getManager().createWaystoneItem(
-                                WaystoneManager.getManager().createData(type, environment, waystoneModel), false,
-                                item -> {
-                                    Util.placeInHand(finalTarget, item);
-                                    if (finalTarget == sender) {
-                                        sender.sendMessage(prefix + "Added "+ finalAmount +"x waystone to your inventory!");
-                                    } else {
-                                        sender.sendMessage(prefix + "Given " + finalAmount + "x waystone to "+finalTarget.getName()+"!");
-                                        finalTarget.sendMessage(prefix + sender.getName()+" gave you "+finalAmount+"x waystone!");
-                                    }
-                                }
+                        ItemStack waystoneItem = WaystoneManager.getManager().createWaystoneItem(
+                                WaystoneManager.getManager().createData(type, environment, waystoneModel), false
                         );
+                        Util.placeInHand(finalTarget, waystoneItem);
+                        if (finalTarget == sender) {
+                            sender.sendMessage(prefix + "Added "+ finalAmount +"x waystone to your inventory!");
+                        } else {
+                            sender.sendMessage(prefix + "Given " + finalAmount + "x waystone to "+finalTarget.getName()+"!");
+                            finalTarget.sendMessage(prefix + sender.getName()+" gave you "+finalAmount+"x waystone!");
+                        }
                         return true;
                     }
                 }

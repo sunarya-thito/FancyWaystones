@@ -1,5 +1,6 @@
 package thito.fancywaystones.recipes;
 
+import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.*;
 import org.bukkit.inventory.*;
 import thito.fancywaystones.*;
@@ -44,7 +45,7 @@ public class MetaRecipe {
             return b == null || b.getType() == XMaterial.AIR.parseMaterial();
         }
         if (b == null) {
-            return a == null || a.getType() == XMaterial.AIR.parseMaterial();
+            return a.getType() == XMaterial.AIR.parseMaterial();
         }
         return a.isSimilar(b);
     }
@@ -53,8 +54,7 @@ public class MetaRecipe {
         ItemStack[] matrix = new ItemStack[9];
         String[] shapes = recipe.getShape();
         int index = 0;
-        for (int j = 0; j < shapes.length; j++) {
-            String shape = shapes[j];
+        for (String shape : shapes) {
             for (int i = 0; i < shape.length(); i++) {
                 char c = shape.charAt(i);
                 matrix[index++] = ingredients.get(c);
@@ -62,7 +62,11 @@ public class MetaRecipe {
         }
         String[] array = Arrays.stream(matrix).map(MetaRecipe::toString).toArray(String[]::new);
         int length = 0;
-        for (int i = 0; i < array.length; i++) length = Math.max(length, array[i].length());
+        for (String s : array) length = Math.max(length, s.length());
+        appendEmpty(array, length);
+    }
+
+    private static void appendEmpty(String[] array, int length) {
         for (int i = 0; i < array.length; i++) {
             for (int j = array[i].length(); j < length; j++) {
                 array[i] = array[i] + ' ';
@@ -77,14 +81,7 @@ public class MetaRecipe {
         String[] array = Arrays.stream(matrix).map(MetaRecipe::toString).toArray(String[]::new);
         int length = 0;
         for (int i = 0; i < array.length; i++) length = Math.max(length, array[i].length());
-        for (int i = 0; i < array.length; i++) {
-            for (int j = array[i].length(); j < length; j++) {
-                array[i] = array[i] + ' ';
-            }
-        }
-        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[0]+"]["+array[1]+"]["+array[2]+"]");
-        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[3]+"]["+array[4]+"]["+array[5]+"]");
-        FancyWaystones.getPlugin().getLogger().log(Level.INFO, "["+array[6]+"]["+array[7]+"]["+array[8]+"]");
+        appendEmpty(array, length);
     }
 
     static String toString(ItemStack itemStack) {

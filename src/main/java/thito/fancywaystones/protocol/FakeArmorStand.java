@@ -1,21 +1,30 @@
 package thito.fancywaystones.protocol;
 
-import com.comphenix.protocol.*;
-import com.comphenix.protocol.events.*;
-import com.comphenix.protocol.utility.*;
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.wrappers.*;
-import org.bukkit.*;
-import org.bukkit.entity.*;
-import org.bukkit.util.*;
+import com.cryptomorin.xseries.XMaterial;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
-import thito.fancywaystones.*;
+import thito.fancywaystones.FancyWaystones;
+import thito.fancywaystones.Task;
 import thito.fancywaystones.Util;
-import thito.fancywaystones.model.*;
+import thito.fancywaystones.model.ClientSideStandardModel;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
-import java.util.function.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class FakeArmorStand {
     public static int dataWatcherIndex;

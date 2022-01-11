@@ -1,5 +1,5 @@
 # Configuration Version, do not change!
-Configuration Version: "1.0"
+Configuration Version: "1.0.2"
 
 Waystone Types:
   # careful when changing waystone type ids
@@ -90,6 +90,26 @@ Waystone Types:
 #      - WORLD_WHITELIST:
 #          Worlds:
 #          - world_the_end
+#      - IS_NATURAL
+    Item Drops:
+      loot_drop_1: # the loot table id
+        Condition:
+          - ALWAYS
+        Items:
+          - Plugin: FancyWaystones
+            Type: "{type}"
+            Environment: "{environment}"
+            Model: "{model}"
+        # When this loot is dropped, the listed loot table ids below will not be dropped
+        # Or when the listed loot table ids below is dropped, this loot will not be dropped
+        Conflicting: [] # a list of loot table ids
+    # Teleport with your boat, minecart, leashed entities, parrots, etc.
+    Entity Teleport:
+      - ENTITIES_WHITELIST: []
+        And:
+          - ENTITIES_BLACKLIST: []
+            And:
+              - IS_SAME_SERVER
     # Unique Name Key
     # if set, the waystone name will be unique (in the specified context)
     # in this case, the waystone name is unique in "PUBLIC NAMES" context
@@ -99,6 +119,19 @@ Waystone Types:
     Unique Names: "PUBLIC NAMES"
     # Price for teleportation
     Price:
+      # Charge players for entity teleportation
+      Entity:
+        Enable: false
+        Cost:
+          '*':
+            Level: 1
+            EnderPearl: 1
+          VILLAGER:
+            Level: 10
+            EnderPearl: 10
+          WITHER:
+            Level: 1000
+            EnderPearl: 1000
       # Charge players for multiworld teleportation (teleport between worlds)?
       Multiworld:
         Enable: false
@@ -157,10 +190,32 @@ Waystone Types:
             - IS_OWNER
     Drops:
       - ALWAYS
+    Item Drops:
+      loot_drop_1: # the loot table id
+        Condition:
+          - ALWAYS
+        Items:
+          - Plugin: FancyWaystones
+            Type: "{type}"
+            Environment: "{environment}"
+            Model: "{model}"
+        Conflicting: []
     Should Be Listed:
       - ALWAYS
     Unique Names: "PUBLIC NAMES"
     Price:
+      Entity:
+        Enable: false
+        Cost:
+          '*':
+            Level: 1
+            EnderPearl: 1
+          VILLAGER:
+            Level: 10
+            EnderPearl: 10
+          WITHER:
+            Level: 1000
+            EnderPearl: 1000
       Multiworld:
         Enable: false
         Cost:
@@ -217,8 +272,30 @@ Waystone Types:
             - IS_OWNER
     Drops:
       - ALWAYS
+    Item Drops:
+      loot_drop_1: # the loot table id
+        Condition:
+          - ALWAYS
+        Items:
+          - Plugin: FancyWaystones
+            Type: "{type}"
+            Environment: "{environment}"
+            Model: "{model}"
+        Conflicting: [ ]
     Unique Names: "PUBLIC NAMES"
     Price:
+      Entity:
+        Enable: false
+        Cost:
+          '*':
+            Level: 1
+            EnderPearl: 1
+          VILLAGER:
+            Level: 10
+            EnderPearl: 10
+          WITHER:
+            Level: 1000
+            EnderPearl: 1000
       Multiworld:
         Enable: false
         Cost:
@@ -279,8 +356,30 @@ Waystone Types:
             - IS_OWNER
     Drops:
       - ALWAYS
+    Item Drops:
+      loot_drop_1: # the loot table id
+        Condition:
+          - ALWAYS
+        Items:
+          - Plugin: FancyWaystones
+            Type: "{type}"
+            Environment: "{environment}"
+            Model: "{model}"
+        Conflicting: []
     Unique Names: "PUBLIC NAMES"
     Price:
+      Entity:
+        Enable: false
+        Cost:
+          '*':
+            Level: 1
+            EnderPearl: 1
+          VILLAGER:
+            Level: 10
+            EnderPearl: 10
+          WITHER:
+            Level: 1000
+            EnderPearl: 1000
       Multiworld:
         Enable: false
         Cost:

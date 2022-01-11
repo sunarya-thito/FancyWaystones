@@ -1,6 +1,7 @@
 package thito.fancywaystones.task;
 
 import org.bukkit.*;
+import org.bukkit.inventory.ItemStack;
 import thito.fancywaystones.*;
 import thito.fancywaystones.location.*;
 
@@ -55,9 +56,8 @@ public class WaystoneInactivityCheckTask implements Runnable {
                         if (FancyWaystones.getPlugin().isEnabled()) {
                             Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
                                 if (waystoneData.getType().shouldDropPurge(waystoneData)) {
-                                    WaystoneManager.getManager().createWaystoneItem(waystoneData, true, item -> {
-                                        location.getWorld().dropItemNaturally(location, item);
-                                    });
+                                    ItemStack item = WaystoneManager.getManager().createWaystoneItem(waystoneData, true);
+                                    location.getWorld().dropItemNaturally(location, item);
                                 }
                             });
                         }

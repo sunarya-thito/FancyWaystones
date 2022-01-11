@@ -6,8 +6,9 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -15,20 +16,26 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerUnleashEntityEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.util.Vector;
+import thito.fancywaystones.condition.handler.ExplosionConditionHandler;
 import thito.fancywaystones.event.*;
 import thito.fancywaystones.location.DeathLocation;
 import thito.fancywaystones.location.LocalLocation;
 import thito.fancywaystones.location.TeleportState;
+import thito.fancywaystones.loot.LootTable;
 import thito.fancywaystones.proxy.ProxyWaystone;
 import thito.fancywaystones.structure.Selection;
 import thito.fancywaystones.task.DeathBookWarmUpTask;
@@ -38,12 +45,32 @@ import thito.fancywaystones.task.WarmUpTask;
 import xyz.xenondevs.particle.ParticleEffect;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class WaystoneListener implements Listener {
+
+    static Map<Player, List<Entity>> leashedEntitiesMap = new HashMap<>();
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onLeash(PlayerLeashEntityEvent event) {
+        leashedEntitiesMap.computeIfAbsent(event.getPlayer(), player -> new ArrayList<>()).add(event.getEntity());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSpawn(CreatureSpawnEvent event) {
+        LivingEntity entity = event.getEntity();
+        entity.setMetadata("FW:SR", new FixedMetadataValue(FancyWaystones.getPlugin(), event.getSpawnReason()));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onUnleash(PlayerUnleashEntityEvent event) {
+        List<Entity> entities = leashedEntitiesMap.get(event.getPlayer());
+        if (entities != null) {
+            entities.remove(event.getEntity());
+            if (entities.isEmpty()) {
+                leashedEntitiesMap.remove(event.getPlayer());
+            }
+        }
+    }
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent e) {
@@ -80,6 +107,7 @@ public class WaystoneListener implements Listener {
             task.cancel();
             task.onCancelled();
         }
+        leashedEntitiesMap.remove(e.getPlayer());
         FancyWaystones.getPlugin().submitIO(() -> {
             WaystoneManager.getManager().unloadPlayerData(e.getPlayer().getUniqueId());
         });
@@ -101,11 +129,19 @@ public class WaystoneListener implements Listener {
             FancyWaystones.getPlugin().submitIO(() -> {
                 if (wb.getWaystoneBlock() != null) {
                     wb.destroy(reason);
-                    WaystoneManager.getManager().createWaystoneItem(wb, false, result -> {
-                        Location location = ((LocalLocation) wb.getLocation()).getLocation();
-                        Util.submitSync(() -> {
-                            location.getWorld().dropItemNaturally(location.clone().add(.5, 0, .5), result);
-                        });
+//                    ItemStack result = WaystoneManager.getManager().createWaystoneItem(wb, false);
+                    Location location = ((LocalLocation) wb.getLocation()).getLocation();
+//                    Util.submitSync(() -> {
+//                        location.getWorld().dropItemNaturally(location.clone().add(.5, 0, .5), result);
+//                    });
+                    LootTable lootTable = wb.getType().getLootTable();
+                    List<ItemStack> itemList = lootTable.getLootItems(new Placeholder()
+                            .putContent(Placeholder.WAYSTONE, wb)
+                            .putContent(ExplosionConditionHandler.EXPLOSION_CAUSE, true));
+                    Util.submitSync(() -> {
+                        for (ItemStack itemStack : itemList) {
+                            location.getWorld().dropItemNaturally(location.clone().add(.5, 0, .5), itemStack);
+                        }
                     });
                 }
             });
@@ -177,21 +213,28 @@ public class WaystoneListener implements Listener {
                 return;
             } else if (wasCancelled) return;
             if (FWEvent.call(new WaystoneDestroyEvent(data, e.getPlayer())).isCancelled()) return;
-            ItemStack used = e.getPlayer().getItemInHand();
+//            ItemStack used = e.getPlayer().getItemInHand();
             FancyWaystones.getPlugin().submitIO(() -> {
                 if (data.getWaystoneBlock() != null) {
                     data.destroy(e.getPlayer().getName());
                     Util.submitSync(() -> {
                         if (data.getType().shouldDrop(e.getPlayer(), data)) {
-                            WaystoneManager.getManager().createWaystoneItem(data,
-                                    used.hasItemMeta() && used.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH),
-                                    result -> {
-                                        if (FancyWaystones.getPlugin().isEnabled()) {
-                                            Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
-                                                block.getWorld().dropItemNaturally(block.getLocation().clone().add(.5, 0, .5), result);
-                                            });
-                                        }
-                                    });
+                            LootTable lootTable = data.getType().getLootTable();
+                            List<ItemStack> itemList = lootTable.getLootItems(new Placeholder()
+                                    .putContent(Placeholder.PLAYER, e.getPlayer())
+                                    .putContent(Placeholder.WAYSTONE, data));
+                            Util.submitSync(() -> {
+                                for (ItemStack itemStack : itemList) {
+                                    block.getWorld().dropItemNaturally(block.getLocation().clone().add(.5, 0, .5), itemStack);
+                                }
+                            });
+//                            ItemStack result = WaystoneManager.getManager().createWaystoneItem(data,
+//                                    used.hasItemMeta() && used.getItemMeta().hasEnchant(Enchantment.SILK_TOUCH));
+//                            if (FancyWaystones.getPlugin().isEnabled()) {
+//                                Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), () -> {
+//                                    block.getWorld().dropItemNaturally(block.getLocation().clone().add(.5, 0, .5), result);
+//                                });
+//                            }
                         }
                     });
                 }

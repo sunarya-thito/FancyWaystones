@@ -1,5 +1,6 @@
 package thito.fancywaystones.protocol;
 
+import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.inventory.*;
 import org.bukkit.util.*;
 import thito.fancywaystones.*;

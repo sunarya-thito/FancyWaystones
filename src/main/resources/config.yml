@@ -1,5 +1,5 @@
 # Configuration Version, do not change!
-Configuration Version: "1.0.4"
+Configuration Version: "1.0.5"
 
 Default Waystone Name: "My Waystone"
 
@@ -39,6 +39,12 @@ Storage:
       Waystone: waystones
       Player: players
       Names: waystone_names
+    Advanced:
+      Minimum Idle: 5
+      Maximum Pool Size: 50
+      Connection Timeout: 10000
+      Idle Timeout: 600000
+      Max Lifetime: 1800000
 
 # Prevents inappropriate words in waystone name
 Blacklisted Names:

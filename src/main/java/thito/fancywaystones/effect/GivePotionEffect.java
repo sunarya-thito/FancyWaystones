@@ -1,5 +1,6 @@
 package thito.fancywaystones.effect;
 
+import com.cryptomorin.xseries.XPotion;
 import org.bukkit.*;
 import org.bukkit.configuration.*;
 import org.bukkit.entity.*;

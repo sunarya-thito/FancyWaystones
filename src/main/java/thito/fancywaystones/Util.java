@@ -3,6 +3,7 @@ package thito.fancywaystones;
 import com.comphenix.protocol.*;
 import com.comphenix.protocol.events.*;
 import com.comphenix.protocol.wrappers.*;
+import com.cryptomorin.xseries.XMaterial;
 import dev.lone.itemsadder.api.CustomStack;
 import io.th0rgal.oraxen.items.OraxenItems;
 import org.bukkit.*;
@@ -10,9 +11,11 @@ import org.bukkit.block.*;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.entity.*;
 import org.bukkit.event.block.*;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.util.Vector;
 
 import java.lang.reflect.*;
@@ -234,6 +237,19 @@ public class Util {
     public static String getVersion() {
         final String name = Bukkit.getServer().getClass().getPackage().getName();
         return name.substring(name.lastIndexOf('.') + 1) + ".";
+    }
+
+    public static CreatureSpawnEvent.SpawnReason getSpawnReason(LivingEntity livingEntity) {
+        List<MetadataValue> metadata = livingEntity.getMetadata("FW:SR");
+        for (MetadataValue value : metadata) {
+            if (value.getOwningPlugin() == FancyWaystones.getPlugin()) {
+                Object value1 = value.value();
+                if (value1 instanceof CreatureSpawnEvent.SpawnReason) {
+                    return (CreatureSpawnEvent.SpawnReason) value1;
+                }
+            }
+        }
+        return CreatureSpawnEvent.SpawnReason.CUSTOM;
     }
 
     public static int getVersionNumber() {

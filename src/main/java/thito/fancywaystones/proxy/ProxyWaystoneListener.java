@@ -102,10 +102,10 @@ public class ProxyWaystoneListener implements PluginMessageListener {
                     if (world != null) {
                         Location location = new Location(world, target.getX(), target.getY(), target.getZ());
                         Player targetPlayer = Bukkit.getPlayer(((TeleportMessage) message).getPlayerUUID());
-                        if (FancyWaystones.getPlugin().isEnabled() && targetPlayer != null) {
-                            Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), new TeleportTask(
+                        if (targetPlayer != null) {
+                            Util.submitSync(new TeleportTask(
                                     targetPlayer, location, FancyWaystones.getPlugin().getCheckRadius(), FancyWaystones.getPlugin().getCheckHeight(),
-                                    FancyWaystones.getPlugin().isForceTeleportation()) {
+                                    FancyWaystones.getPlugin().isForceTeleportation(), ((TeleportMessage) message).getAttachedEntities()) {
                                 @Override
                                 protected void done() {
                                     if (!isSuccess() && source != null && ((TeleportMessage) message).isSendFeedback()) {

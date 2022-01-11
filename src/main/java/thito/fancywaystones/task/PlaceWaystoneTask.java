@@ -3,6 +3,7 @@ package thito.fancywaystones.task;
 import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.entity.*;
+import org.bukkit.inventory.ItemStack;
 import thito.fancywaystones.*;
 import thito.fancywaystones.location.LocalLocation;
 import thito.fancywaystones.proxy.*;
@@ -124,9 +125,8 @@ public class PlaceWaystoneTask implements Runnable {
             placeholder.putContent(Placeholder.PLAYER, player);
             placeholder.putContent(Placeholder.WAYSTONE, data);
             player.sendMessage(placeholder.replace("{language.not-enough-space-place}"));
-            WaystoneManager.getManager().createWaystoneItem(data, true, result -> {
-                Util.placeInHand(player, result);
-            });
+            ItemStack result = WaystoneManager.getManager().createWaystoneItem(data, true);
+            Util.placeInHand(player, result);
         }
     }
 

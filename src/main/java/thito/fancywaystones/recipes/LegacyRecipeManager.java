@@ -41,25 +41,24 @@ public class LegacyRecipeManager implements RecipeManager, Listener {
             World.Environment environment = section.getString("Environment").map(World.Environment::valueOf).orElse(World.Environment.NORMAL);
             WaystoneModel model = WaystoneManager.getManager().getModelMap().getOrDefault(section.getString("Model").orElse(null),
                     WaystoneManager.getManager().getDefaultModel());
-            WaystoneManager.getManager().createWaystoneItem(WaystoneManager.getManager().createData(type, environment, model), false, item -> {
-                try {
-                    ShapedRecipe shapedRecipe = new ShapedRecipe(item);
-                    shapedRecipe.shape(shapes.toArray(new String[0]));
-                    materials.forEach((key, i) -> {
-                        shapedRecipe.setIngredient(key, i.getData());
-                    });
-                    FancyWaystones.getPlugin().getLogger()
-                            .log(Level.INFO, "Registered recipe for waystone " + environment.name() + ":" + type.name());
-                    Bukkit.addRecipe(shapedRecipe);
-                    add(new MetaRecipe(
-                            environment.name() + "." +
-                            type.name() + "." +
-                            model.getId(), shapedRecipe, materials, RecipeConfiguration.fromConfig(section)
-                            ));
-                } catch (Throwable t) {
-                    FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Failed to register recipe: "+environment.name()+":"+type.name()+" due to an error", t);
-                }
-            });
+            ItemStack item = WaystoneManager.getManager().createWaystoneItem(WaystoneManager.getManager().createData(type, environment, model), false);
+            try {
+                ShapedRecipe shapedRecipe = new ShapedRecipe(item);
+                shapedRecipe.shape(shapes.toArray(new String[0]));
+                materials.forEach((key, i) -> {
+                    shapedRecipe.setIngredient(key, i.getData());
+                });
+                FancyWaystones.getPlugin().getLogger()
+                        .log(Level.INFO, "Registered recipe for waystone " + environment.name() + ":" + type.name());
+                Bukkit.addRecipe(shapedRecipe);
+                add(new MetaRecipe(
+                        environment.name() + "." +
+                                type.name() + "." +
+                                model.getId(), shapedRecipe, materials, RecipeConfiguration.fromConfig(section)
+                ));
+            } catch (Throwable t) {
+                FancyWaystones.getPlugin().getLogger().log(Level.SEVERE, "Failed to register recipe: "+environment.name()+":"+type.name()+" due to an error", t);
+            }
         }
 
         ConfigurationSection deathBookRecipe = FancyWaystones.getPlugin().getBooksYml().getConfig().getConfigurationSection("Books.Death Book.Recipe");
@@ -150,7 +149,7 @@ public class LegacyRecipeManager implements RecipeManager, Listener {
             Iterator<Recipe> recipeIterator = Bukkit.recipeIterator();
             while (recipeIterator.hasNext()) {
                 Recipe recipe = recipeIterator.next();
-                if (recipes.stream().filter(x -> x.getRecipe().getResult().equals(recipe.getResult())).count() > 0) {
+                if (recipes.stream().anyMatch(x -> x.getRecipe().getResult().equals(recipe.getResult()))) {
                     recipeIterator.remove();
                 }
             }
@@ -161,7 +160,7 @@ public class LegacyRecipeManager implements RecipeManager, Listener {
             Iterator<Recipe> recipeIterator = Bukkit.recipeIterator();
             while (recipeIterator.hasNext()) {
                 Recipe recipe = recipeIterator.next();
-                if (recipes.stream().filter(x -> x.getRecipe().getResult().equals(recipe.getResult())).count() <= 0) {
+                if (recipes.stream().noneMatch(x -> x.getRecipe().getResult().equals(recipe.getResult()))) {
                     backup.add(recipe);
                 }
             }

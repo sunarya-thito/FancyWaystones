@@ -7,6 +7,7 @@ import thito.fancywaystones.condition.*;
 import thito.fancywaystones.condition.handler.*;
 import thito.fancywaystones.config.*;
 import thito.fancywaystones.economy.*;
+import thito.fancywaystones.loot.LootTable;
 
 import java.util.*;
 
@@ -28,6 +29,7 @@ public class ConfigWaystoneType implements WaystoneType {
     private final List<String> categoryWhitelist, categoryBlacklist;
     private final double distanceCostDivision;
     private final boolean distanceCostFloorDivision;
+    private final LootTable lootTable;
 
     public ConfigWaystoneType(ConfigurationSection section) {
         id = section.getName();
@@ -59,6 +61,13 @@ public class ConfigWaystoneType implements WaystoneType {
         multiServerCostMap = parseCost(section.getConfigurationSection("Price.Multiserver.Cost"));
         distanceCostMap = parseCost(section.getConfigurationSection("Price.Distance.Cost"));
         basicFeeCostMap = parseCost(section.getConfigurationSection("Price.Basic Fee.Cost"));
+        lootTable = new LootTable();
+        lootTable.load(section.getConfigurationSection("Item Drops"));
+    }
+
+    @Override
+    public LootTable getLootTable() {
+        return lootTable;
     }
 
     @Override

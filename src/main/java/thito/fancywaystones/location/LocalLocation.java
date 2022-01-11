@@ -46,10 +46,13 @@ public class LocalLocation implements WaystoneLocation {
 
     @Override
     public void transport(Player player, WaystoneData source, WaystoneData target, Consumer<TeleportState> stateConsumer) {
-        if (FancyWaystones.getPlugin().isEnabled()) {
-            Bukkit.getScheduler().runTask(FancyWaystones.getPlugin(), new TeleportTask(
+        Util.submitSync(() -> {
+            AttachedEntities attachedEntities = new AttachedEntities();
+            attachedEntities.collect(player);
+            Util.submitSync(new TeleportTask(
                     player, location, FancyWaystones.getPlugin().getCheckRadius(),
-                    FancyWaystones.getPlugin().getCheckHeight(), FancyWaystones.getPlugin().isForceTeleportation()) {
+                    FancyWaystones.getPlugin().getCheckHeight(), FancyWaystones.getPlugin().isForceTeleportation(),
+                    attachedEntities) {
                 @Override
                 protected void done() {
                     if (isSuccess()) {
@@ -59,7 +62,7 @@ public class LocalLocation implements WaystoneLocation {
                     }
                 }
             });
-        }
+        });
     }
 
     @Override

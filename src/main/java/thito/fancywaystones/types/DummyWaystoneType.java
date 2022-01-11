@@ -4,10 +4,18 @@ import org.bukkit.entity.*;
 import thito.fancywaystones.*;
 import thito.fancywaystones.condition.*;
 import thito.fancywaystones.economy.*;
+import thito.fancywaystones.loot.LootTable;
 
 import java.util.*;
 
 public class DummyWaystoneType implements WaystoneType {
+    private LootTable lootTable = new LootTable();
+
+    @Override
+    public LootTable getLootTable() {
+        return lootTable;
+    }
+
     @Override
     public String name() {
         return "dummy";

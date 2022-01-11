@@ -1,5 +1,6 @@
 package thito.fancywaystones.effect;
 
+import com.cryptomorin.xseries.XSound;
 import org.bukkit.configuration.*;
 import org.bukkit.entity.*;
 import thito.fancywaystones.*;

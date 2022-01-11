@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -237,25 +236,21 @@ public class WaystoneManager {
         });
     }
 
-    public void createWaystoneItem(WaystoneData data, boolean storeID, Consumer<ItemStack> result) {
+    public ItemStack createWaystoneItem(WaystoneData data, boolean storeID) {
         Placeholder placeholder = new Placeholder();
         placeholder.putContent(Placeholder.WAYSTONE, data);
+        String string = saveToStringWaystoneData(data, storeID);
         for (ItemModel model : itemModelSet) {
             if (model.accept(data)) {
-                saveToStringWaystoneData(data, storeID, string -> {
-                    ItemStack item = model.getItemStack(placeholder);
-                    NBTUtil.setData(item, "fancywaystones:waystoneData", string.getBytes(StandardCharsets.UTF_8));
-                    result.accept(item);
-                });
-                return;
+                ItemStack item = model.getItemStack(placeholder);
+                NBTUtil.setData(item, "fancywaystones:waystoneData", string.getBytes(StandardCharsets.UTF_8));
+                return item;
             }
         }
         MinecraftItem item = new MinecraftItem();
         item.load(waystoneItem);
-        saveToStringWaystoneData(data, storeID, string -> {
-            item.setData("fancywaystones:waystoneData", string.getBytes(StandardCharsets.UTF_8));
-            result.accept(item.getItemStack(placeholder));
-        });
+        item.setData("fancywaystones:waystoneData", string.getBytes(StandardCharsets.UTF_8));
+        return item.getItemStack(placeholder);
     }
 
     public void setStorage(WaystoneStorage storage) {
@@ -433,7 +428,23 @@ public class WaystoneManager {
         config.loadFromString(new String(getStorage().readWaystoneData(data.getUUID()), StandardCharsets.UTF_8));
         data.getStatistics().load(config.getConfigurationSection("statistics"));
         data.setName(config.getString("name"));
-        data.setLocation(new LocalLocation(new Location(Bukkit.getWorld(config.getString("world")), config.getInt("x"), config.getInt("y"), config.getInt("z"))));
+        String uid = config.getString("worldUID");
+        World world;
+        if (uid != null) {
+            world = Bukkit.getWorld(UUID.fromString(uid));
+            if (world != null) {
+                data.setLocation(new LocalLocation(new Location(world, config.getInt("x"), config.getInt("y"), config.getInt("z"))));
+            } else {
+                String name = config.getString("world");
+                world = name == null ? null : Bukkit.getWorld(name);
+            }
+        } else {
+            world = Bukkit.getWorld(config.getString("world"));
+        }
+        if (world != null) {
+            data.setLocation(new LocalLocation(new Location(world, config.getInt("x"), config.getInt("y"), config.getInt("z"))));
+        }
+//        data.setLocation(new LocalLocation(new Location(Bukkit.getWorld(config.getString("world")), config.getInt("x"), config.getInt("y"), config.getInt("z"))));
         if (config.isConfigurationSection("members")) {
             data.getMembers().clear();
             for (String key : config.getConfigurationSection("members").getKeys(false)) {
@@ -659,7 +670,7 @@ public class WaystoneManager {
         long elapsed = System.currentTimeMillis() - time;
         FancyWaystones.getPlugin().pushSRWSpeed(elapsed);
     }
-    private void saveToStringWaystoneData(WaystoneData data, boolean storeID, Consumer<String> consumer) {
+    private String saveToStringWaystoneData(WaystoneData data, boolean storeID) {
         YamlConfiguration configuration = new YamlConfiguration();
         try {
             if (storeID) {
@@ -677,7 +688,7 @@ public class WaystoneManager {
         } catch (Throwable t) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save waystone data", t);
         }
-        consumer.accept(configuration.saveToString());
+        return configuration.saveToString();
     }
 
     private WaystoneData loadWaystoneDataPrintError(UUID id) {

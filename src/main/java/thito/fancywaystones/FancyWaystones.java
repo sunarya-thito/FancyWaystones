@@ -2,6 +2,7 @@ package thito.fancywaystones;
 
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.cryptomorin.xseries.XMaterial;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.*;
@@ -257,8 +258,10 @@ public class FancyWaystones extends JavaPlugin {
         LateHookLoader lateHookLoader = new LateHookLoader();
         lateHookLoader.checkStatus();
         pluginManager.registerEvents(lateHookLoader, this);
-        if (XMaterial.isNewVersion()) {
+        try {
+            Player.class.getMethod("discoverRecipes", Collection.class).setAccessible(true);
             pluginManager.registerEvents(new ModernWaystoneListener(), this);
+        } catch (Throwable ignored) {
         }
         deathBook = new DeathBook();
         teleportationBook = new TeleportationBook();
@@ -734,11 +737,11 @@ public class FancyWaystones extends JavaPlugin {
             config.setJdbcUrl("jdbc:mysql://" + getConfig().getString("Storage.MySQL.Host") + ":" + getConfig().getInt("Storage.MySQL.Port") + "/" +
                     getConfig().getString("Storage.MySQL.Database Name")+"?autoreconnect=true");
         }
-        config.setMinimumIdle(5);
-        config.setMaximumPoolSize(50);
-        config.setConnectionTimeout(10000);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(config.getConnectionTimeout());
+        config.setMinimumIdle(getConfig().getInt("Storage.MySQL.Advanced.Minimum Idle"));
+        config.setMaximumPoolSize(getConfig().getInt("Storage.MySQL.Advanced.Maximum Pool Size"));
+        config.setConnectionTimeout(getConfig().getLong("Storage.MySQL.Advanced.Connection Timeout"));
+        config.setIdleTimeout(getConfig().getLong("Storage.MySQL.Advanced.Idle Timeout"));
+        config.setMaxLifetime(getConfig().getLong("Storage.MySQL.Advanced.Max Lifetime"));
         config.setPassword(getConfig().getString("Storage.MySQL.Password"));
         config.setUsername(getConfig().getString("Storage.MySQL.Username"));
         HikariDataSource dataSource = new HikariDataSource(config);

@@ -7,19 +7,22 @@ import org.bukkit.event.server.PluginEnableEvent;
 import thito.fancywaystones.FancyWaystones;
 import thito.fancywaystones.WaystoneManager;
 import thito.fancywaystones.model.config.component.ItemsAdderCustomBlockComponent;
+import thito.fancywaystones.model.config.component.ModelEngineComponent;
 import thito.fancywaystones.model.config.component.OraxenCustomBlockComponent;
 
 import java.util.logging.Level;
 
 public class LateHookLoader implements Listener {
 
-    private boolean hookedWithCustomStructures;
     public void checkStatus() {
         if (Bukkit.getPluginManager().isPluginEnabled("ItemsAdder")) {
             hookItemsAdder();
         }
         if (Bukkit.getPluginManager().isPluginEnabled("Oraxen")) {
             hookOraxen();
+        }
+        if (Bukkit.getPluginManager().isPluginEnabled("ModelEngine")) {
+
         }
     }
 
@@ -30,6 +33,19 @@ public class LateHookLoader implements Listener {
         }
         if (e.getPlugin().getName().equals("Oraxen")) {
             hookOraxen();
+        }
+        if (e.getPlugin().getName().equals("ModelEngine")) {
+            hookModelEngine();
+        }
+    }
+
+    private void hookModelEngine() {
+        if (WaystoneManager.getManager().getComponentTypeMap().containsKey("model-engine")) return;
+        try {
+            WaystoneManager.getManager().getComponentTypeMap().put("model-engine", new ModelEngineComponent());
+            FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Hooked with ModelEngine");
+        } catch (Throwable t) {
+            FancyWaystones.getPlugin().getLogger().log(Level.INFO, "Not hooked with ModelEngine", t);
         }
     }
 
