@@ -1,0 +1,261 @@
+# Traducción creada por DavidPilahito7 - Elgrupito.es
+# play.elgrupito.es
+name: Español (ES)
+language-command-usage: '&cSet language. Current Language: {language.name}. Usage:
+  &f/waystonelanguage <language>'
+language-command-invalid: '&cInvalid language! Available languages: {language_list}'
+language-command-set: '&aIdioma cambiado a {language.name}'
+confirm-title: ¿Estas seguro?
+confirm-confirm: 'SI'
+confirm-cancel: 'NO'
+waypoints-title: Waypoints
+waypoints-waystones: POSTE WAYPOINTS
+waypoints-death: PUNTOS DE MUERTE
+waypoints-server: WAYPOINTS SERVER
+waypoints-player: TU WAYPOINTS
+waypoints-add: AGREGAR NUEVO WAYPOINT
+waypoints-add-info: basado en su ubicación
+gui-search-filter: Filtro de búsqueda
+gui-search-filter-info: Haga clic aquí para cambiar
+gui-search-filter-info2: 'Palabra clave de búsqueda actual:'
+gui-search-filter-click-change: Clic izquierdo para cambiar
+gui-search-filter-click-clear: CLIC derecho para borrar
+gui-sort-order: Orden de clasificación
+gui-sort: Ordenar por
+gui-close: CERRAR
+sort-name: Nombre
+sort-date-created: fecha de creacion
+sort-distance: Distancia
+sort-world: Mundo
+sort-visibility: Visibilidad
+info-world: Mundo
+info-x: X
+info-y: Y
+info-z: Z
+info-visible: Visible
+info-click-waypoints-remove: Mayús + clic derecho para eliminar
+info-click-waypoints-rename: Mayús + clic izquierdo para cambiar el nombre
+info-click-waypoints-color: Clic central para cambiar de color
+info-click-waypoints-visibility: Clic izquierdo para cambiar la visibilidad
+info-click-waypoints-show: Haga clic derecho para mostrar coordenadas en el chat
+info-click-waypoints-show2: (solo visible para ti)
+waypoint-disabled: '&cLa función de puntos de ruta está deshabilitada'
+waypoint-chat: '&6Coordenadas de waypoint para &f{waypoint_name} &6es mundo:&e{waypoint_worldName}
+  &6x:&e{waypoint_x} &6y:&e{waypoint_y} &6z:&e{waypoint_z}'
+waypoint-add: '&1Agregar nuevo Waypoint'
+waypoint-usage-add: '&cCommand Usage: /waypoint add <world> <x> <y> <z> <name>'
+waypoint-added: '&aWaypoint &f{waypoint_name} &aadded!'
+waypoint-failed-to-add: '&cWaypoint &f{waypoint_name} &cnot added!'
+waypoint-invalid-coordinate: '&cInvalid coordinate!'
+prefix: '&8[&b&lFW&8] &7'
+distance: Distancia
+block: █
+same-world: '&cDebe estar en el mismo mundo que el poste.'
+tp-offset-set: '&aEstablece un nuevo desplazamiento de TP para {waystone_name}!'
+death-book-no-death: '&cSu lugar de muerte es desconocido o se agotó el tiempo de espera.'
+and: "y"
+cost-not-enough: "&cNo tiene suficiente &6{cost} &para hacer esto."
+destroyed: "&7PILAR &e{waystone_name} &7destruido por &a{reason}"
+reason-creeper-explosion: "Explosion de Creeper"
+reason-tnt-explosion: "Explosion de TNT"
+reason-unknown-explosion: "Explision Deconocida"
+reason-unknown: "Desconocido"
+maxed-activation: "&cHa alcanzado el límite para el tipo de waystone {waystone_type_display_name}"
+not-enough-space-place: "&c¡No se puede colocar waystone allí. ¡No hay suficiente espacio!"
+unsafe-waystone: "&c¡No se puede teletransportar a &6{waystone_name} &cdebido a una ubicacion insegura de waystone!"
+unsafe-destination: "&c¡No se puede teletransportar al destino debido a una ubicacion de destino insegura!"
+invalid-waystone: "&cNo se puede teletransportar a &6{waystone_name}&c, ¡el waystone ya no esta disponible o un jugador lo ha roto!"
+invalid-unknown-waystone: "&c¡El waystone de destino ya no esta disponible!"
+invalid-environment: "&c¡Esta piedra de paso no se puede usar en esta dimension mundial!"
+player-not-found: "&cNo se puede encontrar el jugador con nombre {target}!"
+not-owner: "&c¡No puede agregar el propietario de pilar a la lista!"
+rename-gui-title: "&1Renombrar Pilar"
+no-death: "&cNo tienes ninguna ubicacion de muerte guardada. O se agoto el tiempo de espera o simplemente no has muerto."
+no-access-target: "&cNo tienes accesso a esta region donde {waystone_name} se coloco!"
+teleport-cancelled-moved: "&cTeletransporte cancelado por movimiento.!"
+teleported: "&7Teletransporte a &e{waystone_name}&7!"
+teleported-death: "&7Teletransporte a ultima muerte!"
+death-location: "Lugar de la muerte"
+date-format: "{day} {dd}/{MM}/{yyyy}"
+cannot-break-not-owner: "&c¡No puedes romper este pilar! ¡Solo {waystone_owner_name} puede romper este pilar!"
+remove-member: "Borrar miembros"
+add-member: "Añadir miembros"
+edit-members-gui-title: "&1Añadir miembro - Insertar nombre"
+member-already-added: "&cJugador añadido a la lista"
+blacklisted: "&c¡Lo sentimos, esta en la lista negra para acceder al Pilar.!"
+search-filter-title: "&1Buscar Filtros"
+illegal-waystone-name: "&c¡El nombre de pilar contiene una palabra en la lista negra!"
+duplicate-waystone-name: "&cPilar con ese nombre ya existe para el tipo &f{waystone_type}&c!"
+waystone-inactivity-reason: "Pilar Inactivo"
+time:
+  days: "dias"
+  hours: "horas"
+  minutes: "minutos"
+  seconds: "segundos"
+day-name:
+  monday: "Lunes"
+  tuesday: "Martes"
+  wednesday: "Miercoles"
+  thursday: "Jueves"
+  friday: "Viernes"
+  saturday: "Sabado"
+  sunday: "Domingo"
+order:
+  ascend:
+    date-created: "Reciente"
+    name: "Orden alfabetico"
+    visits: "La mayoría de las visitas"
+    visitors: "La mayoría de los visitantes"
+    users: "La mayoría de los usuarios"
+    used-time: "Recientemente usado"
+    distance: "Mas lejano"
+    world: "Orden mundial"
+    visibility: "Primero visible"
+  descend:
+    date-created: "El mas viejo"
+    name: "Orden alfabético inverso"
+    visits: "visitas"
+    visitors: "Menos visitantes"
+    users: "Menos usuarios"
+    used-time: "Usado anteriormente"
+    distance: "Mas cercano"
+    world: "Orden mundial inverso"
+    visibility: "Último visible"
+free: "libre"
+economy-names:
+economy-names:
+  level: "Nivel"
+  vault: "Dinero"
+  stellium: estelio
+hologram:
+  active: "&a&lACTIVO"
+  inactive: "&7&lINACTIVO"
+  no-access: " &6&lNO TIENES ACCESO"
+  tip-click: "&7&oHaga clic derecho para activar"
+  name: "{waystone_name}"
+condition:
+  format: "&c{reason}"
+  format-plural: |-
+    &c&l¡No puedo hacer eso!
+    &7Cualquiera &c{reasons}
+  format-plural-delimiter: "&7 o &c"
+  or: "o"
+  active-waystone: "El pilar debe estar activado."
+  not-active-waystone: "El pilar no debe estar activado."
+  never: "No tienes permitido hacer esto."
+  always: "Tienes permiso para hacer esto."
+  effect: "Debes tener {potion-type} {amplifier}"
+  not-effect: "No debes tener {potion-type} {amplifier}"
+  enchantment: "Debes tener tu objeto en la mano encantado con {enchantment} nivel {enchantment-level}"
+  not-enchantment: "No debes tener tu artículo en tu mano encantado con {enchantment} nivel {enchantment-level}"
+  explosion: "Esto debe ser causado por una explosion."
+  not-explosion: "Esto no debe ser causado por una explosion."
+  land-access: "Debes tener acceso a la tierra."
+  not-land-access: "No debes tener acceso al terreno"
+  member: "Debes ser miembro de este pilar"
+  not-member: "No debes ser miembro de este pilar"
+  owner: "Debes ser el dueño de esta pilar."
+  not-owner: "No debes ser el propietario de este pilar."
+  permission: "Debes tener el permiso \"{permission}\""
+  not-permission: "No debes tener el permiso \"{permission}\""
+  random: "Tienes mala suerte"
+  not-random: "Tienes mala suerte"
+  same-dimension: "Debe estar en dimension {dimension}"
+  not-same-dimension: "Debe estar en una dimension diferente a la {dimension}"
+  same-server: "Debe estar en el mismo servidor."
+  not-same-server: "Debe estar en un servidor diferente"
+  same-type: "Debe ser {type} type"
+  not-same-type: "Debe ser de otro tipo que {type}"
+  same-world: "Debe estar en {world} mundo"
+  not-same-world: "Debe estar en un mundo diferente al {world}"
+  types: "Debe ser al menos uno de estos tipos: {types}"
+  not-types: "No debe uno de estos tipos: {types}"
+  worlds: "Debe estar al menos dentro de estos mundos.: {worlds}"
+  not-worlds: "No debe uno de estos mundos: {worlds}"
+  natural-waystone: "No debe ser un pilar natural"
+  not-natural-waystone: "Debe ser un pilar natural"
+  holding: "Debe sostener {item}"
+  not-holding: "No debe sostener {item}"
+  offset-distance-range: "Debe estar entre {min_distance} y {max_distance} rango de bloques"
+  offset-distance-max: "Debe ser menor que {max_distance} distancia de bloques"
+  offset-distance-min: "Debe ser mas que {min_distance}distancia de bloques"
+  offset-distance-out-range: "Must be less than {min_distance} bloques de distancia o mas de {max_distance} distancia de bloques"
+settings-title: Configuraciones
+gui-back: REGRESA
+sort-users: Usuario
+sort-visits: Visitas
+sort-visitors: Visitantes
+sort-used-time: Tiempo usado
+paywall-title: Choose Payment
+paywall-with-stellium: Paga con Stellium
+paywall-with-money: Pagar con dinero
+paywall-with-level: Paga con Nivel
+paywall-levels: Niveles
+paywall-cost: Coste
+paywall-balance: Equilibrio
+paywall-item-pay: Paga con este artículo
+paywall-item: Objetos
+members-title: Editar miembros
+members-click-remove: Shift + Right Click to Remove
+members-info-discovered: This player discovered this waystone
+members-blacklist: Blacklisted Players
+members-whitelist: Whitelisted Players
+members-add: AÑADIR MIEMBROS
+waystone-title: Poste
+waystone-settings: Configuraciones
+waystone-settings-info: Panel de control de poste
+waystone-inactive1: Activa este poste por derecho.
+waystone-inactive2: hacer clic en el bloque para usar
+waystone-inactive3: eso
+waystone-info-cost: 'Costo de teletransportación:'
+waystone-info-total-visitors: 'Visitantes totales:'
+waystone-info-date-created: 'Fecha de creación/Edad:'
+waystone-button-teleport: CLIC DERECHO&d para teletransportarse
+waystone-button-delete: MAYÚS + CLIC DERECHO&d para eliminar
+waystone-deactivate: DESACTIVAR POSTE
+waystone-deactivate-info: Haga clic aquí para desactivar el poste
+waystone-category-disabled: Esta categoría está deshabilitada
+waystone-category-disabled2: en esta poste
+waystone-category-server: POSTE SERVER
+waystone-category-public: POSTE PUBLICO
+waystone-category-regional: POSTE REGIONAL
+waystone-category-private: POSTE PRIVADO
+waystone-edit-members: EDITAR MIEMBROS
+waystone-edit-members-info: Haga clic aquí para añadir un jugador específico
+waystone-edit-members-info2: para poder acceder a este waystone
+waystone-edit-members-no-access: no tienes acceso a
+waystone-edit-members-no-access2: editar miembros de poste
+waystone-rename: RENOMBRA
+waystone-rename-info: Haga clic aquí para cambiar el nombre de este
+waystone-rename-info2: poste
+waystone-rename-info3: 'Nombre actual:'
+waystone-rename-info4: Solo &d{waystone_owner_name}
+waystone-rename-info5: puede cambiar el nombre de este poste
+waystone-search: Filtro de búsqueda
+waystone-search-info: Haga clic aquí para cambiar
+waystone-search-info2: 'Palabra clave de búsqueda actual:'
+waystone-search-info3: Clic izquierdo para cambiar
+waystone-search-info4: Haga clic derecho para borrar
+waystone-offset: Establecer TP
+waystone-offset-info: 'Compensación de TP actual:'
+waystone-offset-info2: Clic izquierdo para cambiar
+waystone-offset-info3: Haga clic derecho para borrar
+waystone-offset-info4: Especifica dónde deberían los jugadores
+waystone-offset-info5: ser teletransportado al visitar este
+waystone-offset-info6: Poste
+waystone-stats: ESTADÍSTICAS
+waystone-stats-info1: 'Nombre: '
+waystone-stats-info2: 'Dueño: '
+waystone-stats-info3: 'Visitas: '
+waystone-stats-info4: 'Visitantes: '
+waystone-stats-info5: 'Usuarios: '
+waystone-stats-info6: 'fecha de creacion: '
+waystone-stats-info7: 'Años: '
+warm-up-subtitle: ¡Por favor, no te muevas!
+warm-up-cancelled-title: CANCELADO
+warm-up-cancelled-subtitle: ¡Te moviste!
+post-teleport-title: TELETRANSPORTADO
+tp-offset: LUGAR PARA ESTABLECER TP UBICACIÓN
+tp-offset1: Coloque este bloque en el suelo
+tp-offset2: para establecer la ubicación de teletransportación.
+tp-offset3: Puede soltarlo para cancelar esta acción.
