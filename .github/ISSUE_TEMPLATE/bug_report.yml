@@ -1,0 +1,169 @@
+name: Bug report
+description: Create a report to help us improve
+title: '[Bug]: '
+labels: bug
+assignees: 'sunarya-thito'
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please search to see if an issue already exists for the bug you encountered.
+      options:
+        - label: I have searched the existing issues
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the bug.
+      placeholder: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: stepsToReproduce
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior. Please also include a list of other mods/modpacks installed.
+      placeholder: |
+        1. In this environment...
+        2. With this config...
+        3. Run '...'
+        4. See error...
+    validations:
+      required: true
+  - type: textarea
+    id: expectedBehaviour
+    attributes:
+      label: Expected behavior
+      description: Expected behavior
+      placeholder: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: dropdown
+    id: modVersion
+    attributes:
+      label: Mod Version
+      description: "Please select the used version of 'Fancy Waystones'."
+      options:
+        - "v1.0.61"
+        - "v1.0.60"
+        - "v1.0.59"
+        - "v1.0.57"
+        - "v1.0.56"
+        - "v1.0.55"
+        - "v1.0.54"
+        - "v1.0.53"
+        - "v1.0.52"
+        - "v1.0.51"
+        - "v1.0.50"
+        - "v1.0.49"
+        - "v1.0.48"
+        - "v1.0.47"
+        - "v1.0.46"
+        - "v1.0.45"
+        - "v1.0.44"
+        - "v1.0.43"
+        - "v1.0.42"
+        - "v1.0.41"
+        - "v1.0.40"
+        - "v1.0.39"
+        - "v1.0.38"
+        - "v1.0.37"
+        - "v1.0.36"
+        - "v1.0.35"
+        - "v1.0.34"
+        - "v1.0.33"
+        - "v1.0.32"
+        - "v1.0.31"
+        - "v1.0.30"
+        - "v1.0.29"
+        - "v1.0.28"
+        - "v1.0.27"
+        - "v1.0.26"
+        - "v1.0.25"
+        - "v1.0.24"
+        - "v1.0.23"
+        - "v1.0.22"
+        - "v1.0.21"
+        - "v1.0.20"
+        - "v1.0.14"
+        - "v1.0.13"
+        - "v1.0.12"
+        - "v1.0.11"
+        - "v1.0.10"
+        - "v1.0.9"
+        - "v1.0.8"
+        - "v1.0.7"
+        - "v1.0.6"
+        - "v1.0.5"
+        - "v1.0.4"
+        - "v1.0.3"
+        - "v1.0.2"
+        - "v1.0.1"
+        - "v1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: minecraftVersion
+    attributes:
+      label: Minecraft Version
+      description: "Please select the used version of 'Minecraft'."
+      options:
+        - "1.19"
+        - "1.18.2"
+        - "1.18.1"
+        - "1.18"
+        - "1.17"
+        - "1.16"
+        - "1.15"
+        - "1.14"
+        - "1.13"
+        - "1.12"
+        - "1.11"
+        - "1.10"
+        - "1.9"
+        - "Other"
+    validations:
+      required: true
+  - type: dropdown
+    id: javaVersion
+    attributes:
+      label: Java Version
+      description: "Please select the used version of 'Java'."
+      options:
+        - "Java 18"
+        - "Java 17"
+        - "Java 16"
+        - "Other"
+    validations:
+      required: true
+  - type: textarea
+    id: fabricVersion
+    attributes:
+      label: Spigot Server Version
+      description: "Please enter the used version of 'Spigot'"
+      value: |
+        - **Spigot Version:** ex. 1.2.3
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: textarea
+    id: anythingElse
+    attributes:
+      label: Anything else?
+      description: |
+        Links? References? Anything that will give us more context about the issue you are encountering!
+
+        Tip: You can attach images or log files by clicking this area to highlight it and then dragging files in.
+    validations:
+      required: false
