@@ -196,12 +196,6 @@ dimensions:
   nether: Nether
   the_end: The End
   custom: Tidak Diketahui
-item:
-  diamond: "Berlian"
-  cake: "Kue"
-  iron: "Besi"
-  gold: "Emas"
-  string: "Benang"
 time:
   days: "hari"
   hours: "jam"
